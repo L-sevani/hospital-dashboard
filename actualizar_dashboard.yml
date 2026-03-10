@@ -1,0 +1,54 @@
+name: Actualizar Dashboard HGZ 1
+
+on:
+  # ── Automático: todos los lunes a las 7:00 AM hora Ciudad de México (13:00 UTC) ──
+  schedule:
+    - cron: "0 13 * * 1"
+
+  # ── Manual: desde GitHub con un clic ──
+  workflow_dispatch:
+    inputs:
+      motivo:
+        description: "Motivo de la actualización manual"
+        required: false
+        default: "Actualización manual"
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # necesario para publicar en GitHub Pages
+
+    steps:
+      # 1. Descargar el código del repositorio
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      # 2. Instalar Python
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3. Instalar dependencias
+      - name: Instalar dependencias
+        run: pip install pandas openpyxl requests
+
+      # 4. Correr el script (descarga Excel de SharePoint y genera index.html)
+      - name: Procesar Excel y actualizar dashboard
+        env:
+          SP_TENANT_ID:     ${{ secrets.SP_TENANT_ID }}
+          SP_CLIENT_ID:     ${{ secrets.SP_CLIENT_ID }}
+          SP_CLIENT_SECRET: ${{ secrets.SP_CLIENT_SECRET }}
+          SP_SITE_ID:       ${{ secrets.SP_SITE_ID }}
+          SP_FILE_PATH:     ${{ secrets.SP_FILE_PATH }}
+        run: python scripts/procesar_excel.py
+
+      # 5. Confirmar y subir los cambios (index.html actualizado)
+      - name: Publicar dashboard actualizado
+        run: |
+          git config user.name  "Dashboard Bot HGZ1"
+          git config user.email "bot@hgz1.local"
+          git add index.html dashboard_data.json
+          git diff --cached --quiet || git commit -m "Dashboard actualizado $(date +'%d/%m/%Y %H:%M') UTC"
+          git push
