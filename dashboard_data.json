@@ -1,1 +1,2123 @@
-{}
+{
+  "hospitales": [
+    "HGZ 1 TLAXCALA"
+  ],
+  "periodos": [
+    "2026-01",
+    "2026-02"
+  ],
+  "data": {
+    "HGZ 1 TLAXCALA": {
+      "periodos": [
+        "2026-01",
+        "2026-02"
+      ],
+      "data": {
+        "2026-01": {
+          "infecciones": {
+            "subgrupos": [
+              "ITS",
+              "NEUMONÍA"
+            ],
+            "data": {
+              "ITS": {
+                "ESCHERICHIA COLI": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G- Amikacina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ampicilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ampicilina Sulbactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Aztreonam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefazolina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefepime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefoperazona Sulbactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftacidime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftriaxona,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Colistina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ertapenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Gentamicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Imipenem",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Linezolid",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Meropenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Nitrofurantoina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Piperacilina Tazobactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Tigeciclina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS EPIDERMIDIS": {
+                  "total": 2,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Penicilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS HAEMOLYTICUS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS HOMINNIS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                }
+              },
+              "NEUMONÍA": {
+                "CANDIDA ALBICANS": {
+                  "total": 2,
+                  "antibioticos": [
+                    {
+                      "a": "Hongo Anfotericina B",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "Hongo Caspofungina",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "Hongo Fluconazol",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "Hongo Voriconazol",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    }
+                  ]
+                },
+                "KLEBSIELLA PNEUMONIAE SUBS. PNEUMONIAE": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G- Amikacina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ampicilina Sulbactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefalotina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefazolina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefepime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftacidime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftriaxona,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ertapenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Gentamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Meropenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Nitrofurantoina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Norfloxacino",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- TmpSmx",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS AUREUS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS HAEMOLYTICUS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STENOTROPHOMONAS MALTOPHILIA": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G- TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "cultivos": {
+            "subgrupos": [
+              "HEMOCULTIVOS",
+              "NEUMO"
+            ],
+            "data": {
+              "HEMOCULTIVOS": {
+                "ESCHERICHIA COLI": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G- Amikacina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ampicilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ampicilina Sulbactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Aztreonam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefazolina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefepime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefoperazona Sulbactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftacidime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftriaxona,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Colistina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ertapenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Gentamicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Imipenem",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Linezolid",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Meropenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Nitrofurantoina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Piperacilina Tazobactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Tigeciclina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS EPIDERMIDIS": {
+                  "total": 2,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Penicilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS HAEMOLYTICUS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS HOMINNIS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                }
+              },
+              "NEUMO": {
+                "CANDIDA ALBICANS": {
+                  "total": 2,
+                  "antibioticos": [
+                    {
+                      "a": "Hongo Anfotericina B",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "Hongo Caspofungina",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "Hongo Fluconazol",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "Hongo Voriconazol",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    }
+                  ]
+                },
+                "KLEBSIELLA PNEUMONIAE SUBS. PNEUMONIAE": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G- Amikacina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ampicilina Sulbactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefalotina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefazolina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefepime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftacidime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftriaxona,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ertapenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Gentamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Meropenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Nitrofurantoina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Norfloxacino",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- TmpSmx",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS AUREUS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS HAEMOLYTICUS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STENOTROPHOMONAS MALTOPHILIA": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G- TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "servicios": {
+            "subgrupos": [
+              "MEDICINA INTERNA",
+              "CIRUGÍA",
+              "PEDIATRÍA"
+            ],
+            "data": {
+              "MEDICINA INTERNA": {
+                "CANDIDA ALBICANS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "Hongo Anfotericina B",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "Hongo Caspofungina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "Hongo Fluconazol",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "Hongo Voriconazol",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "ESCHERICHIA COLI": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G- Amikacina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ampicilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ampicilina Sulbactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Aztreonam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefazolina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefepime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefoperazona Sulbactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftacidime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftriaxona,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Colistina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ertapenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Gentamicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Imipenem",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Linezolid",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Meropenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Nitrofurantoina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Piperacilina Tazobactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Tigeciclina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS EPIDERMIDIS": {
+                  "total": 2,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 2,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Penicilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 2,
+                      "R": 0,
+                      "I": 0,
+                      "t": 2
+                    }
+                  ]
+                }
+              },
+              "CIRUGÍA": {
+                "CANDIDA ALBICANS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "Hongo Anfotericina B",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "Hongo Caspofungina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "Hongo Fluconazol",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "Hongo Voriconazol",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "KLEBSIELLA PNEUMONIAE SUBS. PNEUMONIAE": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G- Amikacina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ampicilina Sulbactam",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefalotina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefazolina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Cefepime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftacidime",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ceftriaxona,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Ertapenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Gentamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Meropenem",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Nitrofurantoina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- Norfloxacino",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G- TmpSmx",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS AUREUS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS HAEMOLYTICUS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STAPHYLOCOCCUS HOMINNIS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                },
+                "STENOTROPHOMONAS MALTOPHILIA": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G- TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                }
+              },
+              "PEDIATRÍA": {
+                "STAPHYLOCOCCUS HAEMOLYTICUS": {
+                  "total": 1,
+                  "antibioticos": [
+                    {
+                      "a": "G+ Clindamicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Ciprofloxacina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Daptomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Eritromicina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Levofloxacina,",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Linezolid",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Oxacilina",
+                      "S": 0,
+                      "R": 1,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Rifampicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ TmpSmx",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    },
+                    {
+                      "a": "G+ Vancomicina",
+                      "S": 1,
+                      "R": 0,
+                      "I": 0,
+                      "t": 1
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "2026-02": {
+          "infecciones": {
+            "subgrupos": [
+              "ITS"
+            ],
+            "data": {
+              "ITS": {}
+            }
+          },
+          "cultivos": {
+            "subgrupos": [
+              "HEMOCULTIVOS"
+            ],
+            "data": {
+              "HEMOCULTIVOS": {}
+            }
+          },
+          "servicios": {
+            "subgrupos": [
+              "GINECOLOGÍA"
+            ],
+            "data": {
+              "GINECOLOGÍA": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}
