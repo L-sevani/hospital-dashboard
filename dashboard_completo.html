@@ -68,67 +68,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .fstab.active{background:#2563eb;color:#fff;border-color:#2563eb;}
 
 
-/* ── MOBILE RESPONSIVE ── */
-@media (max-width: 768px){
-  /* Header */
-  .header{padding:12px 16px;gap:8px;}
-  .header h1{font-size:1rem;}
-  .header p{font-size:.72rem;}
-  .btns{gap:6px;}
-  .btn{padding:6px 11px;font-size:.74rem;}
 
-  /* Nav tabs — scrollable */
-  .nav{padding:0 8px;gap:0;}
-  .ntab{padding:11px 12px;font-size:.76rem;}
-
-  /* Controls */
-  .controls{padding:8px 16px;gap:10px;}
-  .clabel{font-size:.68rem;}
-  .pp{padding:3px 9px;font-size:.68rem;}
-  #compare-ctrl{display:none;} /* hide compare on mobile */
-
-  /* Filter bar */
-  #filter-bar{padding:7px 16px;}
-
-  /* Legend row */
-  .legrow{padding:6px 16px;gap:12px;}
-  .leg{font-size:.7rem;}
-  .ap{font-size:.64rem;padding:1px 7px;}
-
-  /* Sections */
-  .sections{padding:12px 16px;gap:16px;}
-
-  /* Cards */
-  .ccard{padding:14px 12px;}
-  .ccard h2{font-size:.92rem;margin-bottom:12px;}
-
-  /* Subgroup tabs */
-  .sgtabs{gap:5px;}
-  .sgtab{padding:5px 10px;font-size:.72rem;}
-
-  /* Freq subtabs */
-  .freq-subtabs{gap:5px;}
-  .fstab{padding:5px 10px;font-size:.72rem;}
-}
-
-@media (max-width: 480px){
-  .header h1{font-size:.9rem;}
-  .ntab{padding:10px 10px;font-size:.7rem;}
-  .sections{padding:10px 10px;}
-  .ccard{padding:12px 10px;}
-}
-
-@media print{
-  body{background:#fff;}
-  .header{background:#1a2035;-webkit-print-color-adjust:exact;print-color-adjust:exact;position:static;}
-  .btn-pdf,.btn-sec,.nav,.controls,.legrow{display:none;}
-  .section{display:flex!important;}
-  .ccard{break-inside:avoid;box-shadow:none;}
-  div[style*="background:#22c55e"],div[style*="background:#ef4444"],div[style*="background:#f59e0b"],
-  div[style*="background:#15803d"],div[style*="background:#991b1b"],div[style*="background:#b45309"]{
-    -webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  @page{margin:12mm;size:A4 landscape;}
-}
 </style>
 </head>
 <body>
@@ -146,7 +86,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
     </select>
     <div class="btns">
       <button class="btn btn-sec" onclick="window.location.reload()">↺ Actualizar</button>
-      <button class="btn btn-pdf" onclick="window.print()">⬇ Descargar PDF</button>
+
     </div>
   </div>
 </div>
