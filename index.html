@@ -308,6 +308,8 @@ const ABX_ALIASES = {
   '(A) Amikacina': 'Amikacina',
   '(W) Vancomicina': 'Vancomicina',
   '(R) Linezolid': 'Linezolid'
+  'AmoxicilinaAcido Clavulanico': 'Amoxicilina Acido Clavulanico',
+  'AmoxicilinaAcidoClavulanico': 'Amoxicilina Acido Clavulanico'
 };
 
 const CB_ABX_META = {
@@ -385,6 +387,11 @@ function getCbObj(baseObj){
 }
 
 
+function formatAbxUiName(name){
+  if(name==='Amoxicilina Acido Clavulanico') return '(A) Amoxicilina Acido Clavulanico';
+  return name;
+}
+  
 function normalizeAbxName(name){
   const raw=(name||'').trim();
   if(!raw) return raw;
@@ -607,7 +614,18 @@ function getPeriods(){ return mode==='mes'?['TODOS',...RAW.periodos]:['TODOS',..
 
 // ── DATA HELPERS ──
 function calcPct(rows){
-  return (rows||[]).map(r=>({...r,
+  const merged={};
+  (rows||[]).forEach(r=>{
+    const nm=normalizeAbxName(r&&r.a?r.a:'');
+    if(!nm) return;
+    const meta=ABX_META[nm];
+    if(!merged[nm]) merged[nm]={a:nm,c:(meta?meta.c:(r.c||'Sin clasificar')),t:0,S:0,R:0,I:0};
+    merged[nm].t+=(r.t||0);
+    merged[nm].S+=(r.S||0);
+    merged[nm].R+=(r.R||0);
+    merged[nm].I+=(r.I||0);
+  });
+  return Object.values(merged).map(r=>({...r,
     pS:r.t?r.S/r.t:0,
     pR:r.t?r.R/r.t:0,
     pI:r.t?r.I/r.t:0
@@ -1478,11 +1496,11 @@ function buildAdvAbxSelect(){
     [...abxSet].sort().forEach(a=>{
       const lb=document.createElement('label'); lb.className='adv-pcheck'; lb.style.fontSize='.72rem';
       const ck=document.createElement('input'); ck.type='checkbox'; ck.value=a; ck.checked=prev.includes(a); ck.style.marginRight='4px';
-      ck.onchange=()=>setDdLabel('abx',[...abxPanel.querySelectorAll('input:checked')].map(i=>i.value));
-      lb.appendChild(ck); const sp=document.createElement('span'); sp.textContent=a; lb.appendChild(sp);
+      ck.onchange=()=>setDdLabel('abx',[...abxPanel.querySelectorAll('input:checked')].map(i=>formatAbxUiName(i.value)));
+      lb.appendChild(ck); const sp=document.createElement('span'); sp.textContent=formatAbxUiName(a); lb.appendChild(sp);
       abxPanel.appendChild(lb);
     });
-    setDdLabel('abx',[...abxPanel.querySelectorAll('input:checked')].map(i=>i.value));
+    setDdLabel('abx',[...abxPanel.querySelectorAll('input:checked')].map(i=>formatAbxUiName(i.value)));
   }
 
   const perPanel=document.getElementById('adv-per-dd-panel');
@@ -1734,8 +1752,8 @@ function applyAdvAbx(){
         const labeled=[];
         rawSec.subgrupos.forEach(sg=>{
           const d=rawSec.data[sg]; if(!d) return;
-          const abxRows=sriForPeriod(d,per)||[];
-          const found=abxRows.find(r=>r.a===abxName);
+           const abxRows=sriForPeriod(d,per)||[];
+          const found=abxRows.find(r=>normalizeAbxName(r.a)===abxName);
           if(found&&found.t>0){
             labeled.push({a:sgName(sg),c:null,t:found.t,S:found.S,R:found.R,I:found.I,
               pS:found.t?found.S/found.t:0,pR:found.t?found.R/found.t:0,pI:found.t?found.I/found.t:0});
