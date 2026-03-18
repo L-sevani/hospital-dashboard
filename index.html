@@ -1086,15 +1086,8 @@ function renderHospitalText(){
     .map(r=>lbl(r));
   const topR=topRList.length?topRList.join(', '):'Ninguno';
 
-  const microsObj=getSRIObj('micros');
-  let N=0;
-  if(microsObj&&microsObj.subgrupos&&microsObj.data){
-    N=microsObj.subgrupos.filter(m=>{
-      const rows=sriForPeriod(microsObj.data[m],p1)||[];
-      return rows.some(x=>(x.t||0)>0);
-    }).length;
-  }
-  if(!N) N=RAW.N_micros||0;
+  // N = total de antibiogramas del hospital en el período seleccionado
+  const N=hospRows.reduce((sum,r)=>sum+(r.t||0),0);
 
   box.innerHTML=`<p>
     <strong>(N-${N})</strong> La sensibilidad (S) y resistencia (R) de los antimicrobianos utilizados en todo el hospital de 
