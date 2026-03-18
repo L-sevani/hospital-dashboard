@@ -307,7 +307,7 @@ const ABX_ALIASES = {
   'Hongo Anfotericina B': 'Anfotericina B',
   '(A) Amikacina': 'Amikacina',
   '(W) Vancomicina': 'Vancomicina',
-  '(R) Linezolid': 'Linezolid'
+  '(R) Linezolid': 'Linezolid',
   'AmoxicilinaAcido Clavulanico': 'Amoxicilina Acido Clavulanico',
   'AmoxicilinaAcidoClavulanico': 'Amoxicilina Acido Clavulanico'
 };
@@ -349,7 +349,7 @@ const CB_ABX_META = {
   'Teicoplanina': {a:'Teicoplanina', c:'Sin clasificar'},
   'Tetraciclina': {a:'Tetraciclina', c:'Sin clasificar'},
   'Tigeciclina': {a:'Tigeciclina', c:'R'},
-  'TmpSmx': {a:'Trimetoprim/Sulfametoxazol', c:'Sin clasificar'},
+  'TmpSmx': {a:'TmpSmx', c:'Sin clasificar'},
   'Vancomicina': {a:'Vancomicina', c:'W'}
 };
 
@@ -391,7 +391,7 @@ function formatAbxUiName(name){
   if(name==='Amoxicilina Acido Clavulanico') return '(A) Amoxicilina Acido Clavulanico';
   return name;
 }
-  
+
 function normalizeAbxName(name){
   const raw=(name||'').trim();
   if(!raw) return raw;
@@ -539,7 +539,7 @@ function _deriveFromHospitalV2(hd){
   out.N_micros=allMicros.size;
   out.periodos=[...periods];
   out.años=[...new Set(periods.map(p=>String(p).split('-')[0]))];
-  
+
   // Frecuencias derivadas para formato v2
   ['chart1','chart2','chart3','chart4'].forEach(k=>{
     out.freq[k]={};
@@ -596,7 +596,7 @@ let activeHospital = (RAW.hospitales && RAW.hospitales[0]) || 'HGZ 1 TLAXCALA';
 function setHospital(h) {
   activeHospital = h;
   // Update title
-   const titleEl=document.getElementById('htitle');
+  const titleEl=document.getElementById('htitle');
   if(titleEl) titleEl.textContent='Vigilancia Epidemiológica — ' + getHospitalDisplayName(h);
   // If multi-hospital JSON: rebuild RAW from hospital slice
   if (RAW._derivedByHospital && RAW._derivedByHospital[h]) {
@@ -624,7 +624,8 @@ function fmtP(p){
 function getPeriods(){ return mode==='mes'?['TODOS',...RAW.periodos]:['TODOS',...RAW.años]; }
 
 // ── DATA HELPERS ──
-const merged={};
+function calcPct(rows){
+  const merged={};
   (rows||[]).forEach(r=>{
     const nm=normalizeAbxName(r&&r.a?r.a:'');
     if(!nm) return;
@@ -636,7 +637,6 @@ const merged={};
     merged[nm].I+=(r.I||0);
   });
   return Object.values(merged).map(r=>({...r,
-  return (rows||[]).map(r=>({...r,
     pS:r.t?r.S/r.t:0,
     pR:r.t?r.R/r.t:0,
     pI:r.t?r.I/r.t:0
