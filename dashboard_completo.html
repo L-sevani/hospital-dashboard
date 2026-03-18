@@ -444,7 +444,7 @@ function _deriveFromHospitalV2(hd){
     cultivos:{subgrupos:[],data:{}}, micros:{subgrupos:[],data:{}}, freq:{},
     hospital_auto:{}, hospital_auto_cb:{}, N_micros:0
   };
-  const periods=(hd&&hd.periodos)||[];
+  const periods=((hd&&hd.periodos&&hd.periodos.length)?hd.periodos:Object.keys(((hd||{}).data||{})).filter(k=>/^\d{4}-\d{2}$/.test(String(k))).sort());
   const allMicros=new Set();
 
   const makeFreq=()=>({order:[],stacks:{},totals:{}});
@@ -537,7 +537,9 @@ function _deriveFromHospitalV2(hd){
     out.micros.data[m]['TODOS']=_mergeRows(periods.map(p=>out.micros.data[m][p]||[]));
   });
   out.N_micros=allMicros.size;
-
+  out.periodos=[...periods];
+  out.años=[...new Set(periods.map(p=>String(p).split('-')[0]))];
+  
   // Frecuencias derivadas para formato v2
   ['chart1','chart2','chart3','chart4'].forEach(k=>{
     out.freq[k]={};
@@ -591,7 +593,8 @@ function setHospital(h) {
   // If multi-hospital JSON: rebuild RAW from hospital slice
   if (RAW._derivedByHospital && RAW._derivedByHospital[h]) {
     Object.assign(RAW, RAW._derivedByHospital[h]);
-    if (RAW.data && RAW.data[h] && RAW.data[h].periodos) RAW.periodos = RAW.data[h].periodos;
+    if (RAW._derivedByHospital[h] && RAW._derivedByHospital[h].periodos) RAW.periodos = RAW._derivedByHospital[h].periodos;
+    else if (RAW.data && RAW.data[h] && RAW.data[h].periodos) RAW.periodos = RAW.data[h].periodos;
   } else if (RAW.data && RAW.data[h]) {
     const hd = RAW.data[h];
     RAW.periodos = hd.periodos || RAW.periodos || [];
