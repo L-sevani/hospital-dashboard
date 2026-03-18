@@ -307,7 +307,7 @@ const ABX_ALIASES = {
   'Hongo Anfotericina B': 'Anfotericina B',
   '(A) Amikacina': 'Amikacina',
   '(W) Vancomicina': 'Vancomicina',
-  '(R) Linezolid': 'Linezolid'
+  '(R) Linezolid': 'Linezolid',
   'AmoxicilinaAcido Clavulanico': 'Amoxicilina Acido Clavulanico',
   'AmoxicilinaAcidoClavulanico': 'Amoxicilina Acido Clavulanico'
 };
@@ -349,7 +349,7 @@ const CB_ABX_META = {
   'Teicoplanina': {a:'Teicoplanina', c:'Sin clasificar'},
   'Tetraciclina': {a:'Tetraciclina', c:'Sin clasificar'},
   'Tigeciclina': {a:'Tigeciclina', c:'R'},
-  'TmpSmx': {a:'Trimetoprim/Sulfametoxazol', c:'Sin clasificar'},
+  'TmpSmx': {a:'TmpSmx', c:'Sin clasificar'},
   'Vancomicina': {a:'Vancomicina', c:'W'}
 };
 
@@ -391,7 +391,7 @@ function formatAbxUiName(name){
   if(name==='Amoxicilina Acido Clavulanico') return '(A) Amoxicilina Acido Clavulanico';
   return name;
 }
-  
+
 function normalizeAbxName(name){
   const raw=(name||'').trim();
   if(!raw) return raw;
@@ -444,7 +444,7 @@ function _deriveFromHospitalV2(hd){
     cultivos:{subgrupos:[],data:{}}, micros:{subgrupos:[],data:{}}, freq:{},
     hospital_auto:{}, hospital_auto_cb:{}, N_micros:0
   };
- const periods=((hd&&hd.periodos&&hd.periodos.length)?hd.periodos:Object.keys(((hd||{}).data||{})).filter(k=>/^\d{4}-\d{2}$/.test(String(k))).sort());
+  const periods=((hd&&hd.periodos&&hd.periodos.length)?hd.periodos:Object.keys(((hd||{}).data||{})).filter(k=>/^\d{4}-\d{2}$/.test(String(k))).sort());
   const allMicros=new Set();
 
   const makeFreq=()=>({order:[],stacks:{},totals:{}});
@@ -561,7 +561,7 @@ function normalizeLoadedRAW(input){
     input.freq=input.freq||{};
     return input;
   }
- if(input&&input.hospitales&&input.data){
+  if(input&&input.hospitales&&input.data){
     const norm={...input};
     norm.periodos=norm.periodos||[];
     norm.años=[...new Set((norm.periodos||[]).map(p=>String(p).split('-')[0]))];
@@ -1165,7 +1165,7 @@ function getHospitalDisplayName(h){
   return HOSPITALES_NOMBRES[h] || h || 'HGZ No. 1 Tlaxcala';
 }
 
-  
+
 function cmpStatsFromRaw(raw){
   if(!raw||!raw.hospital) return null;
   const hosp=raw.hospital['TODOS']||[];
@@ -1278,7 +1278,7 @@ function renderComparar(){
   const stats0=statsMap['HGZ 1 TLAXCALA'];
   let tablaHTML='';
   if(stats0){
-     // Build per-hospital antibiogram maps (uses derived shape when available)
+    // Build per-hospital antibiogram maps (uses derived shape when available)
     const todosByHosp={};
     HOSPITALES_ORDEN.forEach(hid=>{
       let rawH=null;
@@ -1304,7 +1304,7 @@ function renderComparar(){
       });
     });
     const abxRows=Object.values(totals).filter(r=>r.t>=3).sort((a,b)=>b.t-a.t).slice(0,15);
-    
+
     const thStyle='padding:8px 12px;font-size:.72rem;font-weight:700;color:#6b7280;text-align:center;border-bottom:2px solid #e5e7eb;';
     const tdStyle='padding:7px 10px;font-size:.72rem;text-align:center;border-bottom:1px solid #f3f4f6;';
     const cellSRI=(r)=>{
@@ -1332,7 +1332,7 @@ function renderComparar(){
         <tbody>
           ${abxRows.map((r,i)=>{
             const rowBg=i%2===0?'':'background:#fafafa;';
-           const key=normalizeAbxName(r.a);
+            const key=normalizeAbxName(r.a);
             const r1=byHospAbx['HGZ 1 TLAXCALA'][key]||null;
             const r2=byHospAbx['HGZMF 2 APIZACO'][key]||null;
             const r3=byHospAbx['HGSMF 8 TLAXCALA'][key]||null;
@@ -1763,7 +1763,7 @@ function applyAdvAbx(){
         const labeled=[];
         rawSec.subgrupos.forEach(sg=>{
           const d=rawSec.data[sg]; if(!d) return;
-           const abxRows=sriForPeriod(d,per)||[];
+          const abxRows=sriForPeriod(d,per)||[];
           const found=abxRows.find(r=>normalizeAbxName(r.a)===abxName);
           if(found&&found.t>0){
             labeled.push({a:sgName(sg),c:null,t:found.t,S:found.S,R:found.R,I:found.I,
