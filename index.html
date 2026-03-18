@@ -1250,7 +1250,11 @@ function renderComparar(){
   const stats0=statsMap['HGZ 1 TLAXCALA'];
   let tablaHTML='';
   if(stats0){
-    const hosp0=(RAW.data&&RAW.data['HGZ 1 TLAXCALA']?RAW.data['HGZ 1 TLAXCALA'].hospital:RAW.hospital)||{};
+    // Prefer fully-derived hospital shape; fallback to already-normalized RAW.
+    const raw0=(RAW._derivedByHospital&&RAW._derivedByHospital['HGZ 1 TLAXCALA'])
+      ? RAW._derivedByHospital['HGZ 1 TLAXCALA']
+      : RAW;
+    const hosp0=(raw0&&raw0.hospital)||{};
     const todos0=hosp0['TODOS']||[];
     // Find antibiotics with data in HGZ1
     const abxRows=todos0.filter(r=>r.t>=3).sort((a,b)=>b.t-a.t).slice(0,15);
