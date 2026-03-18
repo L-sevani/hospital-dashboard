@@ -561,13 +561,21 @@ function normalizeLoadedRAW(input){
     input.freq=input.freq||{};
     return input;
   }
-  if(input&&input.hospitales&&input.data){
+ if(input&&input.hospitales&&input.data){
     const norm={...input};
     norm.periodos=norm.periodos||[];
     norm.años=[...new Set((norm.periodos||[]).map(p=>String(p).split('-')[0]))];
     norm.freq=norm.freq||{};
     norm._derivedByHospital={};
-    Object.entries(norm.data||{}).forEach(([h,hd])=>{ norm._derivedByHospital[h]=_deriveFromHospitalV2(hd); });
+    Object.entries(norm.data||{}).forEach(([h,hd])=>{
+      if(hd&&hd.hospital){
+        hd.años=hd.años||[...new Set((hd.periodos||[]).map(p=>String(p).split('-')[0]))];
+        hd.freq=hd.freq||{};
+        norm._derivedByHospital[h]=hd;
+      }else{
+        norm._derivedByHospital[h]=_deriveFromHospitalV2(hd);
+      }
+    });
     const first=(norm.hospitales&&norm.hospitales[0])||Object.keys(norm._derivedByHospital)[0];
     if(first&&norm._derivedByHospital[first]) Object.assign(norm, norm._derivedByHospital[first]);
     return norm;
