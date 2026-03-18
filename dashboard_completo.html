@@ -579,13 +579,8 @@ let activeHospital = (RAW.hospitales && RAW.hospitales[0]) || 'HGZ 1 TLAXCALA';
 function setHospital(h) {
   activeHospital = h;
   // Update title
-  const nombres = {
-    'HGZ 1 TLAXCALA': 'HGZ No. 1 Tlaxcala',
-    'HGZMF 2 APIZACO': 'HGZMF No. 2 Apizaco',
-    'HGSMF 8 TLAXCALA': 'HGSMF No. 8 Tlaxcala'
-  };
-  document.getElementById('htitle').textContent =
-    'Vigilancia Epidemiológica — ' + (nombres[h] || h);
+   const titleEl=document.getElementById('htitle');
+  if(titleEl) titleEl.textContent='Vigilancia Epidemiológica — ' + getHospitalDisplayName(h);
   // If multi-hospital JSON: rebuild RAW from hospital slice
   if (RAW._derivedByHospital && RAW._derivedByHospital[h]) {
     Object.assign(RAW, RAW._derivedByHospital[h]);
@@ -1137,6 +1132,10 @@ const HOSPITALES_NOMBRES = {
   'HGSMF 8 TLAXCALA': 'HGSMF No. 8 · Tlaxcala'
 };
 const HOSPITALES_ORDEN = ['HGZ 1 TLAXCALA','HGZMF 2 APIZACO','HGSMF 8 TLAXCALA'];
+function getHospitalDisplayName(h){
+  return HOSPITALES_NOMBRES[h] || h || 'HGZ No. 1 Tlaxcala';
+}
+
 
 function cmpStatsFromRaw(raw){
   if(!raw||!raw.hospital) return null;
@@ -1337,7 +1336,7 @@ function renderComparar(){
 function renderAll(){
   if(activeSection==='avanzado') return;
   if(activeSection==='comparar'){renderComparar();return;}
-  document.getElementById('hperiodo').textContent=activeHospital+' · IMSS · '+fmtP(p1)+(p2?' vs '+fmtP(p2):'');
+  document.getElementById('hperiodo').textContent=getHospitalDisplayName(activeHospital)+' · IMSS · '+fmtP(p1)+(p2?' vs '+fmtP(p2):'');
   const legSri=document.getElementById('leg-sri');
   if(legSri) legSri.style.display=activeSection==='frecuencias'?'none':'flex';
   if(activeSection==='frecuencias'){renderFreq();return;}
