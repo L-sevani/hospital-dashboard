@@ -347,7 +347,7 @@ const CB_ABX_META = {
   'Teicoplanina': {a:'Teicoplanina', c:'Sin clasificar'},
   'Tetraciclina': {a:'Tetraciclina', c:'Sin clasificar'},
   'Tigeciclina': {a:'Tigeciclina', c:'R'},
-  'TmpSmx': {a:'TmpSmx', c:'Sin clasificar'},
+  'TmpSmx': {a:'Trimetoprim/Sulfametoxazol', c:'Sin clasificar'},
   'Vancomicina': {a:'Vancomicina', c:'W'}
 };
 
@@ -1250,14 +1250,32 @@ function renderComparar(){
   const stats0=statsMap['HGZ 1 TLAXCALA'];
   let tablaHTML='';
   if(stats0){
-    // Prefer fully-derived hospital shape; fallback to already-normalized RAW.
-    const raw0=(RAW._derivedByHospital&&RAW._derivedByHospital['HGZ 1 TLAXCALA'])
-      ? RAW._derivedByHospital['HGZ 1 TLAXCALA']
-      : RAW;
-    const hosp0=(raw0&&raw0.hospital)||{};
-    const todos0=hosp0['TODOS']||[];
-    // Find antibiotics with data in HGZ1
-    const abxRows=todos0.filter(r=>r.t>=3).sort((a,b)=>b.t-a.t).slice(0,15);
+    // Build per-hospital antibiogram maps (uses derived shape when available)
+    const todosByHosp={};
+    HOSPITALES_ORDEN.forEach(hid=>{
+      let rawH=null;
+      if(RAW._derivedByHospital&&RAW._derivedByHospital[hid]) rawH=RAW._derivedByHospital[hid];
+      else if(RAW.data&&RAW.data[hid]) rawH=_deriveFromHospitalV2(RAW.data[hid]);
+      else if((hid===activeHospital || (hid==='HGZ 1 TLAXCALA' && !RAW.data)) && RAW.hospital) rawH=RAW;
+      todosByHosp[hid]=(rawH&&rawH.hospital&&rawH.hospital['TODOS'])?rawH.hospital['TODOS']:[];
+    });
+
+    const byHospAbx={};
+    HOSPITALES_ORDEN.forEach(hid=>{
+      byHospAbx[hid]={};
+      (todosByHosp[hid]||[]).forEach(r=>{ const k=normalizeAbxName(r.a); byHospAbx[hid][k]=r; });
+    });
+
+    // Union of antibiotics with data across hospitals (keeps table useful even if HGZ1 is sparse)
+    const totals={};
+    HOSPITALES_ORDEN.forEach(hid=>{
+      (todosByHosp[hid]||[]).forEach(r=>{
+        const k=normalizeAbxName(r.a);
+        if(!totals[k]) totals[k]={a:k,t:0};
+        totals[k].t+=(r.t||0);
+      });
+    });
+    const abxRows=Object.values(totals).filter(r=>r.t>=3).sort((a,b)=>b.t-a.t).slice(0,15);
 
     const thStyle='padding:8px 12px;font-size:.72rem;font-weight:700;color:#6b7280;text-align:center;border-bottom:2px solid #e5e7eb;';
     const tdStyle='padding:7px 10px;font-size:.72rem;text-align:center;border-bottom:1px solid #f3f4f6;';
@@ -1286,14 +1304,15 @@ function renderComparar(){
         <tbody>
           ${abxRows.map((r,i)=>{
             const rowBg=i%2===0?'':'background:#fafafa;';
-            const r1=r;
-            const r2=null; // No data yet for other hospitals
-            const r3=null;
+            const key=normalizeAbxName(r.a);
+            const r1=byHospAbx['HGZ 1 TLAXCALA'][key]||null;
+            const r2=byHospAbx['HGZMF 2 APIZACO'][key]||null;
+            const r3=byHospAbx['HGSMF 8 TLAXCALA'][key]||null;
             return `<tr style="${rowBg}">
-              <td style="${tdStyle}text-align:left;font-weight:600;color:#374151;">${r1.a}</td>
+              <td style="${tdStyle}text-align:left;font-weight:600;color:#374151;">${r.a}</td>
               ${cellSRI(r1)}
-              <td style="${tdStyle}color:#9ca3af;font-size:.7rem;">Sin datos</td>
-              <td style="${tdStyle}color:#9ca3af;font-size:.7rem;">Sin datos</td>
+              ${cellSRI(r2)}
+              ${cellSRI(r3)}
             </tr>`;
           }).join('')}
         </tbody>
