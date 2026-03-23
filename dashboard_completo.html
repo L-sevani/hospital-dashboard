@@ -1169,8 +1169,9 @@ function cmpStatsFromRaw(raw){
   const topMicros=(raw.micros?raw.micros.subgrupos:[]).slice(0,5);
   const topRes=hosp.filter(r=>r.t>=3&&r.R>0).sort((a,b)=>(b.R/b.t)-(a.R/a.t)).slice(0,5).map(r=>({a:r.a,pct:Math.round(r.R/r.t*100)}));
   const topSen=hosp.filter(r=>r.t>=3&&r.S>0).sort((a,b)=>(b.S/b.t)-(a.S/a.t)).slice(0,5).map(r=>({a:r.a,pct:Math.round(r.S/r.t*100)}));
-  const linezolid=raw.hospital_auto&&raw.hospital_auto['TODOS']?raw.hospital_auto['TODOS'].linezolid:0;
-  const vancomicina=raw.hospital_auto&&raw.hospital_auto['TODOS']?raw.hospital_auto['TODOS'].vancomicina:0;
+  const findByName=(name)=>hosp.find(r=>normalizeAbxName(r.a)===name || r.a===name);
+  const linezolid=(findByName('Linezolid')||{}).t||0;
+  const vancomicina=(findByName('Vancomicina')||{}).t||0;
   const periodos=raw.periodos||[];
   const servicios=raw.servicios?raw.servicios.subgrupos:[];
   const infecciones=raw.infecciones?raw.infecciones.subgrupos:[];
