@@ -136,6 +136,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
     </div>
     <span style="font-size:.69rem;color:#9333ea;font-style:italic;margin-left:4px;" id="adv-hint">Selecciona períodos para el Grupo A y Grupo B</span>
   </div>
+  <div id="adv-hosp-select" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px;"></div>
   <!-- MULTI-PERÍODO -->
   <div id="adv-multi">
     <div style="display:flex;gap:18px;flex-wrap:wrap;">
@@ -1384,7 +1385,7 @@ function setSection(sec,el){
   if(ctrl) ctrl.style.display=(isAdv||isCmp)?'none':'flex';
   if(cmp) cmp.style.display=(isFreq||isAdv||isCmp)?'none':'flex';
   if(legSri) legSri.style.display=(isAdv||isFreq||isCmp)?'none':'flex';
-  if(isAdv){ buildAdvPills(); buildAdvAbxSelect(); }
+  if(isAdv){ buildAdvPills(); buildAdvAbxSelect(); buildAdvHospitalSelector(); }
   activeSection=sec; if(!isAdv) renderAll();
 }
 
@@ -1414,6 +1415,37 @@ function applyMobileUI(){
 let advTab='multi', advSetA=[], advSetB=[], advMode=false;
 let advLabelA='', advLabelB='';
 
+
+
+function getRawSliceForHospital(hid){
+  if(RAW._derivedByHospital && RAW._derivedByHospital[hid]) return RAW._derivedByHospital[hid];
+  if(RAW.data && RAW.data[hid]) return _deriveFromHospitalV2(RAW.data[hid]);
+  if(hid===activeHospital) return RAW;
+  return null;
+}
+function getSRIObjFromRaw(raw,key){
+  if(!raw) return null;
+  const base=(raw[key+'_cb']||raw[key]);
+  if(activeFilter==='cb') return getCbObj(base);
+  return base;
+}
+function buildAdvHospitalSelector(){
+  const box=document.getElementById('adv-hosp-select'); if(!box) return;
+  const hs=(RAW.hospitales&&RAW.hospitales.length)?RAW.hospitales:[activeHospital];
+  const prev=[...box.querySelectorAll('input:checked')].map(i=>i.value);
+  box.innerHTML='<span style="font-size:.72rem;color:#64748b;font-weight:700;text-transform:uppercase;">Hospitales:</span>';
+  hs.forEach(h=>{
+    const lb=document.createElement('label'); lb.className='adv-pcheck'; lb.style.fontSize='.72rem';
+    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=h; ck.checked=prev.length?prev.includes(h):true; ck.style.marginRight='4px';
+    lb.appendChild(ck);
+    const sp=document.createElement('span'); sp.textContent=getHospitalDisplayName(h); lb.appendChild(sp);
+    box.appendChild(lb);
+  });
+}
+function getAdvHospitals(){
+  const vals=[...document.querySelectorAll('#adv-hosp-select input:checked')].map(i=>i.value);
+  return vals.length?vals:[activeHospital];
+}
 
 function setAdvTab(t,el){
   advTab=t;
@@ -1578,7 +1610,29 @@ function applyAdvMulti(){
     </div>
   </div>`;
   box.appendChild(bannerDiv);
+  
+  const selectedHospitals=getAdvHospitals();
+  if(selectedHospitals.length>1){
+    const hWrap=document.createElement('div');
+    hWrap.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;';
+    selectedHospitals.forEach(hid=>{
+      const rawH=getRawSliceForHospital(hid);
+      const hospObj=getSRIObjFromRaw(rawH,'hospital');
+      if(!hospObj) return;
+      const d1=sriMergedRaw(hospObj,advSetA);
+      const d2=hasCmp?sriMergedRaw(hospObj,advSetB):null;
+      if(!d1||!d1.length) return;
+      const card=document.createElement('div');
+      card.style.cssText='background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.07);';
+      const cid='adv-hosp-'+hid.replace(/[^A-Za-z0-9]/g,'-')+'-'+Math.random().toString(36).slice(2,7);
+      card.innerHTML='<div style="font-size:.78rem;font-weight:800;color:#1e293b;margin-bottom:8px;">🏥 '+getHospitalDisplayName(hid)+'</div><div id="'+cid+'"></div>';
+      hWrap.appendChild(card);
+      buildSRIChart(d1,d2,cid,'🔵 Grupo A: '+labelA,hasCmp?('🟢 Grupo B: '+labelB):null);
+    });
+    if(hWrap.children.length) box.appendChild(hWrap);
+  }
 
+  
   // ── TABLA RESUMEN (solo si hay Grupo B) ──
   if(hasCmp){
     const rawH=getSRIObj('hospital');
@@ -1813,6 +1867,7 @@ async function initDashboard(){
   setHospital(activeHospital);
   renderPills();
   renderAll();
+  buildAdvHospitalSelector();
 }
 
 initDashboard();
