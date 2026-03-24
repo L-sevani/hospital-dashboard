@@ -137,6 +137,15 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
     <span style="font-size:.69rem;color:#9333ea;font-style:italic;margin-left:4px;" id="adv-hint">Selecciona períodos para el Grupo A y Grupo B</span>
   </div>
   <div id="adv-hosp-select" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px;"></div>
+ <div id="adv-hosp-opts" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+    <span style="font-size:.72rem;color:#64748b;font-weight:700;text-transform:uppercase;">Vista:</span>
+    <select id="adv-dim-sel" class="csel" style="min-width:170px;">
+      <option value="hospital">Hospital</option><option value="servicios">Servicio</option><option value="infecciones">Infección</option><option value="cultivos">Cultivo</option><option value="micros">Microorganismo</option>
+    </select>
+    <select id="adv-view-sel" class="csel" style="min-width:170px;">
+      <option value="cards">Gráficas por hospital</option><option value="bars">Comparación con barras</option>
+    </select>
+  </div> 
   <!-- MULTI-PERÍODO -->
   <div id="adv-multi">
     <div style="display:flex;gap:18px;flex-wrap:wrap;">
@@ -1447,7 +1456,68 @@ function getAdvHospitals(){
   return vals.length?vals:[activeHospital];
 }
 
-function setAdvTab(t,el){
+function mergeSriRows(rowsList){
+  const m={};
+  (rowsList||[]).forEach(rows=>(rows||[]).forEach(r=>{
+    const k=normalizeAbxName(r.a);
+    if(!m[k]) m[k]={a:k,c:r.c||'Sin clasificar',t:0,S:0,R:0,I:0};
+    m[k].t+=(r.t||0); m[k].S+=(r.S||0); m[k].R+=(r.R||0); m[k].I+=(r.I||0);
+  }));
+  return calcPct(Object.values(m)).sort((a,b)=>b.pS-a.pS || a.pR-b.pR || a.pI-b.pI);
+}
+function getAdvDimensionData(rawH, dimKey, periods){
+  const obj=getSRIObjFromRaw(rawH,dimKey); if(!obj) return [];
+  if(dimKey==='hospital') return sriMergedRaw(obj,periods)||[];
+  if(!obj.subgrupos||!obj.data) return [];
+  const chunks=obj.subgrupos.map(sg=>sriMergedRaw(obj.data[sg],periods)||[]);
+  return mergeSriRows(chunks);
+}
+function renderAdvHospitalsComparison(selectedHospitals,labelA,labelB,hasCmp,box){
+  const dim=(document.getElementById('adv-dim-sel')||{}).value||'hospital';
+  const mode=(document.getElementById('adv-view-sel')||{}).value||'cards';
+  if(mode==='cards'){
+    const hWrap=document.createElement('div');
+    hWrap.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;';
+    selectedHospitals.forEach(hid=>{
+      const rawH=getRawSliceForHospital(hid); if(!rawH) return;
+      const d1=getAdvDimensionData(rawH,dim,advSetA);
+      const d2=hasCmp?getAdvDimensionData(rawH,dim,advSetB):null;
+      if(!d1||!d1.length) return;
+      const card=document.createElement('div');
+      card.style.cssText='background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.07);';
+      const cid='adv-hosp-'+hid.replace(/[^A-Za-z0-9]/g,'-')+'-'+Math.random().toString(36).slice(2,7);
+      card.innerHTML='<div style="font-size:.78rem;font-weight:800;color:#1e293b;margin-bottom:8px;">🏥 '+getHospitalDisplayName(hid)+' · '+(dim==='hospital'?'Hospital':dim)+'</div><div id="'+cid+'"></div>';
+      hWrap.appendChild(card);
+      buildSRIChart(d1,d2,cid,'🔵 Grupo A: '+labelA,hasCmp?('🟢 Grupo B: '+labelB):null);
+    });
+    if(hWrap.children.length) box.appendChild(hWrap);
+    return;
+  }
+  const rows=[];
+  selectedHospitals.forEach(hid=>{
+    const rawH=getRawSliceForHospital(hid); if(!rawH) return;
+    const d1=getAdvDimensionData(rawH,dim,advSetA); if(!d1||!d1.length) return;
+    const t=d1.reduce((s,r)=>s+(r.t||0),0), R=d1.reduce((s,r)=>s+(r.R||0),0), S=d1.reduce((s,r)=>s+(r.S||0),0);
+    const t2=hasCmp?getAdvDimensionData(rawH,dim,advSetB):null;
+    let tB=0,RB=0,SB=0;
+    if(hasCmp&&t2&&t2.length){ tB=t2.reduce((s,r)=>s+(r.t||0),0); RB=t2.reduce((s,r)=>s+(r.R||0),0); SB=t2.reduce((s,r)=>s+(r.S||0),0); }
+    rows.push({hid,name:getHospitalDisplayName(hid),pR:t?Math.round(R/t*100):0,pS:t?Math.round(S/t*100):0,t,hasCmp,pRB:tB?Math.round(RB/tB*100):0,pSB:tB?Math.round(SB/tB*100):0,tB});
+  });
+  if(!rows.length) return;
+  const w=document.createElement('div');
+  w.style.cssText='background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.07);';
+  w.innerHTML='<div style="font-size:.78rem;font-weight:800;color:#1e293b;margin-bottom:10px;">📊 Comparación entre hospitales · '+(dim==='hospital'?'Hospital':dim)+'</div>'+
+    rows.map(r=>'<div style="margin-bottom:10px;border:1px solid #e2e8f0;border-radius:8px;padding:8px;">'+
+      '<div style="font-size:.74rem;font-weight:700;color:#1e293b;margin-bottom:4px;">'+r.name+' (n='+r.t+(r.hasCmp?(' / '+r.tB):'')+')'+'</div>'+
+      '<div style="font-size:.68rem;color:#6b7280;">Grupo A</div><div style="display:flex;gap:8px;align-items:center;">'+
+      '<div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;"><div style="width:'+r.pS+'%;height:8px;background:#16a34a;border-radius:4px;"></div></div><span style="font-size:.68rem;color:#16a34a;font-weight:700;">S '+r.pS+'%</span>'+
+      '<div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;"><div style="width:'+r.pR+'%;height:8px;background:#dc2626;border-radius:4px;"></div></div><span style="font-size:.68rem;color:#dc2626;font-weight:700;">R '+r.pR+'%</span></div>'+
+      (r.hasCmp?('<div style="font-size:.68rem;color:#6b7280;margin-top:3px;">Grupo B · S '+r.pSB+'% · R '+r.pRB+'%</div>'):'')+
+    '</div>').join('');
+  box.appendChild(w);
+}
+  
+  function setAdvTab(t,el){
   advTab=t;
   document.querySelectorAll('.adv-tab').forEach(x=>{x.style.background='#fff';x.style.color='#374151';x.style.borderColor='#e2e8f0';});
   el.style.background='#7c3aed'; el.style.color='#fff'; el.style.borderColor='#7c3aed';
@@ -1611,25 +1681,9 @@ function applyAdvMulti(){
   </div>`;
   box.appendChild(bannerDiv);
   
-  const selectedHospitals=getAdvHospitals();
+const selectedHospitals=getAdvHospitals();
   if(selectedHospitals.length>1){
-    const hWrap=document.createElement('div');
-    hWrap.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;';
-    selectedHospitals.forEach(hid=>{
-      const rawH=getRawSliceForHospital(hid);
-      const hospObj=getSRIObjFromRaw(rawH,'hospital');
-      if(!hospObj) return;
-      const d1=sriMergedRaw(hospObj,advSetA);
-      const d2=hasCmp?sriMergedRaw(hospObj,advSetB):null;
-      if(!d1||!d1.length) return;
-      const card=document.createElement('div');
-      card.style.cssText='background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.07);';
-      const cid='adv-hosp-'+hid.replace(/[^A-Za-z0-9]/g,'-')+'-'+Math.random().toString(36).slice(2,7);
-      card.innerHTML='<div style="font-size:.78rem;font-weight:800;color:#1e293b;margin-bottom:8px;">🏥 '+getHospitalDisplayName(hid)+'</div><div id="'+cid+'"></div>';
-      hWrap.appendChild(card);
-      buildSRIChart(d1,d2,cid,'🔵 Grupo A: '+labelA,hasCmp?('🟢 Grupo B: '+labelB):null);
-    });
-    if(hWrap.children.length) box.appendChild(hWrap);
+    renderAdvHospitalsComparison(selectedHospitals,labelA,labelB,hasCmp,box);
   }
 
   
