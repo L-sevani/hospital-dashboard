@@ -35,6 +35,11 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .cmp-year-head{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;}
 .cmp-months{display:flex;gap:6px;flex-wrap:wrap;padding-top:6px;}
 .cmp-toggle{padding:4px 10px;border-radius:16px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:.72rem;cursor:pointer;}
+.adv-per-summary{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 4px;}
+.adv-per-wrap{display:flex;flex-direction:column;gap:6px;max-height:170px;overflow:auto;border:1px solid #e2e8f0;border-radius:8px;padding:8px;background:#f8fafc;min-width:320px;}
+.adv-per-year{border:1px solid #e2e8f0;border-radius:7px;background:#fff;padding:6px;}
+.adv-per-year-head{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;}
+.adv-per-months{display:flex;gap:6px;flex-wrap:wrap;padding-top:6px;}
 .ppills{display:flex;gap:5px;flex-wrap:wrap;}
 .adv-panel{background:#f1f5f9;border-bottom:2px solid #e2e8f0;padding:14px 32px;}
 .adv-pcheck{display:flex;align-items:center;gap:4px;cursor:pointer;padding:3px 10px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;font-size:.71rem;color:#374151;user-select:none;transition:all .12s;}
@@ -156,11 +161,11 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
     <div style="display:flex;gap:18px;flex-wrap:wrap;">
       <div>
         <div style="font-size:.7rem;font-weight:700;color:#1d4ed8;text-transform:uppercase;margin-bottom:5px;">Grupo A (azul)</div>
-        <select id="adv-yearA" class="csel" onchange="buildAdvPills()" style="margin-bottom:6px;min-width:150px;"></select><div id="adv-perA" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        <select id="adv-yearA" class="csel" onchange="buildAdvPills()" style="margin-bottom:6px;min-width:150px;"></select><div id="adv-perA"></div>
       </div>
       <div>
         <div style="font-size:.7rem;font-weight:700;color:#15803d;text-transform:uppercase;margin-bottom:5px;">Grupo B (verde)</div>
-        <select id="adv-yearB" class="csel" onchange="buildAdvPills()" style="margin-bottom:6px;min-width:150px;"></select><div id="adv-perB" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        <select id="adv-yearB" class="csel" onchange="buildAdvPills()" style="margin-bottom:6px;min-width:150px;"></select><div id="adv-perB"></div>
       </div>
     </div>
     <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -1635,20 +1640,108 @@ function buildAdvPills(){
     sel.value=[...sel.options].some(o=>o.value===prev)?prev:def;
   };
   fillYear(yA,'ALL'); fillYear(yB,'ALL');
+  
+  const paintSummary=(holder,set,cls)=>{
+    const sum=document.createElement('div');
+    sum.className='adv-per-summary';
+    const picks=set.filter(Boolean);
+    if(!picks.length){
+      sum.innerHTML='<span class="cmp-chip-muted">Sin selección</span>';
+      holder.appendChild(sum);
+      return;
+    }
+    picks.slice(0,6).forEach(v=>{
+      const sp=document.createElement('span');
+      sp.className='cmp-chip';
+      sp.style.fontSize='.66rem';
+      sp.textContent=fmtP(v);
+      sum.appendChild(sp);
+    });
+    if(picks.length>6){
+      const more=document.createElement('span');
+      more.className='cmp-chip-muted';
+      more.textContent='+'+(picks.length-6)+' más';
+      sum.appendChild(more);
+    }
+    holder.appendChild(sum);
+  };
+
+  const toggleValue=(set,v)=>{
+    const i=set.indexOf(v);
+    if(i>=0) set.splice(i,1); else set.push(v);
+  };
 
   const buildChecks=(gid,set,cls,yearSel)=>{
     const el=document.getElementById('adv-per'+gid); if(!el) return;
     el.innerHTML='';
     const y=(yearSel&&yearSel.value)||'ALL';
-    const vals=(y==='ALL')?['TODOS',...RAW.años,...RAW.periodos]:['TODOS',y,...monthsForYear(y)];
-    vals.forEach(v=>{
-      const lb=document.createElement('label'); lb.className='adv-pcheck'+(set.includes(v)?(' ck'+cls):'');
+    paintSummary(el,set,cls);
+
+    const quick=document.createElement('div');
+    quick.style.cssText='display:flex;gap:6px;flex-wrap:wrap;';
+    const allOpt=['TODOS',...(y==='ALL'?[]:[y])];
+    allOpt.forEach(v=>{
+      const lb=document.createElement('label');
+      lb.className='adv-pcheck'+(set.includes(v)?(' ck'+cls):'');
+      lb.style.fontSize='.71rem';
       const ck=document.createElement('input'); ck.type='checkbox'; ck.checked=set.includes(v); ck.style.marginRight='4px';
-      ck.onchange=()=>{ const i=set.indexOf(v); if(i>=0)set.splice(i,1); else set.push(v); buildAdvPills(); updateAdvStatus(); };
+      ck.onchange=()=>{ toggleValue(set,v); buildAdvPills(); updateAdvStatus(); };
       lb.appendChild(ck);
       const sp=document.createElement('span'); sp.textContent=fmtP(v); lb.appendChild(sp);
-      el.appendChild(lb);
+      quick.appendChild(lb);
     });
+    el.appendChild(quick);
+
+    const list=document.createElement('div');
+    list.className='adv-per-wrap';
+    const groupYears=(y==='ALL')?years:[y];
+    groupYears.forEach(yy=>{
+      const wrap=document.createElement('div');
+      wrap.className='adv-per-year';
+      const months=monthsForYear(yy);
+      const head=document.createElement('div');
+      head.className='adv-per-year-head';
+      head.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><label class="adv-pcheck${set.includes(yy)?(' ck'+cls):''}" style="font-size:.71rem;padding:3px 8px;"><input type="checkbox" value="${yy}" ${set.includes(yy)?'checked':''}> <span>${yy}</span></label><span style="font-size:.66rem;color:#64748b;">${months.length} mes(es)</span></div><span style="font-size:.66rem;color:#94a3b8;">▾</span>`;
+      wrap.appendChild(head);
+
+      const mWrap=document.createElement('div');
+      mWrap.className='adv-per-months';
+      if(y==='ALL') mWrap.style.display='none';
+      months.forEach(v=>{
+        const lb=document.createElement('label');
+        lb.className='adv-pcheck'+(set.includes(v)?(' ck'+cls):'');
+        lb.style.fontSize='.7rem';
+        lb.style.padding='3px 8px';
+        const ck=document.createElement('input'); ck.type='checkbox'; ck.checked=set.includes(v); ck.style.marginRight='4px';
+        ck.onchange=()=>{ toggleValue(set,v); buildAdvPills(); updateAdvStatus(); };
+        lb.appendChild(ck);
+        const sp=document.createElement('span'); sp.textContent=fmtP(v); lb.appendChild(sp);
+        mWrap.appendChild(lb);
+      });
+      wrap.appendChild(mWrap);
+      list.appendChild(wrap);
+
+      const yearCk=head.querySelector('input[type="checkbox"]');
+      if(yearCk){
+        yearCk.onchange=()=>{
+          const hasYear=set.includes(yy);
+          if(yearCk.checked && !hasYear) set.push(yy);
+          if(!yearCk.checked && hasYear) set.splice(set.indexOf(yy),1);
+          months.forEach(m=>{
+            const has=set.includes(m);
+            if(yearCk.checked && !has) set.push(m);
+            if(!yearCk.checked && has) set.splice(set.indexOf(m),1);
+          });
+          buildAdvPills(); updateAdvStatus();
+        };
+      }
+
+      head.addEventListener('click',(e)=>{
+        if(e.target.tagName==='INPUT' || e.target.closest('label')) return;
+        mWrap.style.display=mWrap.style.display==='none'?'flex':'none';
+      });
+    });
+    el.appendChild(list);
   };
   buildChecks('A',advSetA,'A',yA);
   buildChecks('B',advSetB,'B',yB);
