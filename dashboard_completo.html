@@ -844,6 +844,41 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   });
 }
 
+// ── COMPACT CHART (comparación rápida entre hospitales) ──
+function buildSRICompactChart(data, cid){
+  const el=document.getElementById(cid); if(!el) return;
+  if(!data||!data.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
+  const CH=180, YW=32, PADTOP=10, XLABELH=56;
+  const n=data.length;
+  const SLOT=Math.max(72,Math.min(110,Math.floor(560/Math.max(n,1))));
+  const BW=Math.max(28,Math.round(SLOT*0.52));
+  const slotPad=Math.round((SLOT-BW)/2);
+  const totalW=YW+n*SLOT+slotPad;
+  const totalH=PADTOP+CH+XLABELH;
+
+  let h=`<div style="width:100%;overflow-x:auto;">`;
+  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.66rem;color:#374151;">`;
+
+  [0,.2,.4,.6,.8,1].forEach(t=>{
+    const y=PADTOP+Math.round((1-t)*CH);
+    h+=`<div style="position:absolute;left:${YW}px;right:0;top:${y}px;border-top:1px solid ${t===0?'#94a3b8':'#e5e7eb'};"></div>`;
+    h+=`<div style="position:absolute;left:0;width:${YW-4}px;top:${y}px;transform:translateY(-50%);text-align:right;padding-right:4px;color:#6b7280;">${t===1?'1':t.toFixed(1)}</div>`;
+  });
+
+  data.forEach((d,i)=>{
+    const x=YW+i*SLOT+slotPad;
+    let yB=PADTOP+CH;
+    if(d.pS>0){const h2=Math.max(1,Math.round(d.pS*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#22c55e;"></div>`;}
+    if(d.pR>0){const h2=Math.max(1,Math.round(d.pR*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#ef4444;"></div>`;}
+    if(d.pI>0){const h2=Math.max(1,Math.round(d.pI*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#f59e0b;"></div>`;}
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${BW}px;text-align:center;font-size:.62rem;color:#6b7280;">${d.t||0}</div>`;
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;text-align:center;font-size:.64rem;color:#334155;white-space:normal;line-height:1.2;">${d.a}</div>`;
+  });
+
+  h+=`</div></div>`;
+  el.innerHTML=h;
+}
+
 // ── VERTICAL STACKED CHART (frecuencias) ──
 function buildFreqChart(data, cid){
   const el=document.getElementById(cid); if(!el) return;
@@ -1919,7 +1954,7 @@ function applyAdvAbx(){
         }
 
         const content=document.createElement('div');
-        content.style.cssText='display:flex;flex-direction:column;gap:16px;';
+        content.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;';
         chartRoot.appendChild(content);
 
         let rendered=0;
@@ -1951,11 +1986,11 @@ function applyAdvAbx(){
           if(!rowsByHospital.length) return;
           rendered++;
           const sgWrap=document.createElement('div');
-          sgWrap.style.cssText='border:1px solid #e2e8f0;border-radius:10px;padding:10px;';
+          sgWrap.style.cssText='border:1px solid #e2e8f0;border-radius:10px;padding:10px;background:#fff;';
           const sgCid='adv-abx-sg-cid-'+(idx++);
           sgWrap.innerHTML=`<div style="font-size:.74rem;font-weight:700;color:#374151;margin-bottom:6px;">${sgName(sg)}</div><div id="${sgCid}"></div>`;
           content.appendChild(sgWrap);
-          buildSRIChart(rowsByHospital, null, sgCid, fmtP(per));
+          buildSRICompactChart(rowsByHospital, sgCid);
         });
 
         if(!rendered){
@@ -2011,3 +2046,4 @@ initDashboard();
 </footer>
 </body>
 </html>
+
