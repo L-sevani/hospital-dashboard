@@ -128,14 +128,14 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <span class="clabel">Período principal:</span>
-    <select class="csel" id="main-year-sel" onchange="onMainYearChange()"></select>
-    <select class="csel" id="main-period-sel" onchange="onMainPeriodChange()"></select>
+    <select class="csel" id="main-year-sel" onchange="onMainYearChange()"><option>Cargando...</option></select>
+    <select class="csel" id="main-period-sel" onchange="onMainPeriodChange()"><option>Cargando...</option></select>
   </div>
 
  <div id="compare-ctrl" class="cmp-panel">
     <div class="cmp-top">
       <span class="clabel">Comparar con:</span>
-      <select class="csel" id="cmp-year-sel" onchange="onCmpYearChange()"></select>
+      <select class="csel" id="cmp-year-sel" onchange="onCmpYearChange()"><option>Cargando...</option></select>
       <button type="button" class="cmp-toggle" id="cmp-toggle" onclick="toggleCmpList()">Ocultar lista</button>
       <span style="font-size:.7rem;color:#94a3b8;font-style:italic;">Puedes seleccionar uno o varios</span>
     </div>
@@ -1048,10 +1048,21 @@ function buildMainPeriodOptions(){
 function buildCmpChecks(){
   const ySel=document.getElementById('cmp-year-sel');
   const box=document.getElementById('cmp-checks');
+  const toggleBtn=document.getElementById('cmp-toggle');
   if(!ySel||!box) return;
   const y=ySel.value;
   const selected=(p2==='__adv_B__'?(advSetB||[]):(p2?[p2]:[])).filter(v=>v!==p1);
   const years=(y==='ALL')?getYears():[y];
+  if(!years.length){
+    box.innerHTML='';
+    box.style.display='none';
+    if(toggleBtn) toggleBtn.style.display='none';
+    const s=document.getElementById('cmp-selected');
+    if(s) s.innerHTML='<span class="cmp-chip-muted">Cargando períodos…</span>';
+    return;
+  }
+  box.style.display='flex';
+  if(toggleBtn) toggleBtn.style.display='inline-block';
   box.innerHTML='';
 
   years.forEach(yy=>{
@@ -1163,6 +1174,14 @@ function renderPills(){
   const years=getYears();
   const yMain=document.getElementById('main-year-sel');
   const yCmp=document.getElementById('cmp-year-sel');
+  if(!years.length){
+    if(yMain) yMain.innerHTML='<option value="ALL">Cargando...</option>';
+    const pMain=document.getElementById('main-period-sel');
+    if(pMain) pMain.innerHTML='<option value="TODOS">Cargando...</option>';
+    if(yCmp) yCmp.innerHTML='<option value="ALL">Cargando...</option>';
+    buildCmpChecks();
+    return;
+  }
   if(yMain){
     const prev=yMain.value||'ALL';
     yMain.innerHTML='';
