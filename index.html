@@ -2186,15 +2186,49 @@ function applyAdvAbx(){
 applyMobileUI();
 if(window.addEventListener) window.addEventListener('resize', ()=>{ applyMobileUI(); renderAll(); });
 
+function setLoadErrorUI(msg){
+  const hp=document.getElementById('hperiodo');
+  if(hp) hp.textContent='IMSS · Error de carga';
+  const chart=document.getElementById('chart-hospital');
+  if(chart) chart.innerHTML='<div class="nodata-box">⚠️ '+msg+'</div>';
+  const txt=document.getElementById('hospital-text-box');
+  if(txt) txt.innerHTML='<p><strong>Sin datos.</strong> Revisa la ruta de <code>dashboard_data.json</code> y que el servidor lo sirva correctamente.</p>';
+}
+
+async function fetchDashboardData(){
+  const stamp='?ts='+Date.now();
+  const basePath=(window.location.pathname||'').replace(/[^/]*$/, '');
+  const tries=[
+    'dashboard_data.json'+stamp,
+    './dashboard_data.json'+stamp,
+    basePath+'dashboard_data.json'+stamp,
+    '/dashboard_data.json'+stamp
+  ];
+  let lastErr=null;
+  for(const url of [...new Set(tries)]){
+    try{
+      const resp=await fetch(url,{cache:'no-store'});
+      if(!resp.ok) throw new Error(`HTTP ${resp.status} @ ${url}`);
+      return await resp.json();
+    }catch(err){ lastErr=err; }
+  }
+  throw lastErr||new Error('No se pudo cargar dashboard_data.json');
+}
+  
 async function initDashboard(){
+  let loadFailed=false;
   try {
-    const resp = await fetch('dashboard_data.json?ts=' + Date.now(), { cache: 'no-store' });
-    if (!resp.ok) throw new Error('No se pudo cargar dashboard_data.json');
-    const loaded = await resp.json();
+    const loaded = await fetchDashboardData();
     RAW = normalizeLoadedRAW(loaded);
+    if(!RAW || !RAW.periodos || !RAW.periodos.length){
+      loadFailed=true;
+      throw new Error('El JSON cargó pero no contiene períodos válidos.');
+    }
   } catch (e) {
+    loadFailed=true;
     console.error('Error cargando datos del dashboard:', e);
     RAW = normalizeLoadedRAW({});
+    setLoadErrorUI('No se pudieron cargar períodos desde dashboard_data.json.');
   }
 
   activeHospital = (RAW.hospitales && RAW.hospitales[0]) || activeHospital;
@@ -2212,6 +2246,7 @@ async function initDashboard(){
   renderPills();
   renderAll();
   buildAdvHospitalSelector();
+  if(loadFailed) setLoadErrorUI('No se pudieron cargar períodos desde dashboard_data.json.');
 }
 
 initDashboard();
