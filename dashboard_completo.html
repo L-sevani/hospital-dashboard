@@ -1873,6 +1873,7 @@ function clearAdv(){
 function applyAdvAbx(){
   const abx=[...document.querySelectorAll('#adv-abx-dd-panel input:checked')].map(i=>i.value);
   const pers=[...document.querySelectorAll('#adv-per-dd-panel input:checked')].map(i=>i.value);
+  const selectedHospitals=getAdvHospitals();
   if(!abx.length){alert('Selecciona al menos un antibiótico.');return;}
   if(!pers.length){alert('Selecciona al menos un período.');return;}
   const box=document.getElementById('adv-abx-chart');
@@ -1895,34 +1896,70 @@ function applyAdvAbx(){
   abx.forEach(abxName=>{
     pers.forEach(per=>{
       DIMS.forEach(dim=>{
-        const rawSec=getSRIObj(dim.key);
-        if(!rawSec||!rawSec.subgrupos) return;
-
-        const labeled=[];
-        rawSec.subgrupos.forEach(sg=>{
-          const d=rawSec.data[sg]; if(!d) return;
-          const abxRows=sriForPeriod(d,per)||[];
-          const found=abxRows.find(r=>normalizeAbxName(r.a)===abxName);
-          if(found&&found.t>0){
-            labeled.push({a:sgName(sg),c:null,t:found.t,S:found.S,R:found.R,I:found.I,
-              pS:found.t?found.S/found.t:0,pR:found.t?found.R/found.t:0,pI:found.t?found.I/found.t:0});
-          }
+        const subgroupSet=new Set();
+        selectedHospitals.forEach(hid=>{
+          const rawH=getRawSliceForHospital(hid);
+          const secObj=getSRIObjFromRaw(rawH,dim.key);
+          (secObj&&secObj.subgrupos||[]).forEach(sg=>subgroupSet.add(sg));
         });
-
-        labeled.sort((a,b)=> b.pS-a.pS || a.pR-b.pR || a.pI-b.pI);
+        const subgroups=[...subgroupSet];
 
         const wrap=document.createElement('div');
         wrap.style.cssText='background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 6px rgba(0,0,0,.07);';
         const cid='adv-abx-cid-'+(idx++);
         wrap.innerHTML=`<div style="font-size:.8rem;font-weight:700;color:#5b21b6;margin-bottom:4px;">${dim.label}</div>`+
-          `<div style="font-size:.71rem;color:#64748b;margin-bottom:10px;">💊 ${abxName} · ${fmtP(per)}</div>`+
+          `<div style="font-size:.71rem;color:#64748b;margin-bottom:10px;">💊 ${abxName} · ${fmtP(per)} · ${selectedHospitals.length} hospital(es)</div>`+
           `<div id="${cid}"></div>`;
         box.appendChild(wrap);
 
-        if(!labeled.length){
+        const chartRoot=document.getElementById(cid);
+        if(!subgroups.length){
+          chartRoot.innerHTML='<div style="color:#f59e0b;font-size:.78rem;padding:6px;">⚠️ Sin subgrupos disponibles para comparar.</div>';
+          return;
+        }
+
+        const content=document.createElement('div');
+        content.style.cssText='display:flex;flex-direction:column;gap:16px;';
+        chartRoot.appendChild(content);
+
+        let rendered=0;
+        subgroups.forEach(sg=>{
+          const rowsByHospital=[];
+          selectedHospitals.forEach(hid=>{
+            const rawH=getRawSliceForHospital(hid);
+            const secObj=getSRIObjFromRaw(rawH,dim.key);
+            const d=secObj&&secObj.data?secObj.data[sg]:null;
+            if(!d) return;
+            const abxRows=sriForPeriod(d,per)||[];
+            const found=abxRows.find(r=>normalizeAbxName(r.a)===abxName);
+            if(found&&found.t>0){
+              const hLabel=getHospitalDisplayName(hid);
+              rowsByHospital.push({
+                a:hLabel,
+                c:null,
+                t:found.t,
+                S:found.S,
+                R:found.R,
+                I:found.I,
+                pS:found.t?found.S/found.t:0,
+                pR:found.t?found.R/found.t:0,
+                pI:found.t?found.I/found.t:0
+              });
+            }
+          });
+
+          if(!rowsByHospital.length) return;
+          rendered++;
+          const sgWrap=document.createElement('div');
+          sgWrap.style.cssText='border:1px solid #e2e8f0;border-radius:10px;padding:10px;';
+          const sgCid='adv-abx-sg-cid-'+(idx++);
+          sgWrap.innerHTML=`<div style="font-size:.74rem;font-weight:700;color:#374151;margin-bottom:6px;">${sgName(sg)}</div><div id="${sgCid}"></div>`;
+          content.appendChild(sgWrap);
+          buildSRIChart(rowsByHospital, null, sgCid, fmtP(per));
+        });
+
+        if(!rendered){
           document.getElementById(cid).innerHTML='<div style="color:#f59e0b;font-size:.78rem;padding:6px;">⚠️ Sin registros de <strong>'+abxName+'</strong> en este período.</div>';
-        } else {
-          buildSRIChart(labeled, null, cid, fmtP(per));
         }
       });
     });
