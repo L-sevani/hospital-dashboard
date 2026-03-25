@@ -25,6 +25,16 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .controls{background:#fff;border-bottom:1px solid #e2e8f0;padding:10px 32px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
 .clabel{font-size:.72rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
 .csel{padding:5px 11px;border-radius:6px;border:1px solid #e2e8f0;font-family:'DM Sans',sans-serif;font-size:.8rem;color:#1a1a2e;background:#f8fafc;cursor:pointer;}
+.cmp-panel{display:flex;flex-direction:column;gap:8px;min-width:min(100%,900px);}
+.cmp-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.cmp-summary{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.cmp-chip{font-size:.68rem;padding:2px 8px;border-radius:14px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+.cmp-chip-muted{font-size:.68rem;color:#64748b;font-style:italic;}
+.cmp-groups{display:flex;flex-direction:column;gap:6px;max-height:190px;overflow:auto;border:1px solid #e2e8f0;border-radius:8px;padding:8px;background:#f8fafc;}
+.cmp-year{border:1px solid #e2e8f0;border-radius:7px;background:#fff;padding:6px;}
+.cmp-year-head{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;}
+.cmp-months{display:flex;gap:6px;flex-wrap:wrap;padding-top:6px;}
+.cmp-toggle{padding:4px 10px;border-radius:16px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:.72rem;cursor:pointer;}
 .ppills{display:flex;gap:5px;flex-wrap:wrap;}
 .adv-panel{background:#f1f5f9;border-bottom:2px solid #e2e8f0;padding:14px 32px;}
 .adv-pcheck{display:flex;align-items:center;gap:4px;cursor:pointer;padding:3px 10px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;font-size:.71rem;color:#374151;user-select:none;transition:all .12s;}
@@ -103,25 +113,21 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 </div>
 
 <div class="controls" id="controls-bar">
-  <div style="display:flex;align-items:center;gap:8px;">
-    <span class="clabel">Ver por:</span>
-    <select class="csel" onchange="setMode(this.value)">
-      <option value="mes">Mes</option>
-      <option value="año">Año</option>
-    </select>
-  </div>
-
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <span class="clabel">Período principal:</span>
     <select class="csel" id="main-year-sel" onchange="onMainYearChange()"></select>
     <select class="csel" id="main-period-sel" onchange="onMainPeriodChange()"></select>
   </div>
 
-  <div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;" id="compare-ctrl">
-    <span class="clabel">Comparar con:</span>
-    <select class="csel" id="cmp-year-sel" onchange="onCmpYearChange()"></select>
-    <div id="cmp-checks" style="display:flex;gap:6px;flex-wrap:wrap;max-width:100%;"></div>
-    <span style="font-size:.7rem;color:#94a3b8;font-style:italic;">Puedes seleccionar uno o varios</span>
+  <div id="compare-ctrl" class="cmp-panel">
+    <div class="cmp-top">
+      <span class="clabel">Comparar con:</span>
+      <select class="csel" id="cmp-year-sel" onchange="onCmpYearChange()"></select>
+      <button type="button" class="cmp-toggle" id="cmp-toggle" onclick="toggleCmpList()">Ocultar lista</button>
+      <span style="font-size:.7rem;color:#94a3b8;font-style:italic;">Puedes seleccionar uno o varios</span>
+    </div>
+    <div id="cmp-selected" class="cmp-summary"></div>
+    <div id="cmp-checks" class="cmp-groups"></div>
   </div>
 
   <button onclick="toggleCompare()" id="btn-compare-mob" style="display:none;padding:5px 12px;border-radius:20px;font-size:.74rem;font-weight:500;cursor:pointer;border:1px solid #e2e8f0;background:#f8fafc;color:#374151;">⇄ Comparar</button>
@@ -1019,28 +1025,51 @@ function buildCmpChecks(){
   const box=document.getElementById('cmp-checks');
   if(!ySel||!box) return;
   const y=ySel.value;
-  const vals=[];
-  if(y==='ALL'){
-    getYears().forEach(yy=>vals.push(yy));
-    (RAW.periodos||[]).forEach(m=>vals.push(m));
-  }else{
-    vals.push(y);
-    monthsForYear(y).forEach(m=>vals.push(m));
-  }
   const selected=(p2==='__adv_B__'?(advSetB||[]):(p2?[p2]:[])).filter(v=>v!==p1);
+  const years=(y==='ALL')?getYears():[y];
   box.innerHTML='';
-  vals.forEach(v=>{
-    if(v===p1) return;
-    const lb=document.createElement('label');
-    lb.className='adv-pcheck';
-    lb.style.fontSize='.72rem';
-    lb.style.padding='4px 10px';
-    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=v; ck.checked=selected.includes(v);
-    ck.onchange=onCmpChecksChange;
-    lb.appendChild(ck);
-    const sp=document.createElement('span'); sp.textContent=fmtP(v); lb.appendChild(sp);
-    box.appendChild(lb);
+
+   years.forEach(yy=>{
+    const yearWrap=document.createElement('div');
+    yearWrap.className='cmp-year';
+    const months=monthsForYear(yy).filter(m=>m!==p1);
+    const yearId='cmp-year-'+yy;
+
+    const head=document.createElement('div');
+    head.className='cmp-year-head';
+    head.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><label class="adv-pcheck" style="font-size:.72rem;padding:3px 8px;"><input type="checkbox" id="${yearId}" value="${yy}" ${selected.includes(yy)?'checked':''}> <span>${yy}</span></label><span style="font-size:.68rem;color:#64748b;">${months.length} mes(es)</span></div><span style="font-size:.66rem;color:#94a3b8;">▾</span>`;
+    yearWrap.appendChild(head);
+
+    const monthsWrap=document.createElement('div');
+    monthsWrap.className='cmp-months';
+    months.forEach(m=>{
+      const lb=document.createElement('label');
+      lb.className='adv-pcheck';
+      lb.style.fontSize='.71rem';
+      lb.style.padding='3px 8px';
+      const ck=document.createElement('input'); ck.type='checkbox'; ck.value=m; ck.checked=selected.includes(m);
+      ck.onchange=onCmpChecksChange;
+      lb.appendChild(ck);
+      const sp=document.createElement('span'); sp.textContent=fmtP(m); lb.appendChild(sp);
+      monthsWrap.appendChild(lb);
+    });
+    yearWrap.appendChild(monthsWrap);
+    box.appendChild(yearWrap);
+
+    const yearCk=head.querySelector(`#${yearId}`);
+    if(yearCk){
+      yearCk.onchange=()=>{
+        monthsWrap.querySelectorAll('input[type="checkbox"]').forEach(ck=>{ ck.checked=yearCk.checked; });
+        onCmpChecksChange();
+      };
+    }
+
+    head.addEventListener('click',(e)=>{
+      if(e.target.tagName==='INPUT' || e.target.tagName==='LABEL' || e.target.closest('label')) return;
+      monthsWrap.style.display=monthsWrap.style.display==='none'?'flex':'none';
+    });
   });
+  renderCmpSummary();
 }
 
 function onMainYearChange(){
