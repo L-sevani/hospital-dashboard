@@ -1098,9 +1098,42 @@ function onCmpChecksChange(){
   if(!vals.length){ p2=null; }
   else if(vals.length===1){ p2=vals[0]; }
   else { advSetB=[...vals]; p2='__adv_B__'; }
+  renderCmpSummary();
   renderAll();
 }
 
+  function renderCmpSummary(){
+  const el=document.getElementById('cmp-selected');
+  if(!el) return;
+  const vals=(p2==='__adv_B__'?(advSetB||[]):(p2?[p2]:[])).filter(v=>v!==p1);
+  el.innerHTML='';
+  if(!vals.length){
+    el.innerHTML='<span class="cmp-chip-muted">Sin períodos seleccionados para comparar.</span>';
+    return;
+  }
+  vals.slice(0,8).forEach(v=>{
+    const sp=document.createElement('span');
+    sp.className='cmp-chip';
+    sp.textContent=fmtP(v);
+    el.appendChild(sp);
+  });
+  if(vals.length>8){
+    const more=document.createElement('span');
+    more.className='cmp-chip-muted';
+    more.textContent='+'+(vals.length-8)+' más';
+    el.appendChild(more);
+  }
+}
+
+function toggleCmpList(){
+  const box=document.getElementById('cmp-checks');
+  const btn=document.getElementById('cmp-toggle');
+  if(!box||!btn) return;
+  const hidden=box.style.display==='none';
+  box.style.display=hidden?'flex':'none';
+  btn.textContent=hidden?'Ocultar lista':'Mostrar lista';
+}
+  
 function renderPills(){
   const years=getYears();
   const yMain=document.getElementById('main-year-sel');
@@ -2089,6 +2122,7 @@ async function initDashboard(){
     sel.value = activeHospital;
   }
 
+  mode='mes'; p1='TODOS'; p2=null;
   setHospital(activeHospital);
   renderPills();
   renderAll();
