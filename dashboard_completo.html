@@ -136,8 +136,8 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
     </div>
     <span style="font-size:.69rem;color:#9333ea;font-style:italic;margin-left:4px;" id="adv-hint">Selecciona períodos para el Grupo A y Grupo B</span>
   </div>
-  <div id="adv-hosp-select" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px;"></div>
- <div id="adv-hosp-opts" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+  <div id="adv-hosp-select" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px;"></div> 
+  <div id="adv-hosp-opts" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
     <span style="font-size:.72rem;color:#64748b;font-weight:700;text-transform:uppercase;">Vista:</span>
     <select id="adv-dim-sel" class="csel" style="min-width:170px;">
       <option value="hospital">Hospital</option><option value="servicios">Servicio</option><option value="infecciones">Infección</option><option value="cultivos">Cultivo</option><option value="micros">Microorganismo</option>
@@ -1096,7 +1096,7 @@ function renderHospitalText(){
     .map(r=>lbl(r));
   const topR=topRList.length?topRList.join(', '):'Ninguno';
 
- // N = total de antibiogramas del hospital en el período seleccionado
+  // N = total de antibiogramas del hospital en el período seleccionado
   const N=hospRows.reduce((sum,r)=>sum+(r.t||0),0);
 
   box.innerHTML=`<p>
@@ -1517,7 +1517,7 @@ function renderAdvHospitalsComparison(selectedHospitals,labelA,labelB,hasCmp,box
   box.appendChild(w);
 }
   
-  function setAdvTab(t,el){
+function setAdvTab(t,el){
   advTab=t;
   document.querySelectorAll('.adv-tab').forEach(x=>{x.style.background='#fff';x.style.color='#374151';x.style.borderColor='#e2e8f0';});
   el.style.background='#7c3aed'; el.style.color='#fff'; el.style.borderColor='#7c3aed';
@@ -1680,12 +1680,12 @@ function applyAdvMulti(){
     </div>
   </div>`;
   box.appendChild(bannerDiv);
-  
-const selectedHospitals=getAdvHospitals();
+
+  const selectedHospitals=getAdvHospitals();
   if(selectedHospitals.length>1){
     renderAdvHospitalsComparison(selectedHospitals,labelA,labelB,hasCmp,box);
   }
-
+  
   
   // ── TABLA RESUMEN (solo si hay Grupo B) ──
   if(hasCmp){
@@ -1774,6 +1774,8 @@ const selectedHospitals=getAdvHospitals();
     {key:'micros',     label:'🔬 Por Microorganismo', sub:true},
   ];
 
+  const showPerHospitalCharts=selectedHospitals.length>1;
+
   SECS.forEach(function(sec,idx){
     var raw=getSRIObj(sec.key); if(!raw) return;
     var wrap=document.createElement('div');
@@ -1785,25 +1787,49 @@ const selectedHospitals=getAdvHospitals();
     if(!sec.sub){
       var cid='adv-m-cid-'+idx;
       wrap.innerHTML='<div style="font-size:.82rem;font-weight:700;color:#1a2035;margin-bottom:4px;">'+sec.label+'</div>'
-        +(hasCmp?'<div style="font-size:.7rem;color:#6b7280;margin-bottom:10px;">Barra izquierda (claro) = Grupo A &nbsp;·&nbsp; Barra derecha (oscuro) = Grupo B</div>':'')
-        +'<div id="'+cid+'"></div>';
+        +(showPerHospitalCharts?'<div style="font-size:.7rem;color:#6b7280;margin-bottom:10px;">Se muestran gráficas individuales por hospital seleccionado.</div>':'')
+        +(hasCmp?'<div style="font-size:.7rem;color:#6b7280;margin-bottom:12px;">Barra izquierda (claro) = Grupo A &nbsp;·&nbsp; Barra derecha (oscuro) = Grupo B</div>':'')
+        +'<div id="'+cid+'" style="display:flex;flex-direction:column;gap:12px;"></div>';
       box.appendChild(wrap);
-      buildSRIChart(sriMergedRaw(raw,advSetA), hasCmp?sriMergedRaw(raw,advSetB):null, cid, lA, lB);
+      var hospCont=document.getElementById(cid);
+      if(showPerHospitalCharts){
+        selectedHospitals.forEach(function(hid,hi){
+          var rawH=getRawSliceForHospital(hid); if(!rawH) return;
+          var hospObj=getSRIObjFromRaw(rawH,'hospital'); if(!hospObj) return;
+          var d1h=sriMergedRaw(hospObj,advSetA); if(!d1h||!d1h.length) return;
+          var d2h=hasCmp?sriMergedRaw(hospObj,advSetB):null;
+          var hcid='adv-m-cid-'+idx+'-'+hi;
+          var card=document.createElement('div');
+          card.style.cssText='border:1px solid #e2e8f0;border-radius:10px;padding:10px;';
+          card.innerHTML='<div style="font-size:.74rem;font-weight:700;color:#1e293b;margin-bottom:7px;">🏥 '+getHospitalDisplayName(hid)+'</div><div id="'+hcid+'"></div>';
+          hospCont.appendChild(card);
+          buildSRIChart(d1h,d2h,hcid,lA,lB);
+        });
+        if(!hospCont.children.length) hospCont.innerHTML='<div style="color:#f59e0b;font-size:.78rem;padding:6px;">⚠️ Sin datos por hospital para este período.</div>';
+      }else{
+        buildSRIChart(sriMergedRaw(raw,advSetA), hasCmp?sriMergedRaw(raw,advSetB):null, cid, lA, lB);
+      }
     } else {
       wrap.innerHTML='<div style="font-size:.82rem;font-weight:700;color:#1a2035;margin-bottom:4px;">'+sec.label+'</div>'
         +(hasCmp?'<div style="font-size:.7rem;color:#6b7280;margin-bottom:12px;">Barra izquierda (claro) = Grupo A &nbsp;·&nbsp; Barra derecha (oscuro) = Grupo B</div>':'')
         +'<div id="adv-m-sgs-'+idx+'" style="display:flex;flex-direction:column;gap:16px;"></div>';
       box.appendChild(wrap);
       var sgCont=document.getElementById('adv-m-sgs-'+idx);
-      raw.subgrupos.forEach(function(sg,si){
-        var d=raw.data[sg]; if(!d) return;
-        var d1=sriMergedRaw(d,advSetA); if(!d1||!d1.length) return;
-        var d2=hasCmp?sriMergedRaw(d,advSetB):null;
+      var subgrupos=showPerHospitalCharts?Array.from(new Set(selectedHospitals.flatMap(function(hid){
+        var rawH=getRawSliceForHospital(hid);
+        var secH=getSRIObjFromRaw(rawH,sec.key);
+        return (secH&&secH.subgrupos)?secH.subgrupos:[];
+      }))):raw.subgrupos;
+      subgrupos.forEach(function(sg,si){
+        var d=raw.data[sg];
+        var d1=d?sriMergedRaw(d,advSetA):[];
+        var d2=(d&&hasCmp)?sriMergedRaw(d,advSetB):null;
+        if(!showPerHospitalCharts&&(!d1||!d1.length)) return;
         var cid='adv-m-sg-'+idx+'-'+si;
         var sgWrap=document.createElement('div');
         // Mini delta badge if comparing
         var badge='';
-        if(hasCmp&&d2&&d2.length){
+        if(!showPerHospitalCharts&&hasCmp&&d2&&d2.length){
           var totA=d1.reduce((s,x)=>s+x.t,0), totB=d2.reduce((s,x)=>s+x.t,0);
           var rA=totA>0?Math.round(d1.reduce((s,x)=>s+x.R,0)/totA*100):0;
           var rB=totB>0?Math.round(d2.reduce((s,x)=>s+x.R,0)/totB*100):0;
@@ -1814,9 +1840,28 @@ const selectedHospitals=getAdvHospitals();
         }
         sgWrap.innerHTML='<div style="display:flex;align-items:center;margin-bottom:6px;">'
           +'<div style="font-size:.74rem;font-weight:600;color:#5b21b6;border-left:3px solid #7c3aed;padding-left:8px;">'+sgName(sg)+'</div>'+badge+'</div>'
-          +'<div id="'+cid+'"></div>';
+          +'<div id="'+cid+'" style="display:flex;flex-direction:column;gap:10px;"></div>';
         sgCont.appendChild(sgWrap);
-        buildSRIChart(d1, d2, cid, lA, lB);
+         if(showPerHospitalCharts){
+          var hospPerSg=document.getElementById(cid);
+          selectedHospitals.forEach(function(hid,hi){
+            var rawH=getRawSliceForHospital(hid); if(!rawH) return;
+            var secObj=getSRIObjFromRaw(rawH,sec.key);
+            var dSg=(secObj&&secObj.data)?secObj.data[sg]:null;
+            var h1=dSg?sriMergedRaw(dSg,advSetA):[];
+            if(!h1||!h1.length) return;
+            var h2=(dSg&&hasCmp)?sriMergedRaw(dSg,advSetB):null;
+            var hcid='adv-m-sg-'+idx+'-'+si+'-'+hi;
+            var card=document.createElement('div');
+            card.style.cssText='border:1px solid #e2e8f0;border-radius:9px;padding:8px;';
+            card.innerHTML='<div style="font-size:.72rem;font-weight:700;color:#1e293b;margin-bottom:6px;">🏥 '+getHospitalDisplayName(hid)+'</div><div id="'+hcid+'"></div>';
+            hospPerSg.appendChild(card);
+            buildSRIChart(h1,h2,hcid,lA,lB);
+          });
+          if(!hospPerSg.children.length) sgWrap.remove();
+        }else{
+          buildSRIChart(d1, d2, cid, lA, lB);
+        }
       });
       if(!sgCont.children.length) wrap.innerHTML+='<div style="color:#f59e0b;font-size:.78rem;padding:6px;">⚠️ Sin datos para este período.</div>';
     }
