@@ -635,11 +635,23 @@ function setHospital(h) {
 
 function fmtP(p){
   if(!p||p==='TODOS') return 'Todo el período';
-  if(p==='__adv_A__') return 'Grupo A ('+(advSetA||[]).map(x=>{if(!x||x==='TODOS')return 'Todo';if(x.length===4)return x;const[y,m]=x.split('-');return MONTHS[parseInt(m)]+' '+y;}).join(', ')+')';
-  if(p==='__adv_B__') return 'Grupo B ('+(advSetB||[]).map(x=>{if(!x||x==='TODOS')return 'Todo';if(x.length===4)return x;const[y,m]=x.split('-');return MONTHS[parseInt(m)]+' '+y;}).join(', ')+')';
+  if(p==='__adv_A__') return 'Grupo A ('+summarizePeriodSet(advSetA||[])+')';
+  if(p==='__adv_B__') return 'Grupo B ('+summarizePeriodSet(advSetB||[])+')';
   if(p.length===4) return p;
   const [y,m]=p.split('-');
   return MONTHS[parseInt(m)]+' '+y;
+}
+function summarizePeriodSet(set){
+  const vals=(set||[]).filter(Boolean);
+  if(!vals.length) return 'sin selección';
+  const years=vals.filter(v=>/^\d{4}$/.test(v)).length;
+  const months=vals.filter(v=>/^\d{4}-\d{2}$/.test(v)).length;
+  const all=vals.includes('TODOS')?1:0;
+  const parts=[];
+  if(all) parts.push('todo');
+  if(years) parts.push(`${years} año(s)`);
+  if(months) parts.push(`${months} mes(es)`);
+  return parts.join(' · ');
 }
 function getPeriods(){ return mode==='mes'?['TODOS',...RAW.periodos]:['TODOS',...RAW.años]; }
 
@@ -1641,7 +1653,7 @@ function buildAdvPills(){
   };
   fillYear(yA,'ALL'); fillYear(yB,'ALL');
   
-  const paintSummary=(holder,set,cls)=>{
+ const paintSummary=(holder,set,cls)=>{
     const sum=document.createElement('div');
     sum.className='adv-per-summary';
     const picks=set.filter(Boolean);
@@ -1650,19 +1662,7 @@ function buildAdvPills(){
       holder.appendChild(sum);
       return;
     }
-    picks.slice(0,6).forEach(v=>{
-      const sp=document.createElement('span');
-      sp.className='cmp-chip';
-      sp.style.fontSize='.66rem';
-      sp.textContent=fmtP(v);
-      sum.appendChild(sp);
-    });
-    if(picks.length>6){
-      const more=document.createElement('span');
-      more.className='cmp-chip-muted';
-      more.textContent='+'+(picks.length-6)+' más';
-      sum.appendChild(more);
-    }
+    sum.innerHTML='<span class="cmp-chip-muted">Seleccionado: '+summarizePeriodSet(picks)+'</span>';
     holder.appendChild(sum);
   };
 
@@ -1675,7 +1675,7 @@ function buildAdvPills(){
     const el=document.getElementById('adv-per'+gid); if(!el) return;
     el.innerHTML='';
     const y=(yearSel&&yearSel.value)||'ALL';
-    paintSummary(el,set,cls);
+     paintSummary(el,set,cls);
 
     const quick=document.createElement('div');
     quick.style.cssText='display:flex;gap:6px;flex-wrap:wrap;';
@@ -1750,7 +1750,7 @@ function buildAdvPills(){
 
 function updateAdvStatus(){
   const st=document.getElementById('adv-multi-status');
-  if(st) st.textContent='A: ['+advSetA.map(fmtP).join(', ')+'] — B: ['+advSetB.map(fmtP).join(', ')+']';
+  if(st) st.textContent='A: '+summarizePeriodSet(advSetA)+' — B: '+summarizePeriodSet(advSetB);
 }
 
 function toggleAdvDd(kind){
@@ -1818,8 +1818,8 @@ function buildAdvAbxSelect(){
 
 function applyAdvMulti(){
   if(!advSetA.length){alert('Selecciona al menos un período para el Grupo A.');return;}
-  const st=document.getElementById('adv-multi-status');
-  const labelA=advSetA.map(fmtP).join(' + ');
+  const labelA=summarizePeriodSet(advSetA);
+  const labelB=advSetB.length?summarizePeriodSet(advSetB):null;
   const labelB=advSetB.length?advSetB.map(fmtP).join(' + '):null;
   if(st) st.textContent='✓ Comparando: '+labelA+(labelB?' vs '+labelB:'');
 
