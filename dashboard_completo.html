@@ -646,6 +646,17 @@ function summarizeAdvPeriods(periods){
   if(months) parts.push(`${months} mes(es)`);
   return parts.join(' · ');
 }
+function summarizeAdvYears(periods){
+  const vals=(periods||[]).filter(Boolean);
+  if(!vals.length) return 'sin selección';
+  if(vals.includes('TODOS')) return 'Todo el período';
+  const years=new Set();
+  vals.forEach(v=>{
+    if(/^\d{4}$/.test(v)) years.add(v);
+    else if(/^\d{4}-\d{2}$/.test(v)) years.add(v.split('-')[0]);
+  });
+  return [...years].sort().join(', ');
+}
 function getPeriods(){ return mode==='mes'?['TODOS',...RAW.periodos]:['TODOS',...RAW.años]; }
 
 // ── DATA HELPERS ──
@@ -1822,6 +1833,8 @@ function applyAdvMulti(){
   const st=document.getElementById('adv-multi-status');
   const labelA=summarizeAdvPeriods(advSetA);
   const labelB=advSetB.length?summarizeAdvPeriods(advSetB):null;
+  const yearsA=summarizeAdvYears(advSetA);
+  const yearsB=advSetB.length?summarizeAdvYears(advSetB):null;
   if(st) st.textContent='✓ Comparando: '+labelA+(labelB?' vs '+labelB:'');
 
   const box=document.getElementById('adv-multi-results');
@@ -1873,7 +1886,7 @@ function applyAdvMulti(){
 
   const selectedHospitals=getAdvHospitals();
   if(selectedHospitals.length>1){
-    renderAdvHospitalsComparison(selectedHospitals,labelA,labelB,hasCmp,box);
+    renderAdvHospitalsComparison(selectedHospitals,yearsA,yearsB,hasCmp,box);
   }
   
   
@@ -1971,8 +1984,8 @@ function applyAdvMulti(){
     var wrap=document.createElement('div');
     wrap.style.cssText='background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 6px rgba(0,0,0,.07);';
 
-    const lA='🔵 Grupo A: '+labelA;
-    const lB=hasCmp?('🟢 Grupo B: '+labelB):null;
+    const lA='🔵 Grupo A: '+yearsA;
+    const lB=hasCmp?('🟢 Grupo B: '+yearsB):null;
 
     if(!sec.sub){
       var cid='adv-m-cid-'+idx;
