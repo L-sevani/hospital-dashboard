@@ -1216,11 +1216,19 @@ function renderSg(section){
     });
   }
   const cid='csg-'+section;
+  const tid='tsg-'+section;
   const bodyEl=document.getElementById('body-'+section); if(!bodyEl) return;
-  bodyEl.innerHTML=`<div class="ccard"><h2>${sgName(sg)}</h2><div id="${cid}"></div></div>`;
+  bodyEl.innerHTML=`<div class="ccard"><h2>${sgName(sg)}</h2><div id="${cid}"></div><div id="${tid}" style="margin-top:14px;font-size:.82rem;line-height:1.75;color:#374151;border-left:4px solid #2563eb;padding-left:18px;"></div></div>`;
   const dataObj=raw.data[sg];
-  if(!dataObj){document.getElementById(cid).innerHTML='<div class="nodata-box">⚠️ Sin registros en la base actual.</div>';return;}
-  buildSRIChart(sriForPeriod(dataObj,p1), p2?sriForPeriod(dataObj,p2):null, cid, fmtP(p1), p2?fmtP(p2):null);
+  if(!dataObj){
+    document.getElementById(cid).innerHTML='<div class="nodata-box">⚠️ Sin registros en la base actual.</div>';
+    const tx=document.getElementById(tid); if(tx) tx.innerHTML='<p><strong>(N-0)</strong> Sin información disponible para este subgrupo en el período seleccionado.</p>';
+    return;
+  }
+  const rowsP=sriForPeriod(dataObj,p1)||[];
+  buildSRIChart(rowsP, p2?sriForPeriod(dataObj,p2):null, cid, fmtP(p1), p2?fmtP(p2):null);
+  const tx=document.getElementById(tid);
+  if(tx) tx.innerHTML=buildNarrativeHtml(rowsP, sgName(sg));
 }
 
 const FREQ_CFG=[
