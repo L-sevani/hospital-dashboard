@@ -63,7 +63,11 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .sections{padding:22px 32px;display:flex;flex-direction:column;gap:24px;}
 .section{display:none;}.section.active{display:flex;flex-direction:column;gap:18px;}
 
-.sgtabs{display:flex;gap:7px;flex-wrap:wrap;}
+.sgtabs{display:flex;flex-direction:column;gap:8px;}
+.sgtools{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.sgsearch{padding:6px 10px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#334155;font-size:.78rem;min-width:220px;max-width:100%;}
+.sgcount{font-size:.72rem;color:#64748b;font-weight:600;}
+.sgchiplist{display:flex;gap:7px;flex-wrap:wrap;max-height:148px;overflow:auto;padding:2px;}
 .sgtab{padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:500;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#374151;transition:all .15s;}
 .sgtab:hover{border-color:#2563eb;color:#2563eb;}
 .sgtab.active{background:#2563eb;color:#fff;border-color:#2563eb;}
@@ -1226,39 +1230,78 @@ function renderHospitalText(){
     se recomienda realizar mismo análisis en todos los cultivos intra y extrahospitalarios.
   </p>`;
 }
-
+  
+function getActiveSubgroups(section, raw){
+  const source=(raw&&raw.subgrupos)||[];
+  const current=Array.isArray(activeSg[section])?activeSg[section]:[activeSg[section]].filter(Boolean);
+  const valid=current.filter(s=>source.includes(s));
+  if(!valid.length && source.length) valid.push(source[0]);
+  activeSg[section]=valid;
+  return valid;
+}
+  
 function renderSg(section){
   const key=section==='servicio'?'servicios':section==='infeccion'?'infecciones':section==='cultivo'?'cultivos':'micros';
   const raw=getSRIObj(key);
-  if(!activeSg[section]) activeSg[section]=raw.subgrupos[0]||'';
-  const sg=activeSg[section];
+  const selectedSgs=getActiveSubgroups(section, raw);
   const sgsEl=document.getElementById('sgt-'+section);
   if(sgsEl){
-    sgsEl.innerHTML='';
-    raw.subgrupos.forEach(s=>{
-      const t=document.createElement('div');
-      t.className='sgtab'+(sg===s?' active':'');
-      t.textContent=sgName(s);
-      t.onclick=()=>{activeSg[section]=s;renderSg(section);};
-      sgsEl.appendChild(t);
-    });
+  const persistedQuery=(sgsEl.dataset.q||'').trim().toLowerCase();
+    sgsEl.innerHTML=`<div class="sgtools"><input class="sgsearch" id="sgsearch-${section}" type="search" placeholder="Buscar subgrupo..." value="${persistedQuery}"><span class="sgcount" id="sgcount-${section}"></span></div><div class="sgchiplist" id="sglist-${section}"></div>`;
+    const input=document.getElementById('sgsearch-'+section);
+    const list=document.getElementById('sglist-'+section);
+    const count=document.getElementById('sgcount-'+section);
+    const paintTabs=()=>{
+      const q=(input.value||'').trim().toLowerCase();
+      sgsEl.dataset.q=q;
+      const visibles=(raw.subgrupos||[]).filter(s=>sgName(s).toLowerCase().includes(q));
+      list.innerHTML='';
+      visibles.forEach(s=>{
+        const t=document.createElement('div');
+        t.className='sgtab'+(selectedSgs.includes(s)?' active':'');
+        t.textContent=sgName(s);
+        t.onclick=()=>{
+          const set=new Set(activeSg[section]||[]);
+          if(set.has(s)) set.delete(s); else set.add(s);
+          activeSg[section]=Array.from(set);
+          renderSg(section);
+        };
+        list.appendChild(t);
+      });
+      const visibleSuffix=q?` · ${visibles.length} visibles`:'';
+      count.textContent=`${selectedSgs.length} seleccionados${visibleSuffix}`;
+      if(!visibles.length){
+        list.innerHTML='<div class="cmp-chip-muted">Sin coincidencias en la búsqueda.</div>';
+      }
+    };
+    input.oninput=paintTabs;
+    paintTabs();
   }
-  const cid='csg-'+section;
-  const tid='tsg-'+section;
+
   const bodyEl=document.getElementById('body-'+section); if(!bodyEl) return;
-  bodyEl.innerHTML=`<div class="ccard"><h2>${sgName(sg)}</h2><div id="${cid}"></div><div id="${tid}" style="margin-top:14px;font-size:.82rem;line-height:1.75;color:#374151;border-left:4px solid #2563eb;padding-left:18px;"></div></div>`;
-  const dataObj=raw.data[sg];
-  if(!dataObj){
-    document.getElementById(cid).innerHTML='<div class="nodata-box">⚠️ Sin registros en la base actual.</div>';
-    const tx=document.getElementById(tid); if(tx) tx.innerHTML='<p><strong>(N-0)</strong> Sin información disponible para este subgrupo en el período seleccionado.</p>';
+  if(!selectedSgs.length){
+    bodyEl.innerHTML='<div class="nodata-box">⚠️ Selecciona al menos un subgrupo para mostrar resultados.</div>';
     return;
   }
-  const rowsP=sriForPeriod(dataObj,p1)||[];
-  buildSRIChart(rowsP, p2?sriForPeriod(dataObj,p2):null, cid, fmtP(p1), p2?fmtP(p2):null);
-  const tx=document.getElementById(tid);
-  if(tx) tx.innerHTML=buildNarrativeHtml(rowsP, sgName(sg));
+  
+  bodyEl.innerHTML=selectedSgs.map((sg,idx)=>`<div class="ccard"><h2>${sgName(sg)}</h2><div id="csg-${section}-${idx}"></div><div id="tsg-${section}-${idx}" style="margin-top:14px;font-size:.82rem;line-height:1.75;color:#374151;border-left:4px solid #2563eb;padding-left:18px;"></div></div>`).join('');
+  selectedSgs.forEach((sg,idx)=>{
+    const cid=`csg-${section}-${idx}`;
+    const tid=`tsg-${section}-${idx}`;
+    const dataObj=(raw.data||{})[sg];
+    if(!dataObj){
+      const cEl=document.getElementById(cid);
+      if(cEl) cEl.innerHTML='<div class="nodata-box">⚠️ Sin registros en la base actual.</div>';
+      const tx=document.getElementById(tid);
+      if(tx) tx.innerHTML='<p><strong>(N-0)</strong> Sin información disponible para este subgrupo en el período seleccionado.</p>';
+      return;
+    }
+    const rowsP=sriForPeriod(dataObj,p1)||[];
+    buildSRIChart(rowsP, p2?sriForPeriod(dataObj,p2):null, cid, fmtP(p1), p2?fmtP(p2):null);
+    const tx=document.getElementById(tid);
+    if(tx) tx.innerHTML=buildNarrativeHtml(rowsP, sgName(sg));
+  });
 }
-
 const FREQ_CFG=[
   {key:'chart1',title:'Microorganismos más frecuentes en Servicios'},
   {key:'chart2',title:'Servicios por origen más frecuentes'},
