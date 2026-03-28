@@ -1174,22 +1174,20 @@ function renderHospitalText(){
 
   const hospObj=getSRIObj('hospital');
   const hospRows=sriForPeriod(hospObj,p1)||[];
+  box.innerHTML=buildNarrativeHtml(hospRows,'todo el hospital');
+}
 
-  const byName=(n)=>hospRows.find(r=>normalizeAbxName(r.a)===n || r.a===n);
+  function buildNarrativeHtml(rows, scopeLabel){
+  const baseRows=rows||[];
+  const byName=(n)=>baseRows.find(r=>normalizeAbxName(r.a)===n || r.a===n);
   const linez=(byName('Linezolid')||{}).t||0;
   const vanco=(byName('Vancomicina')||{}).t||0;
-
-  const topRList=hospRows
-    .filter(r=>(r.pR||0)>0.5)
-    .slice(0,4)
-    .map(r=>lbl(r));
+  const topRList=baseRows.filter(r=>(r.pR||0)>0.5).slice(0,4).map(r=>lbl(r));
   const topR=topRList.length?topRList.join(', '):'Ninguno';
-
-  // N = total de antibiogramas del hospital en el período seleccionado
-  const N=hospRows.reduce((sum,r)=>sum+(r.t||0),0);
-
-  box.innerHTML=`<p>
-    <strong>(N-${N})</strong> La sensibilidad (S) y resistencia (R) de los antimicrobianos utilizados en todo el hospital de 
+  const N=baseRows.reduce((sum,r)=>sum+(r.t||0),0);
+  const scope=scopeLabel||'todo el hospital';
+  return `<p>
+    <strong>(N-${N})</strong> La sensibilidad (S) y resistencia (R) de los antimicrobianos utilizados en ${scope} de
     acuerdo al número de cultivos procesados por ejemplo: la (S) al (R)Linezolid y (W)Vancomicina de 
     <strong>'${linez} y ${vanco}'</strong> cultivos respectivamente, los antimicrobianos de mayor (S) se localizan a la 
     izquierda y la (R) mayor al 50% entre los principales: <strong>"${topR}"</strong> por lo que se deberá tomar en 
