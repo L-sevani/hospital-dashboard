@@ -632,8 +632,8 @@ function setHospital(h) {
 
 function fmtP(p){
   if(!p||p==='TODOS') return 'Todo el período';
-  if(p==='__adv_A__') return 'Grupo A ('+summarizeAdvPeriods(advSetA||[])+')';
-  if(p==='__adv_B__') return 'Grupo B ('+summarizeAdvPeriods(advSetB||[])+')';
+   if(p==='__adv_A__') return 'Grupo A ('+summarizeAdvPeriodsDetailed(advSetA||[])+')';
+  if(p==='__adv_B__') return 'Grupo B ('+summarizeAdvPeriodsDetailed(advSetB||[])+')';
   if(p.length===4) return p;
   const [y,m]=p.split('-');
   return MONTHS[parseInt(m)]+' '+y;
@@ -648,6 +648,22 @@ function summarizeAdvPeriods(periods){
   if(hasTodo) parts.push('todo');
   if(years) parts.push(`${years} año(s)`);
   if(months) parts.push(`${months} mes(es)`);
+  return parts.join(' · ');
+}
+function summarizeAdvPeriodsDetailed(periods){
+  const vals=(periods||[]).filter(Boolean);
+  if(!vals.length) return 'sin selección';
+  if(vals.includes('TODOS')) return 'todo el período';
+  const years=new Set();
+  vals.forEach(v=>{
+    if(/^\d{4}$/.test(v)) years.add(v);
+    else if(/^\d{4}-\d{2}$/.test(v)) years.add(v.split('-')[0]);
+  });
+  const yearList=[...years].sort().join(', ');
+  const monthCount=vals.filter(v=>/^\d{4}-\d{2}$/.test(v)).length;
+  const parts=[];
+  if(yearList) parts.push(yearList);
+  if(monthCount) parts.push(`${monthCount} mes(es)`);
   return parts.join(' · ');
 }
 function summarizeAdvYears(periods){
