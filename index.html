@@ -122,7 +122,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 </div>
 
 <div class="controls" id="controls-bar">
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <span class="clabel">Período principal:</span>
     <select class="csel" id="main-year-sel" onchange="onMainYearChange()"></select>
     <select class="csel" id="main-period-sel" onchange="onMainPeriodChange()"></select>
@@ -134,7 +134,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
       <select class="csel" id="cmp-year-sel" onchange="onCmpYearChange()"></select>
       <button type="button" class="cmp-toggle" id="cmp-toggle" onclick="toggleCmpList()">Ocultar lista</button>
       <span style="font-size:.7rem;color:#94a3b8;font-style:italic;">Puedes seleccionar uno o varios</span>
-  </div>
+    </div>
     <div id="cmp-selected" class="cmp-summary"></div>
     <div id="cmp-checks" class="cmp-groups"></div>
   </div>
@@ -174,14 +174,14 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
   <div id="adv-abx" style="display:none;">
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
       <div>
-  <div style="font-size:.7rem;font-weight:700;color:#5b21b6;text-transform:uppercase;margin-bottom:5px;">Antibiótico</div>
-  <div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Selecciona uno o varios</div><div id="adv-abx-dd" class="csel" style="min-width:360px;max-width:460px;padding:0;"><div onclick="toggleAdvDd('abx')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;"><span id="adv-abx-dd-label">(Ninguno)</span><span>▾</span></div><div id="adv-abx-dd-panel" style="display:none;border-top:1px solid #ddd6fe;max-height:180px;overflow:auto;padding:6px;background:#fff;"></div></div>
-</div>
-<div>
-</div>
-<div>
-  <div style="font-size:.7rem;font-weight:700;color:#5b21b6;text-transform:uppercase;margin-bottom:5px;">Período</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;"><div><div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Año</div><select id="adv-abx-year" class="csel" onchange="buildAdvAbxSelect()" style="min-width:140px;"></select></div><div><div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Mes</div><div id="adv-per-dd" class="csel" style="min-width:280px;padding:0;"><div onclick="toggleAdvDd('per')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;"><span id="adv-per-dd-label">(Ninguno)</span><span>▾</span></div><div id="adv-per-dd-panel" style="display:none;border-top:1px solid #ddd6fe;max-height:180px;overflow:auto;padding:6px;background:#fff;"></div></div></div></div>
-</div>
+        <div style="font-size:.7rem;font-weight:700;color:#5b21b6;text-transform:uppercase;margin-bottom:5px;">Antibiótico</div>
+        <div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Selecciona uno o varios</div><div id="adv-abx-dd" class="csel" style="min-width:360px;max-width:460px;padding:0;"><div onclick="toggleAdvDd('abx')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;"><span id="adv-abx-dd-label">(Ninguno)</span><span>▾</span></div><div id="adv-abx-dd-panel" style="display:none;border-top:1px solid #ddd6fe;max-height:180px;overflow:auto;padding:6px;background:#fff;"></div></div>
+      </div>
+      <div>
+      </div>
+      <div>
+        <div style="font-size:.7rem;font-weight:700;color:#5b21b6;text-transform:uppercase;margin-bottom:5px;">Período</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;"><div><div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Año</div><select id="adv-abx-year" class="csel" onchange="buildAdvAbxSelect()" style="min-width:140px;"></select></div><div><div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Mes</div><div id="adv-per-dd" class="csel" style="min-width:280px;padding:0;"><div onclick="toggleAdvDd('per')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;"><span id="adv-per-dd-label">(Ninguno)</span><span>▾</span></div><div id="adv-per-dd-panel" style="display:none;border-top:1px solid #ddd6fe;max-height:180px;overflow:auto;padding:6px;background:#fff;"></div></div></div></div>
+      </div>
       <button onclick="applyAdvAbx()" style="padding:6px 16px;border-radius:7px;background:#7c3aed;color:#fff;border:none;font-size:.76rem;font-weight:600;cursor:pointer;margin-bottom:1px;">▶ Ver en las 4 dimensiones</button>
     </div>
     <div id="adv-abx-chart" style="margin-top:14px;display:flex;flex-direction:column;gap:20px;"></div>
@@ -632,7 +632,7 @@ function setHospital(h) {
 
 function fmtP(p){
   if(!p||p==='TODOS') return 'Todo el período';
-  if(p==='__adv_A__') return 'Grupo A ('+summarizeAdvPeriodsDetailed(advSetA||[])+')';
+   if(p==='__adv_A__') return 'Grupo A ('+summarizeAdvPeriodsDetailed(advSetA||[])+')';
   if(p==='__adv_B__') return 'Grupo B ('+summarizeAdvPeriodsDetailed(advSetB||[])+')';
   if(p.length===4) return p;
   const [y,m]=p.split('-');
@@ -1225,7 +1225,7 @@ function renderHospitalText(){
   box.innerHTML=buildNarrativeHtml(hospRows,'todo el hospital');
 }
 
- function buildNarrativeHtml(rows, scopeLabel){
+  function buildNarrativeHtml(rows, scopeLabel){
   const baseRows=rows||[];
   const byName=(n)=>baseRows.find(r=>normalizeAbxName(r.a)===n || r.a===n);
   const linez=(byName('Linezolid')||{}).t||0;
@@ -1235,7 +1235,7 @@ function renderHospitalText(){
   const N=baseRows.reduce((sum,r)=>sum+(r.t||0),0);
   const scope=scopeLabel||'todo el hospital';
   return `<p>
-    <strong>(N-${N})</strong> La sensibilidad (S) y resistencia (R) de los antimicrobianos utilizados en ${scope} de 
+    <strong>(N-${N})</strong> La sensibilidad (S) y resistencia (R) de los antimicrobianos utilizados en ${scope} de
     acuerdo al número de cultivos procesados por ejemplo: la (S) al (R)Linezolid y (W)Vancomicina de 
     <strong>'${linez} y ${vanco}'</strong> cultivos respectivamente, los antimicrobianos de mayor (S) se localizan a la 
     izquierda y la (R) mayor al 50% entre los principales: <strong>"${topR}"</strong> por lo que se deberá tomar en 
@@ -1245,8 +1245,8 @@ function renderHospitalText(){
     la flora local, mediante, los principales cultivos, servicios, infecciones y microorganismos, todos asociados a IAAS, 
     se recomienda realizar mismo análisis en todos los cultivos intra y extrahospitalarios.
   </p>`;
+}
   
-
 function getActiveSubgroups(section, raw){
   const source=(raw&&raw.subgrupos)||[];
   const current=Array.isArray(activeSg[section])?activeSg[section]:[activeSg[section]].filter(Boolean);
@@ -1255,14 +1255,14 @@ function getActiveSubgroups(section, raw){
   activeSg[section]=valid;
   return valid;
 }
-
+  
 function renderSg(section){
   const key=section==='servicio'?'servicios':section==='infeccion'?'infecciones':section==='cultivo'?'cultivos':'micros';
   const raw=getSRIObj(key);
   const selectedSgs=getActiveSubgroups(section, raw);
   const sgsEl=document.getElementById('sgt-'+section);
   if(sgsEl){
-    const persistedQuery=(sgsEl.dataset.q||'').trim().toLowerCase();
+  const persistedQuery=(sgsEl.dataset.q||'').trim().toLowerCase();
     sgsEl.innerHTML=`<div class="sgtools"><input class="sgsearch" id="sgsearch-${section}" type="search" placeholder="Buscar subgrupo..." value="${persistedQuery}"><span class="sgcount" id="sgcount-${section}"></span></div><div class="sgchiplist" id="sglist-${section}"></div>`;
     const input=document.getElementById('sgsearch-'+section);
     const list=document.getElementById('sglist-'+section);
@@ -1294,23 +1294,23 @@ function renderSg(section){
     paintTabs();
   }
 
-const bodyEl=document.getElementById('body-'+section); if(!bodyEl) return;
-if(!selectedSgs.length){
-  bodyEl.innerHTML='<div class="nodata-box">⚠️ Selecciona al menos un subgrupo para mostrar resultados.</div>';
-  return;
-}
-
-bodyEl.innerHTML=selectedSgs.map((sg,idx)=>`<div class="ccard"><h2>${sgName(sg)}</h2><div id="csg-${section}-${idx}"></div><div id="tsg-${section}-${idx}" style="margin-top:14px;font-size:.82rem;line-height:1.75;color:#374151;border-left:4px solid #2563eb;padding-left:18px;"></div></div>`).join('');
-selectedSgs.forEach((sg,idx)=>{
-  const cid=`csg-${section}-${idx}`;
-  const tid=`tsg-${section}-${idx}`;
-  const dataObj=(raw.data||{})[sg];
-  if(!dataObj){
-    const cEl=document.getElementById(cid);
-    if(cEl) cEl.innerHTML='<div class="nodata-box">⚠️ Sin registros en la base actual.</div>';
-    const tx=document.getElementById(tid);
-    if(tx) tx.innerHTML='<p><strong>(N-0)</strong> Sin información disponible para este subgrupo en el período seleccionado.</p>';
+  const bodyEl=document.getElementById('body-'+section); if(!bodyEl) return;
+  if(!selectedSgs.length){
+    bodyEl.innerHTML='<div class="nodata-box">⚠️ Selecciona al menos un subgrupo para mostrar resultados.</div>';
     return;
+  }
+  
+  bodyEl.innerHTML=selectedSgs.map((sg,idx)=>`<div class="ccard"><h2>${sgName(sg)}</h2><div id="csg-${section}-${idx}"></div><div id="tsg-${section}-${idx}" style="margin-top:14px;font-size:.82rem;line-height:1.75;color:#374151;border-left:4px solid #2563eb;padding-left:18px;"></div></div>`).join('');
+  selectedSgs.forEach((sg,idx)=>{
+    const cid=`csg-${section}-${idx}`;
+    const tid=`tsg-${section}-${idx}`;
+    const dataObj=(raw.data||{})[sg];
+    if(!dataObj){
+      const cEl=document.getElementById(cid);
+      if(cEl) cEl.innerHTML='<div class="nodata-box">⚠️ Sin registros en la base actual.</div>';
+      const tx=document.getElementById(tid);
+      if(tx) tx.innerHTML='<p><strong>(N-0)</strong> Sin información disponible para este subgrupo en el período seleccionado.</p>';
+      return;
     }
     const rowsP=sriForPeriod(dataObj,p1)||[];
     buildSRIChart(rowsP, p2?sriForPeriod(dataObj,p2):null, cid, fmtP(p1), p2?fmtP(p2):null);
@@ -1739,7 +1739,7 @@ function buildAdvPills(){
     const i=set.indexOf(v);
     if(i>=0) set.splice(i,1); else set.push(v);
   };
-
+  
   const buildChecks=(gid,set,cls,yearSel)=>{
     const el=document.getElementById('adv-per'+gid); if(!el) return;
     el.innerHTML='';
@@ -1754,28 +1754,28 @@ function buildAdvPills(){
     quick.style.cssText='display:flex;gap:6px;flex-wrap:wrap;';
     const quickVals=['TODOS',...(y==='ALL'?[]:[y])];
     quickVals.forEach(v=>{
-  const lb=document.createElement('label'); lb.className='adv-pcheck'+(set.includes(v)?(' ck'+cls):'');
-  lb.style.fontSize='.71rem';
-  const ck=document.createElement('input'); ck.type='checkbox'; ck.checked=set.includes(v); ck.style.marginRight='4px';
-  ck.onchange=()=>{ toggleValue(set,v); buildAdvPills(); updateAdvStatus(); };
-  lb.appendChild(ck);
-  const sp=document.createElement('span'); sp.textContent=fmtP(v); lb.appendChild(sp);
-  quick.appendChild(lb);
-});
-el.appendChild(quick);
+      const lb=document.createElement('label'); lb.className='adv-pcheck'+(set.includes(v)?(' ck'+cls):'');
+      lb.style.fontSize='.71rem';
+      const ck=document.createElement('input'); ck.type='checkbox'; ck.checked=set.includes(v); ck.style.marginRight='4px';
+      ck.onchange=()=>{ toggleValue(set,v); buildAdvPills(); updateAdvStatus(); };
+      lb.appendChild(ck);
+      const sp=document.createElement('span'); sp.textContent=fmtP(v); lb.appendChild(sp);
+      quick.appendChild(lb);
+    });
+    el.appendChild(quick);
 
-const list=document.createElement('div');
-list.className='adv-per-wrap';
-const yearsToShow=(y==='ALL')?years:[y];
-yearsToShow.forEach(yy=>{
-  const wrap=document.createElement('div');
-  wrap.className='adv-per-year';
-  const months=monthsForYear(yy);
+    const list=document.createElement('div');
+    list.className='adv-per-wrap';
+    const yearsToShow=(y==='ALL')?years:[y];
+    yearsToShow.forEach(yy=>{
+      const wrap=document.createElement('div');
+      wrap.className='adv-per-year';
+      const months=monthsForYear(yy);
 
-  const head=document.createElement('div');
-  head.className='adv-per-year-head';
-  head.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><label class="adv-pcheck${set.includes(yy)?(' ck'+cls):''}" style="font-size:.71rem;padding:3px 8px;"><input type="checkbox" value="${yy}" ${set.includes(yy)?'checked':''}> <span>${yy}</span></label><span style="font-size:.66rem;color:#64748b;">${months.length} mes(es)</span></div><span style="font-size:.66rem;color:#94a3b8;">▾</span>`;
-  wrap.appendChild(head);
+      const head=document.createElement('div');
+      head.className='adv-per-year-head';
+      head.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><label class="adv-pcheck${set.includes(yy)?(' ck'+cls):''}" style="font-size:.71rem;padding:3px 8px;"><input type="checkbox" value="${yy}" ${set.includes(yy)?'checked':''}> <span>${yy}</span></label><span style="font-size:.66rem;color:#64748b;">${months.length} mes(es)</span></div><span style="font-size:.66rem;color:#94a3b8;">▾</span>`;
+      wrap.appendChild(head);
 
       const mWrap=document.createElement('div');
       mWrap.className='adv-per-months';
@@ -1783,6 +1783,7 @@ yearsToShow.forEach(yy=>{
       months.forEach(v=>{
         const lb=document.createElement('label'); lb.className='adv-pcheck'+(set.includes(v)?(' ck'+cls):'');
         lb.style.fontSize='.7rem'; lb.style.padding='3px 8px';
+        const ck=document.createElement('input'); ck.type='checkbox'; ck.checked=set.includes(v); ck.style.marginRight='4px';
         ck.onchange=()=>{ toggleValue(set,v); buildAdvPills(); updateAdvStatus(); };
         lb.appendChild(ck);
         const sp=document.createElement('span'); sp.textContent=fmtP(v); lb.appendChild(sp);
