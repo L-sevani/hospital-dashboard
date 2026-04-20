@@ -52,6 +52,9 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .pp.act2{background:#7c3aed;color:#fff;border-color:#7c3aed;}
 
 .legrow{background:#fff;border-bottom:1px solid #e2e8f0;padding:7px 32px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.context-bar{position:sticky;top:74px;z-index:120;background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 32px;display:flex;gap:8px;flex-wrap:wrap;}
+.context-chip{font-size:.72rem;padding:4px 10px;border-radius:14px;border:1px solid #dbeafe;background:#eff6ff;color:#1e40af;font-weight:600;}
+.context-chip.muted{border-color:#e2e8f0;background:#fff;color:#475569;}
 .leg{display:flex;align-items:center;gap:5px;font-size:.76rem;color:#374151;font-weight:500;}
 .ld{width:12px;height:12px;border-radius:3px;}
 .ls{background:#22c55e;}.lr{background:#ef4444;}.li{background:#f59e0b;}
@@ -122,7 +125,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 </div>
 
 <div class="controls" id="controls-bar">
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <span class="clabel">Período principal:</span>
     <select class="csel" id="main-year-sel" onchange="onMainYearChange()"></select>
     <select class="csel" id="main-period-sel" onchange="onMainPeriodChange()"></select>
@@ -211,6 +214,8 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
   </div>
 </div>
 
+<div id="context-bar" class="context-bar"></div>
+
 <div class="sections">
   <div class="section active" id="sec-hospital">
     <div class="ccard">
@@ -259,18 +264,18 @@ const ABX_META = {
   'Amoxicilina': {a:'Amoxicilina', c:'A'},
   'Amoxicilina Acido Clavulanico': {a:'Amoxicilina Acido Clavulanico', c:'A'},
   'Ampicilina': {a:'Ampicilina', c:'A'},
-  'Ampicilina Sulbactam': {a:'Ampicilina Sulbactam', c:'A'},
+  'Ampicilina Sulbactam': {a:'Ampicilina Sulbactam', c:'Sin clasificar'},
   'Anfotericina B': {a:'Anfotericina B', c:'Sin clasificar'},
   'Azitromicina': {a:'Azitromicina', c:'W'},
-  'Aztreonam': {a:'Aztreonam', c:'R'},
+  'Aztreonam': {a:'Aztreonam', c:'Sin clasificar'},
   'Caspofungina': {a:'Caspofungina', c:'Sin clasificar'},
-  'Cefalotina': {a:'Cefalotina', c:'A'},
+  'Cefalotina': {a:'Cefalotina', c:'Sin clasificar'},
   'Cefazolina': {a:'Cefazolina', c:'A'},
-  'Cefepime': {a:'Cefepime', c:'W'},
-  'Cefoperazona Sulbactam': {a:'Cefoperazona Sulbactam', c:'W'},
+  'Cefepime': {a:'Cefepime', c:'Sin clasificar'},
+  'Cefoperazona Sulbactam': {a:'Cefoperazona Sulbactam', c:'Sin clasificar'},
   'Cefotaxima': {a:'Cefotaxima', c:'W'},
-  'Cefotetan': {a:'Cefotetan', c:'W'},
-  'Cefoxitina': {a:'Cefoxitina', c:'W'},
+  'Cefotetan': {a:'Cefotetan', c:'Sin clasificar'},
+  'Cefoxitina': {a:'Cefoxitina', c:'Sin clasificar'},
   'Ceftacidime': {a:'Ceftacidime', c:'W'},
   'Ceftriaxona': {a:'Ceftriaxona', c:'W'},
   'Cefuroxima': {a:'Cefuroxima', c:'W'},
@@ -279,37 +284,37 @@ const ABX_META = {
   'Clindamicina': {a:'Clindamicina', c:'A'},
   'Cloranfenicol': {a:'Cloranfenicol', c:'A'},
   'Colistina': {a:'Colistina', c:'R'},
-  'Daptomicina': {a:'Daptomicina', c:'R'},
-  'Doripenem': {a:'Doripenem', c:'W'},
+  'Daptomicina': {a:'Daptomicina', c:'Sin clasificar'},
+  'Doripenem': {a:'Doripenem', c:'Sin clasificar'},
   'Doxiciclina': {a:'Doxiciclina', c:'A'},
-  'Eritromicina': {a:'Eritromicina', c:'W'},
-  'Ertapenem': {a:'Ertapenem', c:'W'},
-  'Estreptomicina': {a:'Estreptomicina', c:'W'},
+  'Eritromicina': {a:'Eritromicina', c:'Sin clasificar'},
+  'Ertapenem': {a:'Ertapenem', c:'Sin clasificar'},
+  'Estreptomicina': {a:'Estreptomicina', c:'Sin clasificar'},
   'Fluconazol': {a:'Fluconazol', c:'Sin clasificar'},
   'Gentamicina': {a:'Gentamicina', c:'A'},
-  'Imipenem': {a:'Imipenem', c:'W'},
-  'Levofloxacina': {a:'Levofloxacina', c:'W'},
+  'Imipenem': {a:'Imipenem', c:'Sin clasificar'},
+  'Levofloxacina': {a:'Levofloxacina', c:'Sin clasificar'},
   'Linezolid': {a:'Linezolid', c:'R'},
-  'Lomefloxacino': {a:'Lomefloxacino', c:'W'},
+  'Lomefloxacino': {a:'Lomefloxacino', c:'Sin clasificar'},
   'Meropenem': {a:'Meropenem', c:'W'},
-  'Meticilina Oxacilina': {a:'Meticilina Oxacilina', c:'A'},
+  'Meticilina Oxacilina': {a:'Meticilina Oxacilina', c:'Sin clasificar'},
   'Metronidazol': {a:'Metronidazol', c:'A'},
-  'Minociclina': {a:'Minociclina', c:'R'},
-  'Moxifloxacina': {a:'Moxifloxacina', c:'W'},
-  'Nafcilina': {a:'Nafcilina', c:'A'},
+  'Minociclina': {a:'Minociclina', c:'Sin clasificar'},
+  'Moxifloxacino': {a:'Moxifloxacino', c:'Sin clasificar'},
+  'Nafcilina': {a:'Nafcilina', c:'Sin clasificar'},
   'Nitrofurantoina': {a:'Nitrofurantoina', c:'A'},
-  'Norfloxacino': {a:'Norfloxacino', c:'W'},
-  'Oxacilina': {a:'Oxacilina', c:'A'},
+  'Norfloxacino': {a:'Norfloxacino', c:'Sin clasificar'},
+  'Oxacilina': {a:'Oxacilina', c:'Sin clasificar'},
   'Penicilina': {a:'Penicilina', c:'A'},
   'Piperacilina Tazobactam': {a:'Piperacilina Tazobactam', c:'W'},
   'Quinopristina': {a:'Quinopristina', c:'Sin clasificar'},
-  'Rifampicina': {a:'Rifampicina', c:'W'},
-  'Teicoplanina': {a:'Teicoplanina', c:'W'},
-  'Tetraciclina': {a:'Tetraciclina', c:'A'},
-  'Ticarcilina Acido Clavulanico': {a:'Ticarcilina Acido Clavulanico', c:'W'},
+  'Rifampicina': {a:'Rifampicina', c:'Sin clasificar'},
+  'Teicoplanina': {a:'Teicoplanina', c:'Sin clasificar'},
+  'Tetraciclina': {a:'Tetraciclina', c:'Sin clasificar'},
+  'Ticarcilina Acido Clavulanico': {a:'Ticarcilina Acido Clavulanico', c:'Sin clasificar'},
   'Ticarcilina Clavulanato': {a:'Ticarcilina Clavulanato', c:'Sin clasificar'},
   'Tigeciclina': {a:'Tigeciclina', c:'R'},
-  'Trimetoprim/Sulfametoxazol': {a:'Trimetoprim/Sulfametoxazol', c:'A'},
+  'Trimetoprim/Sulfametoxazol': {a:'Trimetoprim/Sulfametoxazol', c:'Sin clasificar'},
   'Vancomicina': {a:'Vancomicina', c:'W'},
   'Voriconazol': {a:'Voriconazol', c:'Sin clasificar'}
 };
@@ -317,7 +322,7 @@ const ABX_META = {
 const ABX_ALIASES = {
   'TmpSmx': 'Trimetoprim/Sulfametoxazol',
   'Trimetoprim Sulfametoxazol': 'Trimetoprim/Sulfametoxazol',
-  'Moxifloxacino': 'Moxifloxacina',
+  'Moxifloxacina': 'Moxifloxacino',
   'Hongo Fluconazol': 'Fluconazol',
   'Hongo Caspofungina': 'Caspofungina',
   'Hongo Voriconazol': 'Voriconazol',
@@ -336,8 +341,8 @@ const CB_ABX_META = {
   'Anfotericina B': {a:'Anfotericina B', c:'Sin clasificar'},
   'Azitromicina': {a:'Azitromicina', c:'W'},
   'Caspofungina': {a:'Caspofungina', c:'Sin clasificar'},
-  'Cefalotina': {a:'Cefalotina', c:'A'},
-  'Cefepime': {a:'Cefepime', c:'W'},
+  'Cefalotina': {a:'Cefalotina', c:'Sin clasificar'},
+  'Cefepime': {a:'Cefepime', c:'Sin clasificar'},
   'Cefotaxima': {a:'Cefotaxima', c:'W'},
   'Ceftacidime': {a:'Ceftacidime', c:'W'},
   'Ceftriaxona': {a:'Ceftriaxona', c:'W'},
@@ -347,26 +352,26 @@ const CB_ABX_META = {
   'Clindamicina': {a:'Clindamicina', c:'A'},
   'Cloranfenicol': {a:'Cloranfenicol', c:'A'},
   'Doxiciclina': {a:'Doxiciclina', c:'A'},
-  'Eritromicina': {a:'Eritromicina', c:'W'},
-  'Ertapenem': {a:'Ertapenem', c:'W'},
-  'Estreptomicina': {a:'Estreptomicina', c:'W'},
+  'Eritromicina': {a:'Eritromicina', c:'Sin clasificar'},
+  'Ertapenem': {a:'Ertapenem', c:'Sin clasificar'},
+  'Estreptomicina': {a:'Estreptomicina', c:'Sin clasificar'},
   'Fluconazol': {a:'Fluconazol', c:'Sin clasificar'},
   'Gentamicina': {a:'Gentamicina', c:'A'},
-  'Imipenem': {a:'Imipenem', c:'W'},
-  'Levofloxacina': {a:'Levofloxacina', c:'W'},
+  'Imipenem': {a:'Imipenem', c:'Sin clasificar'},
+  'Levofloxacina': {a:'Levofloxacina', c:'Sin clasificar'},
   'Linezolid': {a:'Linezolid', c:'R'},
   'Meropenem': {a:'Meropenem', c:'W'},
   'Metronidazol': {a:'Metronidazol', c:'A'},
-  'Minociclina': {a:'Minociclina', c:'R'},
-  'Moxifloxacina': {a:'Moxifloxacina', c:'W'},
+  'Minociclina': {a:'Minociclina', c:'Sin clasificar'},
+  'Moxifloxacino': {a:'Moxifloxacino', c:'Sin clasificar'},
   'Nitrofurantoina': {a:'Nitrofurantoina', c:'A'},
   'Penicilina': {a:'Penicilina', c:'A'},
   'Piperacilina Tazobactam': {a:'Piperacilina Tazobactam', c:'W'},
-  'Rifampicina': {a:'Rifampicina', c:'W'},
-  'Teicoplanina': {a:'Teicoplanina', c:'W'},
-  'Tetraciclina': {a:'Tetraciclina', c:'A'},
+  'Rifampicina': {a:'Rifampicina', c:'Sin clasificar'},
+  'Teicoplanina': {a:'Teicoplanina', c:'Sin clasificar'},
+  'Tetraciclina': {a:'Tetraciclina', c:'Sin clasificar'},
   'Tigeciclina': {a:'Tigeciclina', c:'R'},
-  'TmpSmx': {a:'TmpSmx', c:'A'},
+  'TmpSmx': {a:'TmpSmx', c:'Sin clasificar'},
   'Vancomicina': {a:'Vancomicina', c:'W'}
 };
 
@@ -627,12 +632,13 @@ function setHospital(h) {
   // Re-render
   p1 = 'TODOS'; p2 = null;
   renderPills();
+  renderContextBar();
   renderAll();
 }
 
 function fmtP(p){
   if(!p||p==='TODOS') return 'Todo el período';
-   if(p==='__adv_A__') return 'Grupo A ('+summarizeAdvPeriodsDetailed(advSetA||[])+')';
+  if(p==='__adv_A__') return 'Grupo A ('+summarizeAdvPeriodsDetailed(advSetA||[])+')';
   if(p==='__adv_B__') return 'Grupo B ('+summarizeAdvPeriodsDetailed(advSetB||[])+')';
   if(p.length===4) return p;
   const [y,m]=p.split('-');
@@ -1078,7 +1084,7 @@ function buildCmpChecks(){
   const years=(y==='ALL')?getYears():[y];
   box.innerHTML='';
 
-   years.forEach(yy=>{
+  years.forEach(yy=>{
     const yearWrap=document.createElement('div');
     yearWrap.className='cmp-year';
     const months=monthsForYear(yy).filter(m=>m!==p1);
@@ -1151,7 +1157,7 @@ function onCmpChecksChange(){
   renderAll();
 }
 
-  function renderCmpSummary(){
+function renderCmpSummary(){
   const el=document.getElementById('cmp-selected');
   if(!el) return;
   const vals=(p2==='__adv_B__'?(advSetB||[]):(p2?[p2]:[])).filter(v=>v!==p1);
@@ -1182,7 +1188,7 @@ function toggleCmpList(){
   box.style.display=hidden?'flex':'none';
   btn.textContent=hidden?'Ocultar lista':'Mostrar lista';
 }
-  
+
 function renderPills(){
   const years=getYears();
   const yMain=document.getElementById('main-year-sel');
@@ -1225,7 +1231,7 @@ function renderHospitalText(){
   box.innerHTML=buildNarrativeHtml(hospRows,'todo el hospital');
 }
 
-  function buildNarrativeHtml(rows, scopeLabel){
+function buildNarrativeHtml(rows, scopeLabel){
   const baseRows=rows||[];
   const byName=(n)=>baseRows.find(r=>normalizeAbxName(r.a)===n || r.a===n);
   const linez=(byName('Linezolid')||{}).t||0;
@@ -1234,19 +1240,20 @@ function renderHospitalText(){
   const topR=topRList.length?topRList.join(', '):'Ninguno';
   const N=baseRows.reduce((sum,r)=>sum+(r.t||0),0);
   const scope=scopeLabel||'todo el hospital';
-  return `<p>
-    <strong>(N-${N})</strong> La sensibilidad (S) y resistencia (R) de los antimicrobianos utilizados en ${scope} de
-    acuerdo al número de cultivos procesados por ejemplo: la (S) al (R)Linezolid y (W)Vancomicina de 
-    <strong>'${linez} y ${vanco}'</strong> cultivos respectivamente, los antimicrobianos de mayor (S) se localizan a la 
-    izquierda y la (R) mayor al 50% entre los principales: <strong>"${topR}"</strong> por lo que se deberá tomar en 
-    consideración el número inferior al nombre de los antimicrobianos que representa el número de cultivos donde se utilizó 
-    para la identificación del antimicrobiano por los sensidiscos de los cultivos reportados. El objetivo principal de este 
-    análisis es proporcionar información local para la implementación de las guías terapéuticas de tratamiento basadas en 
-    la flora local, mediante, los principales cultivos, servicios, infecciones y microorganismos, todos asociados a IAAS, 
-    se recomienda realizar mismo análisis en todos los cultivos intra y extrahospitalarios.
-  </p>`;
+  return `<div style="display:flex;flex-direction:column;gap:8px;">
+    <p><strong>Resumen rápido (${scope})</strong></p>
+    <ul style="margin-left:18px;display:flex;flex-direction:column;gap:4px;">
+      <li><strong>N-${N}</strong> cultivos analizados.</li>
+      <li>Uso reportado: <strong>Linezolid ${linez}</strong> y <strong>Vancomicina ${vanco}</strong>.</li>
+      <li>Antimicrobianos con resistencia &gt;50%: <strong>${topR}</strong>.</li>
+    </ul>
+    <details>
+      <summary style="cursor:pointer;color:#1d4ed8;font-weight:600;">Ver interpretación completa</summary>
+      <p style="margin-top:8px;">La sensibilidad (S) y resistencia (R) de los antimicrobianos utilizados en ${scope} se interpreta de acuerdo al número de cultivos procesados. Se recomienda considerar el número inferior al nombre del antimicrobiano, ya que representa el total de cultivos en los que se aplicó el sensidisco. Este análisis aporta información local para actualizar guías terapéuticas basadas en flora local asociada a IAAS.</p>
+    </details>
+  </div>`;
 }
-  
+
 function getActiveSubgroups(section, raw){
   const source=(raw&&raw.subgrupos)||[];
   const current=Array.isArray(activeSg[section])?activeSg[section]:[activeSg[section]].filter(Boolean);
@@ -1255,14 +1262,14 @@ function getActiveSubgroups(section, raw){
   activeSg[section]=valid;
   return valid;
 }
-  
+
 function renderSg(section){
   const key=section==='servicio'?'servicios':section==='infeccion'?'infecciones':section==='cultivo'?'cultivos':'micros';
   const raw=getSRIObj(key);
   const selectedSgs=getActiveSubgroups(section, raw);
   const sgsEl=document.getElementById('sgt-'+section);
   if(sgsEl){
-  const persistedQuery=(sgsEl.dataset.q||'').trim().toLowerCase();
+    const persistedQuery=(sgsEl.dataset.q||'').trim().toLowerCase();
     sgsEl.innerHTML=`<div class="sgtools"><input class="sgsearch" id="sgsearch-${section}" type="search" placeholder="Buscar subgrupo..." value="${persistedQuery}"><span class="sgcount" id="sgcount-${section}"></span></div><div class="sgchiplist" id="sglist-${section}"></div>`;
     const input=document.getElementById('sgsearch-'+section);
     const list=document.getElementById('sglist-'+section);
@@ -1296,10 +1303,10 @@ function renderSg(section){
 
   const bodyEl=document.getElementById('body-'+section); if(!bodyEl) return;
   if(!selectedSgs.length){
-    bodyEl.innerHTML='<div class="nodata-box">⚠️ Selecciona al menos un subgrupo para mostrar resultados.</div>';
+    bodyEl.innerHTML='<div class="nodata-box">⚠️ Selecciona al menos un subgrupo para mostrar resultados. <br><small>Tip: usa el buscador de subgrupos o cambia el período para encontrar datos.</small></div>';
     return;
   }
-  
+
   bodyEl.innerHTML=selectedSgs.map((sg,idx)=>`<div class="ccard"><h2>${sgName(sg)}</h2><div id="csg-${section}-${idx}"></div><div id="tsg-${section}-${idx}" style="margin-top:14px;font-size:.82rem;line-height:1.75;color:#374151;border-left:4px solid #2563eb;padding-left:18px;"></div></div>`).join('');
   selectedSgs.forEach((sg,idx)=>{
     const cid=`csg-${section}-${idx}`;
@@ -1307,7 +1314,7 @@ function renderSg(section){
     const dataObj=(raw.data||{})[sg];
     if(!dataObj){
       const cEl=document.getElementById(cid);
-      if(cEl) cEl.innerHTML='<div class="nodata-box">⚠️ Sin registros en la base actual.</div>';
+      if(cEl) cEl.innerHTML='<div class="nodata-box">⚠️ Sin registros en la base actual. <br><small>Prueba otro período, desactiva filtros o cambia de hospital.</small></div>';
       const tx=document.getElementById(tid);
       if(tx) tx.innerHTML='<p><strong>(N-0)</strong> Sin información disponible para este subgrupo en el período seleccionado.</p>';
       return;
@@ -1548,7 +1555,23 @@ function renderComparar(){
   `;
 }
 
+function sectionLabel(sec){
+  const labels={hospital:'Todo el hospital',servicio:'Por servicio',infeccion:'Por infección',cultivo:'Por cultivo',micro:'Por microorganismo',frecuencias:'Frecuencias',avanzado:'Análisis avanzado',comparar:'Comparar hospitales'};
+  return labels[sec]||sec;
+}
+
+function renderContextBar(){
+  const bar=document.getElementById('context-bar');
+  if(!bar) return;
+  const compareLabel=p2?('Comparando: '+fmtP(p1)+' vs '+fmtP(p2)):('Período: '+fmtP(p1));
+  const filterLabel=activeFilter==='cb'?'Cuadro básico':'Todos los antibióticos';
+  bar.innerHTML=`<span class="context-chip">🏥 ${getHospitalDisplayName(activeHospital)}</span><span class="context-chip muted">Sección: ${sectionLabel(activeSection)}</span><span class="context-chip muted">${compareLabel}</span><span class="context-chip muted">Filtro: ${filterLabel}</span>`;
+  const hide=(activeSection==='avanzado'||activeSection==='comparar');
+  bar.style.display=hide?'none':'flex';
+}
+
 function renderAll(){
+  renderContextBar();
   if(activeSection==='avanzado') return;
   if(activeSection==='comparar'){renderComparar();return;}
   document.getElementById('hperiodo').textContent=getHospitalDisplayName(activeHospital)+' · IMSS · '+fmtP(p1)+(p2?' vs '+fmtP(p2):'');
@@ -1577,7 +1600,9 @@ function setSection(sec,el){
   if(cmp) cmp.style.display=(isFreq||isAdv||isCmp)?'none':'flex';
   if(legSri) legSri.style.display=(isAdv||isFreq||isCmp)?'none':'flex';
   if(isAdv){ buildAdvPills(); buildAdvAbxSelect(); buildAdvHospitalSelector(); }
-  activeSection=sec; if(!isAdv) renderAll();
+  activeSection=sec;
+  renderContextBar();
+  if(!isAdv) renderAll();
 }
 
 function setMode(m){mode=m;p1='TODOS';p2=null;renderPills();renderAll();}
@@ -1739,7 +1764,7 @@ function buildAdvPills(){
     const i=set.indexOf(v);
     if(i>=0) set.splice(i,1); else set.push(v);
   };
-  
+
   const buildChecks=(gid,set,cls,yearSel)=>{
     const el=document.getElementById('adv-per'+gid); if(!el) return;
     el.innerHTML='';
