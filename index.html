@@ -951,9 +951,14 @@ function buildFreqChart(data, cid){
   const cmap={}; stackKeys.forEach((k,i)=>{cmap[k]=PALETTE[i%PALETTE.length];});
 
   const maxVal=Math.max(...data.order.map(r=>data.totals[r]||0),1);
-  const rawStep=maxVal<=10?1:maxVal<=30?5:10;
-  const niceMax=Math.ceil(maxVal/rawStep)*rawStep;
-  const ticks=[]; for(let t=0;t<=niceMax;t+=rawStep) ticks.push(t);
+  const targetTickCount=7;
+  const roughStep=maxVal/targetTickCount;
+  const magnitude=Math.pow(10,Math.floor(Math.log10(Math.max(roughStep,1))));
+  const ratio=roughStep/magnitude;
+  const niceRatio=ratio<=1?1:ratio<=2?2:ratio<=5?5:10;
+  const yStep=Math.max(1,niceRatio*magnitude);
+  const niceMax=Math.ceil(maxVal/yStep)*yStep;
+  const ticks=[]; for(let t=0;t<=niceMax;t+=yStep) ticks.push(t);
 
   const isMobile=(window.innerWidth||1200)<768;
   const sidePad=isMobile?32:96;
