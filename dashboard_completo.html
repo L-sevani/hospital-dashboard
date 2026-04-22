@@ -1026,6 +1026,11 @@ function buildFreqChart(data, cid){
   el.innerHTML=h;
 
   const tip=getFixedTip('freq');
+  if(!tip.dataset.freqBound){
+    tip.dataset.freqBound='1';
+    tip.addEventListener('mouseenter',()=>{ tip.dataset.locked='1'; });
+    tip.addEventListener('mouseleave',()=>{ tip.dataset.locked='0'; hideTip(); });
+  }
   el.querySelectorAll('.vbh[data-tip]').forEach(bar=>{
     bar.addEventListener('mouseenter',e=>{
       try{
@@ -1033,11 +1038,17 @@ function buildFreqChart(data, cid){
         let inn=`<div style="font-weight:700;color:#0f172a;margin-bottom:4px;">${d.name}</div>`;
         inn+=`<div style="color:#475569;font-size:.66rem;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin-bottom:4px;">Total: ${d.total}</div>`;
         inn+=d.tipRows;
-        tip.innerHTML=inn; tip.style.display='block'; placeTip(e);
+        tip.innerHTML=inn;
+        tip.dataset.locked='0';
+        tip.style.display='block';
+        placeTip(e);
       }catch(ex){}
     });
-    bar.addEventListener('mousemove',e=>placeTip(e));
-    bar.addEventListener('mouseleave',hideTip);
+    bar.addEventListener('mouseleave',e=>{
+      const to=e.relatedTarget;
+      if(to===tip || (to&&tip.contains(to))) return;
+      setTimeout(()=>{ if(tip.dataset.locked!=='1') hideTip(); },120);
+    });
   });
 }
 
