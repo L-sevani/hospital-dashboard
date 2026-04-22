@@ -988,9 +988,10 @@ function buildFreqChart(data, cid){
 
     let yB=PADTOP+CH;
     sorted.forEach(([col,n])=>{
-      const segH=Math.max(1,Math.round((n/niceMax)*CH));
+      const segH=(n/niceMax)*CH;
+      if(segH<=0) return;
       yB-=segH;
-      h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${segH}px;background:${cmap[col]};"></div>`;
+      h+=`<div style="position:absolute;left:${x}px;top:${yB.toFixed(2)}px;width:${BW}px;height:${segH.toFixed(2)}px;background:${cmap[col]};"></div>`;
     });
 
     const tipRows=sorted.map(([col,n])=>
