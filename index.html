@@ -88,7 +88,8 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .fstab{padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:500;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#374151;transition:all .15s;}
 .fstab:hover{border-color:#2563eb;color:#2563eb;}
 .fstab.active{background:#2563eb;color:#fff;border-color:#2563eb;}
-
+.adv-sec-title{font-size:1.08rem;font-weight:800;color:#1a2035;margin-bottom:6px;letter-spacing:.01em;line-height:1.25;}
+.adv-sub-title{font-size:.86rem;font-weight:700;color:#4c1d95;border-left:4px solid #7c3aed;padding-left:8px;line-height:1.2;}
 
 
 </style>
@@ -2096,7 +2097,7 @@ function applyAdvMulti(){
 
     if(!sec.sub){
       var cid='adv-m-cid-'+idx;
-      wrap.innerHTML='<div style="font-size:.82rem;font-weight:700;color:#1a2035;margin-bottom:4px;">'+sec.label+'</div>'
+      wrap.innerHTML='<div class="adv-sec-title">'+sec.label+'</div>'
         +(showPerHospitalCharts?'<div style="font-size:.7rem;color:#6b7280;margin-bottom:10px;">Se muestran gráficas individuales por hospital seleccionado.</div>':'')
         +(hasCmp?'<div style="font-size:.7rem;color:#6b7280;margin-bottom:10px;">Barra izquierda (claro) = Grupo A &nbsp;·&nbsp; Barra derecha (oscuro) = Grupo B</div>':'')
         +'<div id="'+cid+'" style="display:flex;flex-direction:column;gap:12px;"></div>';
@@ -2120,7 +2121,7 @@ function applyAdvMulti(){
         buildSRIChart(sriMergedRaw(raw,advSetA), hasCmp?sriMergedRaw(raw,advSetB):null, cid, lA, lB);
       }
     } else {
-      wrap.innerHTML='<div style="font-size:.82rem;font-weight:700;color:#1a2035;margin-bottom:4px;">'+sec.label+'</div>'
+      wrap.innerHTML='<div class="adv-sec-title">'+sec.label+'</div>'
         +(hasCmp?'<div style="font-size:.7rem;color:#6b7280;margin-bottom:12px;">Barra izquierda (claro) = Grupo A &nbsp;·&nbsp; Barra derecha (oscuro) = Grupo B</div>':'')
         +'<div id="adv-m-sgs-'+idx+'" style="display:flex;flex-direction:column;gap:16px;"></div>';
       box.appendChild(wrap);
@@ -2149,7 +2150,7 @@ function applyAdvMulti(){
           badge=`<span style="background:${bColor};border-radius:5px;padding:2px 8px;font-size:.65rem;margin-left:8px;">${bText}</span>`;
         }
         sgWrap.innerHTML='<div style="display:flex;align-items:center;margin-bottom:6px;">'
-          +'<div style="font-size:.74rem;font-weight:600;color:#5b21b6;border-left:3px solid #7c3aed;padding-left:8px;">'+sgName(sg)+'</div>'+badge+'</div>'
+          +'<div class="adv-sub-title">'+sgName(sg)+'</div>'+badge+'</div>'
           +'<div id="'+cid+'" style="display:flex;flex-direction:column;gap:10px;"></div>';
         sgCont.appendChild(sgWrap);
         if(showPerHospitalCharts){
@@ -2226,7 +2227,7 @@ function applyAdvAbx(){
         const wrap=document.createElement('div');
         wrap.style.cssText='background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 6px rgba(0,0,0,.07);';
         const cid='adv-abx-cid-'+(idx++);
-        wrap.innerHTML=`<div style="font-size:.8rem;font-weight:700;color:#5b21b6;margin-bottom:4px;">${dim.label}</div>`+
+        wrap.innerHTML=`<div class="adv-sec-title" style="color:#5b21b6;">${dim.label}</div>`+
           `<div style="font-size:.71rem;color:#64748b;margin-bottom:10px;">💊 ${abxName} · ${fmtP(per)} · ${selectedHospitals.length} hospital(es)</div>`+
           `<div id="${cid}"></div>`;
         box.appendChild(wrap);
