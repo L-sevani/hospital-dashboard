@@ -91,7 +91,34 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .adv-sec-title{font-size:1.08rem;font-weight:800;color:#1a2035;margin-bottom:6px;letter-spacing:.01em;line-height:1.25;}
 .adv-sub-title{font-size:.86rem;font-weight:700;color:#4c1d95;border-left:4px solid #7c3aed;padding-left:8px;line-height:1.2;}
 
-
+/* ── ADVANCED SECTION REDESIGN ── */
+.adv-wrapper{padding:28px 32px;background:linear-gradient(135deg,#faf5ff 0%,#eff6ff 100%);gap:20px;}
+.adv-tabrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border-radius:12px;padding:10px 14px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.adv-tab{padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:#f8fafc;color:#374151;transition:all .18s;}
+.adv-tab:hover{border-color:#7c3aed;color:#7c3aed;}
+.adv-tab.active{background:#7c3aed;color:#fff;border-color:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,.3);}
+.adv-hint{font-size:.72rem;color:#9333ea;font-style:italic;margin-left:8px;}
+.adv-hosp-row{display:flex;align-items:center;flex-wrap:wrap;background:#fff;border-radius:10px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.adv-groups-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:640px){.adv-groups-grid{grid-template-columns:1fr;}}
+.adv-group-card{border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.07);}
+.adv-group-header{display:flex;align-items:center;gap:8px;padding:12px 16px;font-size:.78rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;}
+.adv-group-header-a{background:linear-gradient(90deg,#1d4ed8,#3b82f6);color:#fff;}
+.adv-group-header-b{background:linear-gradient(90deg,#15803d,#22c55e);color:#fff;}
+.adv-group-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.5);}
+.adv-group-badge{margin-left:auto;font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.25);}
+.adv-group-body{background:#fff;padding:14px 16px;display:flex;flex-direction:column;gap:8px;}
+.adv-field-label{font-size:.68rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;}
+.adv-select{padding:6px 10px;border-radius:8px;border:1px solid #e2e8f0;font-family:'DM Sans',sans-serif;font-size:.8rem;color:#1a1a2e;background:#f8fafc;cursor:pointer;width:100%;}
+.adv-select-a:focus{border-color:#3b82f6;outline:none;box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+.adv-select-b:focus{border-color:#22c55e;outline:none;box-shadow:0 0 0 3px rgba(34,197,94,.15);}
+.adv-pills-wrap{display:flex;gap:6px;flex-wrap:wrap;min-height:32px;}
+.adv-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px;background:#fff;border-radius:10px;padding:12px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.adv-btn-apply{padding:8px 20px;border-radius:8px;background:#7c3aed;color:#fff;border:none;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;box-shadow:0 2px 8px rgba(124,58,237,.3);}
+.adv-btn-apply:hover{background:#6d28d9;box-shadow:0 4px 12px rgba(124,58,237,.4);}
+.adv-btn-clear{padding:8px 16px;border-radius:8px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:.76rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.adv-btn-clear:hover{background:#e2e8f0;color:#374151;}
+.adv-status{font-size:.72rem;color:#64748b;font-style:italic;}
 </style>
 </head>
 <body>
@@ -147,56 +174,89 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 </div>
 
 <!-- ADVANCED ANALYSIS SECTION -->
-<div id="sec-avanzado" class="section" style="padding:22px 32px;flex-direction:column;gap:20px;background:#faf5ff;">
-  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-    <div style="display:flex;gap:6px;">
-      <div id="adv-tab-multi" class="adv-tab active" onclick="setAdvTab('multi',this)" style="padding:4px 14px;border-radius:20px;font-size:.74rem;font-weight:500;cursor:pointer;border:1px solid #7c3aed;background:#7c3aed;color:#fff;transition:all .15s;">📅 Multi-Período</div>
-      <div id="adv-tab-abx" class="adv-tab" onclick="setAdvTab('abx',this)" style="padding:4px 14px;border-radius:20px;font-size:.74rem;font-weight:500;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#374151;transition:all .15s;">💊 Por Antibiótico</div>
-    </div>
-    <span style="font-size:.69rem;color:#9333ea;font-style:italic;margin-left:4px;" id="adv-hint">Selecciona períodos para el Grupo A y Grupo B</span>
+<div id="sec-avanzado" class="section adv-wrapper">
+
+  <div class="adv-tabrow">
+    <div id="adv-tab-multi" class="adv-tab active" onclick="setAdvTab('multi',this)">📅 Multi-Período</div>
+    <div id="adv-tab-abx" class="adv-tab" onclick="setAdvTab('abx',this)">💊 Por Antibiótico</div>
+    <span id="adv-hint" class="adv-hint">Selecciona períodos para el Grupo A y Grupo B</span>
   </div>
-  <div id="adv-hosp-select" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px;"></div> 
+
+  <div class="adv-hosp-row">
+    <div id="adv-hosp-select" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"></div>
+  </div>
+
   <!-- MULTI-PERÍODO -->
   <div id="adv-multi">
-    <div style="display:flex;gap:18px;flex-wrap:wrap;">
-      <div>
-        <div style="font-size:.7rem;font-weight:700;color:#1d4ed8;text-transform:uppercase;margin-bottom:5px;">Grupo A (azul)</div>
-        <select id="adv-yearA" class="csel" onchange="buildAdvPills()" style="margin-bottom:6px;min-width:150px;"></select><div id="adv-perA" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    <div class="adv-groups-grid">
+      <div class="adv-group-card">
+        <div class="adv-group-header adv-group-header-a">
+          <span class="adv-group-dot"></span>
+          GRUPO A
+          <span class="adv-group-badge">Azul</span>
+        </div>
+        <div class="adv-group-body">
+          <label class="adv-field-label">Año</label>
+          <select id="adv-yearA" class="adv-select adv-select-a" onchange="buildAdvPills()"></select>
+          <div id="adv-perA" class="adv-pills-wrap"></div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:.7rem;font-weight:700;color:#15803d;text-transform:uppercase;margin-bottom:5px;">Grupo B (verde)</div>
-        <select id="adv-yearB" class="csel" onchange="buildAdvPills()" style="margin-bottom:6px;min-width:150px;"></select><div id="adv-perB" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      <div class="adv-group-card">
+        <div class="adv-group-header adv-group-header-b">
+          <span class="adv-group-dot"></span>
+          GRUPO B
+          <span class="adv-group-badge">Verde</span>
+        </div>
+        <div class="adv-group-body">
+          <label class="adv-field-label">Año</label>
+          <select id="adv-yearB" class="adv-select adv-select-b" onchange="buildAdvPills()"></select>
+          <div id="adv-perB" class="adv-pills-wrap"></div>
+        </div>
       </div>
     </div>
-    <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <button onclick="applyAdvMulti()" style="padding:5px 16px;border-radius:7px;background:#7c3aed;color:#fff;border:none;font-size:.76rem;font-weight:600;cursor:pointer;">▶ Aplicar comparación</button>
-      <button onclick="clearAdv()" style="padding:5px 14px;border-radius:7px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:.75rem;cursor:pointer;">✕ Limpiar</button>
-      <span id="adv-multi-status" style="font-size:.71rem;color:#64748b;"></span>
+    <div class="adv-actions">
+      <button onclick="applyAdvMulti()" class="adv-btn-apply">▶ Aplicar comparación</button>
+      <button onclick="clearAdv()" class="adv-btn-clear">✕ Limpiar</button>
+      <span id="adv-multi-status" class="adv-status"></span>
     </div>
     <div id="adv-multi-results" style="margin-top:18px;display:flex;flex-direction:column;gap:20px;"></div>
   </div>
+
+  <!-- POR ANTIBIÓTICO -->
   <div id="adv-abx" style="display:none;">
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
       <div>
         <div style="font-size:.7rem;font-weight:700;color:#5b21b6;text-transform:uppercase;margin-bottom:5px;">Antibiótico</div>
-        <div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Selecciona uno o varios</div><div id="adv-abx-dd" class="csel" style="min-width:360px;max-width:460px;padding:0;"><div onclick="toggleAdvDd('abx')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;"><span id="adv-abx-dd-label">(Ninguno)</span><span>▾</span></div><div id="adv-abx-dd-panel" style="display:none;border-top:1px solid #ddd6fe;max-height:180px;overflow:auto;padding:6px;background:#fff;"></div></div>
+        <div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Selecciona uno o varios</div>
+        <div id="adv-abx-dd" class="csel" style="min-width:360px;max-width:460px;padding:0;">
+          <div onclick="toggleAdvDd('abx')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+            <span id="adv-abx-dd-label">(Ninguno)</span><span>▾</span>
+          </div>
+          <div id="adv-abx-dd-panel" style="display:none;border-top:1px solid #ddd6fe;max-height:180px;overflow:auto;padding:6px;background:#fff;"></div>
+        </div>
       </div>
+      <div></div>
       <div>
+        <div style="font-size:.7rem;font-weight:700;color:#5b21b6;text-transform:uppercase;margin-bottom:5px;">Período</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
+          <div>
+            <div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Año</div>
+            <select id="adv-abx-year" class="csel" onchange="buildAdvAbxSelect()" style="min-width:140px;"></select>
+          </div>
+          <div>
+            <div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Mes</div>
+            <div id="adv-per-dd" class="csel" style="min-width:280px;padding:0;">
+              <div onclick="toggleAdvDd('per')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+                <span id="adv-per-dd-label">(Ninguno)</span><span>▾</span>
+              </div>
+              <div id="adv-per-dd-panel" style="display:none;border-top:1px solid #ddd6fe;max-height:180px;overflow:auto;padding:6px;background:#fff;"></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:.7rem;font-weight:700;color:#5b21b6;text-transform:uppercase;margin-bottom:5px;">Período</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;"><div><div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Año</div><select id="adv-abx-year" class="csel" onchange="buildAdvAbxSelect()" style="min-width:140px;"></select></div><div><div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Mes</div><div id="adv-per-dd" class="csel" style="min-width:280px;padding:0;"><div onclick="toggleAdvDd('per')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;"><span id="adv-per-dd-label">(Ninguno)</span><span>▾</span></div><div id="adv-per-dd-panel" style="display:none;border-top:1px solid #ddd6fe;max-height:180px;overflow:auto;padding:6px;background:#fff;"></div></div></div></div>
-      </div>
-      <button onclick="applyAdvAbx()" style="padding:6px 16px;border-radius:7px;background:#7c3aed;color:#fff;border:none;font-size:.76rem;font-weight:600;cursor:pointer;margin-bottom:1px;">▶ Ver en las 4 dimensiones</button>
+      <button onclick="applyAdvAbx()" class="adv-btn-apply" style="margin-bottom:1px;">▶ Ver en las 4 dimensiones</button>
     </div>
     <div id="adv-abx-chart" style="margin-top:14px;display:flex;flex-direction:column;gap:20px;"></div>
-  </div>
-</div>
-
-<div id="filter-bar" style="background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 32px;display:flex;align-items:center;gap:10px;">
-  <span style="font-size:.72rem;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Antibióticos:</span>
-  <div style="display:flex;gap:6px;">
-    <div class="fltab active" id="flt-todos" onclick="setFilter('todos',this)" style="padding:4px 14px;border-radius:20px;font-size:.75rem;font-weight:500;cursor:pointer;border:1px solid #2563eb;background:#2563eb;color:#fff;transition:all .15s;">Todos</div>
-    <div class="fltab" id="flt-cb" onclick="setFilter('cb',this)" style="padding:4px 14px;border-radius:20px;font-size:.75rem;font-weight:500;cursor:pointer;border:1px solid #e2e8f0;background:#f8fafc;color:#374151;transition:all .15s;">Cuadro Básico</div>
   </div>
 </div>
 
