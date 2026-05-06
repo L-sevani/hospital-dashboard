@@ -871,6 +871,7 @@ function awareTag(label){
 
 
 function lbl(r){return r.c&&(r.c==='A'||r.c==='W'||r.c==='R')?'('+r.c+') '+r.a:r.a;}
+function lblName(name){const n=normalizeAbxName(name||'');const meta=ABX_META[n];const c=meta?meta.c:'';return(c==='A'||c==='W'||c==='R')?'('+c+') '+(n||name):(n||name);}
 const SG_NAMES={'ITS':'INFECCIÓN DEL TRACTO SANGUÍNEO','IVU':'INFECCIÓN DE VÍAS URINARIAS'};
 function sgName(s){return SG_NAMES[s]||s;}
 function buildSRIChart(data1, data2, cid, lbl1, lbl2){
@@ -1321,7 +1322,7 @@ function buildNarrativeHtml(rows, scopeLabel){
     <p><strong>Resumen rápido (${scope})</strong></p>
     <ul style="margin-left:18px;display:flex;flex-direction:column;gap:4px;">
       <li><strong>N-${N}</strong> cultivos analizados.</li>
-      <li>Uso reportado: <strong>Linezolid ${linez}</strong> y <strong>Vancomicina ${vanco}</strong>.</li>
+      <li>Uso reportado: <strong>${lblName('Linezolid')} ${linez}</strong> y <strong>${lblName('Vancomicina')} ${vanco}</strong>.</li>
       <li>Antimicrobianos con resistencia &gt;50%: <strong>${topR}</strong>.</li>
     </ul>
     <details>
@@ -1504,11 +1505,11 @@ function renderComparar(){
         </div>
         <div style="background:#f8fafc;border-radius:8px;padding:10px;text-align:center;">
           <div style="font-size:1.5rem;font-weight:800;color:#7c3aed;">${st.linezolid}</div>
-          <div style="font-size:.68rem;color:#6b7280;margin-top:2px;">Linezolid usado</div>
+          <div style="font-size:.68rem;color:#6b7280;margin-top:2px;">${lblName('Linezolid')} usado</div>
         </div>
         <div style="background:#f8fafc;border-radius:8px;padding:10px;text-align:center;">
           <div style="font-size:1.5rem;font-weight:800;color:#0891b2;">${st.vancomicina}</div>
-          <div style="font-size:.68rem;color:#6b7280;margin-top:2px;">Vancomicina usada</div>
+          <div style="font-size:.68rem;color:#6b7280;margin-top:2px;">${lblName('Vancomicina')} usada</div>
         </div>
       </div>
       <!-- Resistencia S/I/R -->
@@ -1533,7 +1534,7 @@ function renderComparar(){
       <div>
         <div style="font-size:.72rem;font-weight:700;color:#374151;margin-bottom:6px;">🔴 MÁS RESISTENTES</div>
         ${st.topRes.slice(0,4).map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-          <span style="font-size:.7rem;color:#374151;">${r.a}</span>
+          <span style="font-size:.7rem;color:#374151;">${lblName(r.a)}</span>
           <span style="font-size:.7rem;font-weight:700;color:#dc2626;">${r.pct}%R</span>
         </div>`).join('')}
       </div>
@@ -1607,7 +1608,7 @@ function renderComparar(){
             const r2=byHospAbx['HGZMF 2 APIZACO'][key]||null;
             const r3=byHospAbx['HGSMF 8 TLAXCALA'][key]||null;
             return `<tr style="${rowBg}">
-              <td style="${tdStyle}text-align:left;font-weight:600;color:#374151;">${r.a}</td>
+              <td style="${tdStyle}text-align:left;font-weight:600;color:#374151;">${lblName(r.a)}</td>
               ${cellSRI(r1)}
               ${cellSRI(r2)}
               ${cellSRI(r3)}
