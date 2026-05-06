@@ -108,7 +108,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
       <option value="HGSMF 8 TLAXCALA" disabled>🏥 HGSMF No. 8 Tlaxcala</option>
     </select>
     <div class="btns">
-      <button class="btn btn-sec" onclick="window.location.reload()">↺ Actualizar</button>
+      <button class="btn btn-sec" id="btn-reload" onclick="reloadData()">↺ Actualizar</button>
 
     </div>
   </div>
@@ -2345,7 +2345,17 @@ async function initDashboard(){
   buildAdvHospitalSelector();
   if(loadFailed) setLoadErrorUI('No se pudieron cargar períodos desde dashboard_data.json.');
 }
-
+async function reloadData(){
+  const btn = document.getElementById('btn-reload');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Cargando...'; }
+  RAW = {};
+  await initDashboard();
+  if(btn){
+    btn.disabled=false;
+    btn.textContent='✓ Actualizado';
+    setTimeout(()=>{ btn.textContent='↺ Actualizar'; }, 2500);
+  }
+}
 initDashboard();
 </script>
 
