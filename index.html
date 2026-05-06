@@ -871,7 +871,7 @@ function awareTag(label){
 
 
 function lbl(r){return r.c&&(r.c==='A'||r.c==='W'||r.c==='R')?'('+r.c+') '+r.a:r.a;}
-function lblName(name){const n=normalizeAbxName(name||'');const meta=ABX_META[n];const c=meta?meta.c:'';return(c==='A'||c==='W'||c==='R')?'('+c+') '+(n||name):(n||name);}
+function lblName(name){const n=normalizeAbxName(name||'');const meta=ABX_META[n];const c=meta?meta.c:'';return(c==='A'||c==='W'||c==='R')?`<span class="atag t${c}">(${c})</span>${n||name}`:(n||name);}
 const SG_NAMES={'ITS':'INFECCIÓN DEL TRACTO SANGUÍNEO','IVU':'INFECCIÓN DE VÍAS URINARIAS'};
 function sgName(s){return SG_NAMES[s]||s;}
 function buildSRIChart(data1, data2, cid, lbl1, lbl2){
