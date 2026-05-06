@@ -2295,9 +2295,9 @@ async function fetchDashboardData(){
   const stamp='?ts='+Date.now();
   const basePath=(window.location.pathname||'').replace(/[^/]*$/, '');
   const tries=[
+    basePath+'dashboard_data.json'+stamp,
     'dashboard_data.json'+stamp,
     './dashboard_data.json'+stamp,
-    basePath+'dashboard_data.json'+stamp,
     '/dashboard_data.json'+stamp
   ];
   let lastErr=null;
