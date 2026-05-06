@@ -524,14 +524,7 @@ function _deriveFromHospitalV2(hd){
       });
     });
 
-    // Infecciones (complementa chart2)
-    (inf.subgrupos||[]).forEach(sg=>{
-      const mm=(inf.data||{})[sg]||{};
-      Object.entries(mm).forEach(([micro,obj])=>{
-        const tot=Number((obj&&obj.total)||0);
-        addStack(freqByPer.chart2[per]||(freqByPer.chart2[per]=makeFreq()), sg, micro, tot);
-      });
-    });
+    // Infecciones: no se mezclan en chart2 para mantener solo servicios por cultivo/micro en esta vista
 
     // Cultivos (chart3/chart4)
     (cul.subgrupos||[]).forEach(sg=>{
