@@ -119,6 +119,15 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .adv-btn-clear{padding:8px 16px;border-radius:8px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:.76rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
 .adv-btn-clear:hover{background:#e2e8f0;color:#374151;}
 .adv-status{font-size:.72rem;color:#64748b;font-style:italic;}
+/* ── DRILL-DOWN ── */
+.drill-steps-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+@media(max-width:860px){.drill-steps-wrap{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.drill-steps-wrap{grid-template-columns:1fr;}}
+.drill-step{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:2px solid #e2e8f0;transition:border-color .2s,opacity .2s;}
+.drill-step.drill-active{border-color:#7c3aed;}
+.drill-step.drill-step-locked{opacity:.45;pointer-events:none;}
+.drill-step-header{display:flex;align-items:center;gap:8px;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#374151;margin-bottom:10px;}
+.drill-step-num{width:22px;height:22px;border-radius:50%;background:#7c3aed;color:#fff;font-size:.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -179,6 +188,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
   <div class="adv-tabrow">
     <div id="adv-tab-multi" class="adv-tab active" onclick="setAdvTab('multi',this)">📅 Multi-Período</div>
     <div id="adv-tab-abx" class="adv-tab" onclick="setAdvTab('abx',this)">💊 Por Antibiótico</div>
+    <div id="adv-tab-drill" class="adv-tab" onclick="setAdvTab('drill',this)">🔍 Análisis Detallado</div>
     <span id="adv-hint" class="adv-hint">Selecciona períodos para el Grupo A y Grupo B</span>
   </div>
 
@@ -220,6 +230,42 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
       <span id="adv-multi-status" class="adv-status"></span>
     </div>
     <div id="adv-multi-results" style="margin-top:18px;display:flex;flex-direction:column;gap:20px;"></div>
+  </div>
+
+  <!-- ANÁLISIS DETALLADO (DRILL-DOWN) -->
+  <div id="adv-drill" style="display:none;">
+    <div class="drill-steps-wrap">
+      <div class="drill-step drill-active" id="drill-step-1">
+        <div class="drill-step-header"><span class="drill-step-num">1</span>Servicio</div>
+        <select id="drill-svc" class="adv-select" onchange="onDrillSvcChange()">
+          <option value="">— Selecciona —</option>
+        </select>
+      </div>
+      <div class="drill-step drill-step-locked" id="drill-step-2">
+        <div class="drill-step-header"><span class="drill-step-num">2</span>Infección</div>
+        <select id="drill-inf" class="adv-select" onchange="onDrillInfChange()" disabled>
+          <option value="">— Primero selecciona Servicio —</option>
+        </select>
+      </div>
+      <div class="drill-step drill-step-locked" id="drill-step-3">
+        <div class="drill-step-header"><span class="drill-step-num">3</span>Cultivo</div>
+        <select id="drill-cul" class="adv-select" onchange="onDrillCulChange()" disabled>
+          <option value="">— Primero selecciona Infección —</option>
+        </select>
+      </div>
+      <div class="drill-step drill-step-locked" id="drill-step-4">
+        <div class="drill-step-header"><span class="drill-step-num">4</span>Microorganismo</div>
+        <select id="drill-micro" class="adv-select" onchange="onDrillMicroChange()" disabled>
+          <option value="">— Primero selecciona Cultivo —</option>
+        </select>
+      </div>
+    </div>
+    <div class="adv-actions" style="margin-top:12px;">
+      <button onclick="applyDrillChart()" class="adv-btn-apply" id="drill-apply-btn" disabled>📊 Ver antibióticos</button>
+      <button onclick="clearDrill()" class="adv-btn-clear">✕ Limpiar</button>
+      <span id="drill-status" class="adv-status"></span>
+    </div>
+    <div id="drill-result" style="margin-top:16px;"></div>
   </div>
 
   <!-- POR ANTIBIÓTICO -->
@@ -871,7 +917,7 @@ function awareTag(label){
 
 
 function lbl(r){return r.c&&(r.c==='A'||r.c==='W'||r.c==='R')?'('+r.c+') '+r.a:r.a;}
-function lblName(name){const n=normalizeAbxName(name||'');const meta=ABX_META[n];const c=meta?meta.c:'';return(c==='A'||c==='W'||c==='R')?`<span class="atag t${c}">(${c})</span>${n||name}`:(n||name);}
+function lblName(name){const n=normalizeAbxName(name||'');const meta=ABX_META[n];const c=meta?meta.c:'';return(c==='A'||c==='W'||c==='R')?'('+c+') '+(n||name):(n||name);}
 const SG_NAMES={'ITS':'INFECCIÓN DEL TRACTO SANGUÍNEO','IVU':'INFECCIÓN DE VÍAS URINARIAS'};
 function sgName(s){return SG_NAMES[s]||s;}
 function buildSRIChart(data1, data2, cid, lbl1, lbl2){
@@ -1808,7 +1854,156 @@ function setAdvTab(t,el){
   el.style.background='#7c3aed'; el.style.color='#fff'; el.style.borderColor='#7c3aed';
   document.getElementById('adv-multi').style.display=t==='multi'?'block':'none';
   document.getElementById('adv-abx').style.display=t==='abx'?'block':'none';
-  document.getElementById('adv-hint').textContent=t==='multi'?'Selecciona períodos para el Grupo A y Grupo B':'Selecciona antibiótico y dimensión de análisis';
+  document.getElementById('adv-drill').style.display=t==='drill'?'block':'none';
+  const hints={multi:'Selecciona períodos para el Grupo A y Grupo B',abx:'Selecciona antibiótico y dimensión de análisis',drill:'Filtra paso a paso: Servicio → Infección → Cultivo → Microorganismo → Antibióticos'};
+  document.getElementById('adv-hint').textContent=hints[t]||'';
+  if(t==='drill') initDrillPanel();
+}
+
+// ── DRILL-DOWN FUNCTIONS ──
+let _drillMaps=null;
+
+function buildDrillMaps(hospId){
+  const svcMap={}, infMap={}, culMap={};
+  const rawHosp=(RAW.data||{})[hospId];
+  if(rawHosp&&rawHosp.data){
+    const periods=rawHosp.periodos||Object.keys(rawHosp.data).filter(k=>/^\d{4}-\d{2}$/.test(k));
+    periods.forEach(per=>{
+      const d=rawHosp.data[per]||{};
+      [['servicios',svcMap],['infecciones',infMap],['cultivos',culMap]].forEach(([sec,map])=>{
+        const secObj=d[sec]||{};
+        (secObj.subgrupos||[]).forEach(sg=>{
+          if(!map[sg]) map[sg]=new Set();
+          Object.keys((secObj.data||{})[sg]||{}).forEach(m=>map[sg].add(m));
+        });
+      });
+    });
+    return {svcMap,infMap,culMap};
+  }
+  // Fallback: derived data (sin detalle de micro por sección)
+  const derived=getRawSliceForHospital(hospId)||RAW;
+  (derived.servicios?.subgrupos||[]).forEach(sg=>{svcMap[sg]=new Set(['*']);});
+  (derived.infecciones?.subgrupos||[]).forEach(sg=>{infMap[sg]=new Set(['*']);});
+  (derived.cultivos?.subgrupos||[]).forEach(sg=>{culMap[sg]=new Set(['*']);});
+  return {svcMap,infMap,culMap};
+}
+
+function initDrillPanel(){
+  const hospId=getAdvHospitals()[0]||activeHospital;
+  _drillMaps=buildDrillMaps(hospId);
+  const svcSel=document.getElementById('drill-svc'); if(!svcSel) return;
+  const svcs=Object.keys(_drillMaps.svcMap).sort();
+  svcSel.innerHTML='<option value="">— Selecciona un servicio —</option>'+
+    svcs.map(s=>`<option value="${s}">${s}</option>`).join('');
+  resetDrillFrom(2);
+}
+
+function onDrillSvcChange(){
+  const svc=document.getElementById('drill-svc')?.value;
+  resetDrillFrom(2);
+  if(!svc||!_drillMaps) return;
+  const svcMicros=_drillMaps.svcMap[svc]||new Set();
+  const avail=Object.entries(_drillMaps.infMap)
+    .filter(([,micros])=>{ if(micros.has('*')) return true; for(const m of micros) if(svcMicros.has(m)) return true; return false; })
+    .map(([k])=>k).sort();
+  const s2=document.getElementById('drill-step-2');
+  const sel=document.getElementById('drill-inf');
+  if(s2){s2.classList.remove('drill-step-locked');s2.classList.add('drill-active');}
+  if(sel){sel.disabled=false;sel.innerHTML=`<option value="">— ${avail.length} disponibles —</option>`+avail.map(i=>`<option value="${i}">${i}</option>`).join('');}
+}
+
+function onDrillInfChange(){
+  const svc=document.getElementById('drill-svc')?.value;
+  const inf=document.getElementById('drill-inf')?.value;
+  resetDrillFrom(3);
+  if(!inf||!_drillMaps) return;
+  const svcMicros=_drillMaps.svcMap[svc]||new Set();
+  const infMicros=_drillMaps.infMap[inf]||new Set();
+  const combined=infMicros.has('*')?svcMicros:new Set([...infMicros].filter(m=>svcMicros.has('*')||svcMicros.has(m)));
+  const avail=Object.entries(_drillMaps.culMap)
+    .filter(([,micros])=>{ if(micros.has('*')||combined.size===0) return true; for(const m of micros) if(combined.has(m)) return true; return false; })
+    .map(([k])=>k).sort();
+  const s3=document.getElementById('drill-step-3');
+  const sel=document.getElementById('drill-cul');
+  if(s3){s3.classList.remove('drill-step-locked');s3.classList.add('drill-active');}
+  if(sel){sel.disabled=false;sel.innerHTML=`<option value="">— ${avail.length} disponibles —</option>`+avail.map(c=>`<option value="${c}">${c}</option>`).join('');}
+}
+
+function onDrillCulChange(){
+  const svc=document.getElementById('drill-svc')?.value;
+  const inf=document.getElementById('drill-inf')?.value;
+  const cul=document.getElementById('drill-cul')?.value;
+  resetDrillFrom(4);
+  if(!cul||!_drillMaps) return;
+  const svcMicros=_drillMaps.svcMap[svc]||new Set();
+  const infMicros=_drillMaps.infMap[inf]||new Set();
+  const culMicros=_drillMaps.culMap[cul]||new Set();
+  let micros;
+  if(culMicros.has('*')) micros=svcMicros;
+  else micros=new Set([...culMicros].filter(m=>(svcMicros.has('*')||svcMicros.has(m))&&(infMicros.has('*')||infMicros.has(m))));
+  const avail=[...micros].filter(Boolean).sort();
+  const s4=document.getElementById('drill-step-4');
+  const sel=document.getElementById('drill-micro');
+  if(s4){s4.classList.remove('drill-step-locked');s4.classList.add('drill-active');}
+  if(sel){sel.disabled=false;sel.innerHTML=`<option value="">— ${avail.length} disponibles —</option>`+avail.map(m=>`<option value="${m}">${m}</option>`).join('');}
+}
+
+function onDrillMicroChange(){
+  const micro=document.getElementById('drill-micro')?.value;
+  const btn=document.getElementById('drill-apply-btn');
+  if(btn) btn.disabled=!micro;
+}
+
+function applyDrillChart(){
+  const svc=document.getElementById('drill-svc')?.value;
+  const inf=document.getElementById('drill-inf')?.value;
+  const cul=document.getElementById('drill-cul')?.value;
+  const micro=document.getElementById('drill-micro')?.value;
+  const result=document.getElementById('drill-result');
+  const status=document.getElementById('drill-status');
+  if(!micro||!result) return;
+  const hospId=getAdvHospitals()[0]||activeHospital;
+  const derived=getRawSliceForHospital(hospId)||RAW;
+  const rows=(derived.micros?.data?.[micro]?.['TODOS'])||[];
+  if(!rows.length){result.innerHTML='<div class="empty">Sin datos de antibióticos para este microorganismo.</div>';return;}
+  if(status) status.textContent='';
+  const breadcrumb=[svc,inf,cul,micro].filter(Boolean).join(' › ');
+  const cid='drill-chart-'+Math.random().toString(36).slice(2,7);
+  result.innerHTML=`
+    <div style="background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
+      <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Ruta de análisis</div>
+      <div style="font-size:.75rem;color:#374151;margin-bottom:2px;">📍 ${breadcrumb}</div>
+      <div style="font-size:.72rem;color:#64748b;margin-bottom:14px;">🦠 ${rows.reduce((s,r)=>s+(r.t||0),0)} antibiogramas totales</div>
+      <div id="${cid}"></div>
+    </div>`;
+  buildSRIChart(calcPct(rows).sort((a,b)=>b.pS-a.pS||a.pR-b.pR),null,cid,`🦠 ${micro}`,null);
+}
+
+function resetDrillFrom(step){
+  if(step<=2){
+    const s=document.getElementById('drill-step-2'),el=document.getElementById('drill-inf');
+    if(s){s.classList.add('drill-step-locked');s.classList.remove('drill-active');}
+    if(el){el.disabled=true;el.innerHTML='<option value="">— Primero selecciona Servicio —</option>';}
+  }
+  if(step<=3){
+    const s=document.getElementById('drill-step-3'),el=document.getElementById('drill-cul');
+    if(s){s.classList.add('drill-step-locked');s.classList.remove('drill-active');}
+    if(el){el.disabled=true;el.innerHTML='<option value="">— Primero selecciona Infección —</option>';}
+  }
+  if(step<=4){
+    const s=document.getElementById('drill-step-4'),el=document.getElementById('drill-micro');
+    if(s){s.classList.add('drill-step-locked');s.classList.remove('drill-active');}
+    if(el){el.disabled=true;el.innerHTML='<option value="">— Primero selecciona Cultivo —</option>';}
+    const btn=document.getElementById('drill-apply-btn'); if(btn) btn.disabled=true;
+    const r=document.getElementById('drill-result'); if(r) r.innerHTML='';
+  }
+}
+
+function clearDrill(){
+  const s=document.getElementById('drill-svc'); if(s) s.value='';
+  resetDrillFrom(2);
+  const r=document.getElementById('drill-result'); if(r) r.innerHTML='';
+  const st=document.getElementById('drill-status'); if(st) st.textContent='';
 }
 
 function buildAdvPills(){
