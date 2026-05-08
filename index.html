@@ -948,7 +948,8 @@ function awareTag(label){
 
 
 function lbl(r){return r.c&&(r.c==='A'||r.c==='W'||r.c==='R')?'('+r.c+') '+r.a:r.a;}
-function lblName(name){const n=normalizeAbxName(name||'');const meta=ABX_META[n];const c=meta?meta.c:'';return(c==='A'||c==='W'||c==='R')?'('+c+') '+(n||name):(n||name);}
+function lblHtml(r){const c=r&&r.c&&(r.c==='A'||r.c==='W'||r.c==='R')?r.c:'';return c?`<span class="atag t${c}">(${c})</span>${r.a}`:r.a;}
+function lblName(name){const n=normalizeAbxName(name||'');const meta=ABX_META[n];const c=meta?meta.c:'';return(c==='A'||c==='W'||c==='R')?`<span class="atag t${c}">(${c})</span>${n||name}`:(n||name);}
 const SG_NAMES={'ITS':'INFECCIÓN DEL TRACTO SANGUÍNEO','IVU':'INFECCIÓN DE VÍAS URINARIAS'};
 function sgName(s){return SG_NAMES[s]||s;}
 function buildSRIChart(data1, data2, cid, lbl1, lbl2){
@@ -1391,7 +1392,7 @@ function buildNarrativeHtml(rows, scopeLabel){
   const byName=(n)=>baseRows.find(r=>normalizeAbxName(r.a)===n || r.a===n);
   const linez=(byName('Linezolid')||{}).t||0;
   const vanco=(byName('Vancomicina')||{}).t||0;
-  const topRList=baseRows.filter(r=>(r.pR||0)>0.5).slice(0,4).map(r=>lbl(r));
+  const topRList=baseRows.filter(r=>(r.pR||0)>0.5).slice(0,4).map(r=>lblHtml(r));
   const topR=topRList.length?topRList.join(', '):'Ninguno';
   const N=baseRows.reduce((sum,r)=>sum+(r.t||0),0);
   const scope=scopeLabel||'todo el hospital';
@@ -1957,11 +1958,22 @@ function initDrillPanel(){
   rebuildDrillCascade();
 }
 
-// Reconstruye el cascada completo según el período A seleccionado
+// Reconstruye el cascada completo según el período A y TODOS los hospitales seleccionados
 function rebuildDrillCascade(){
-  const hospId=getAdvHospitals()[0]||activeHospital;
+  const hospIds=getAdvHospitals();
   const periodsA=getDrillPeriods('A');
-  _drillMaps=buildDrillMaps(hospId, periodsA);
+  // Mergeamos mapas de todos los hospitales seleccionados
+  const merged={svcMap:{},infMap:{},culMap:{}};
+  hospIds.forEach(hid=>{
+    const maps=buildDrillMaps(hid, periodsA);
+    ['svcMap','infMap','culMap'].forEach(key=>{
+      Object.entries(maps[key]).forEach(([sg,micros])=>{
+        if(!merged[key][sg]) merged[key][sg]=new Set();
+        micros.forEach(m=>merged[key][sg].add(m));
+      });
+    });
+  });
+  _drillMaps=merged;
   const svcSel=document.getElementById('drill-svc'); if(!svcSel) return;
   const svcs=Object.keys(_drillMaps.svcMap).sort();
   svcSel.innerHTML='<option value="">— Selecciona ('+svcs.length+' con datos) —</option>'+
@@ -2019,28 +2031,53 @@ function applyDrillChart(){
   const result=document.getElementById('drill-result');
   const status=document.getElementById('drill-status');
   if(!micro||!result) return;
-  const hospId=getAdvHospitals()[0]||activeHospital;
-  const derived=getRawSliceForHospital(hospId)||RAW;
-  const microData=derived.micros?.data?.[micro];
-  if(!microData){result.innerHTML='<div class="empty">Sin datos de antibióticos para este microorganismo.</div>';return;}
+
+  const hospIds=getAdvHospitals();
   const periodsA=getDrillPeriods('A');
   const periodsB=getDrillPeriods('B');
-  const d1=sriMergedRaw(microData, periodsA||['TODOS']);
-  const d2=periodsB?sriMergedRaw(microData, periodsB):null;
-  if(!d1||!d1.length){result.innerHTML='<div class="empty">Sin datos para el período seleccionado.</div>';return;}
-  if(status) status.textContent='';
-  const breadcrumb=[svc,inf,cul,micro].filter(Boolean).join(' › ');
   const labelA=periodsA?.includes('TODOS')?'Todo el período':(periodsA?.join(', ')||'Período A');
   const labelB=periodsB?(periodsB.join(', ')||'Período B'):null;
-  const cid='drill-chart-'+Math.random().toString(36).slice(2,7);
+  const breadcrumb=[svc,inf,cul,micro].filter(Boolean).join(' › ');
+
+  // Construimos una tarjeta por hospital que tenga datos reales
+  const cards=[];
+  hospIds.forEach(hid=>{
+    const derived=getRawSliceForHospital(hid)||RAW;
+    const microData=derived.micros?.data?.[micro];
+    if(!microData) return;
+    const d1=sriMergedRaw(microData, periodsA||['TODOS']);
+    if(!d1||!d1.length) return; // sin datos reales → omitir hospital
+    const d2=periodsB?sriMergedRaw(microData, periodsB):null;
+    const cid='drill-chart-'+hid.replace(/[^A-Za-z0-9]/g,'-')+'-'+Math.random().toString(36).slice(2,5);
+    cards.push({hid, d1, d2, cid});
+  });
+
+  if(!cards.length){
+    result.innerHTML='<div class="empty">Sin datos reales para <strong>'+micro+'</strong> en el período y hospitales seleccionados.</div>';
+    if(status) status.textContent='';
+    return;
+  }
+
+  if(status) status.textContent='';
   result.innerHTML=`
-    <div style="background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
-      <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Ruta de análisis</div>
-      <div style="font-size:.75rem;color:#374151;margin-bottom:2px;">📍 ${breadcrumb}</div>
-      <div style="font-size:.72rem;color:#64748b;margin-bottom:14px;">🗓 ${labelA}${labelB?' vs '+labelB:''} · 🦠 ${d1.reduce((s,r)=>s+(r.t||0),0)} antibiogramas</div>
-      <div id="${cid}"></div>
+    <div style="background:#f8fafc;border-radius:12px;padding:14px 16px;margin-bottom:12px;">
+      <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Ruta de análisis</div>
+      <div style="font-size:.75rem;color:#374151;">📍 ${breadcrumb}</div>
+      <div style="font-size:.72rem;color:#64748b;margin-top:2px;">🗓 ${labelA}${labelB?' vs '+labelB:''}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px;">
+      ${cards.map(({hid,d1,cid})=>`
+        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);">
+          <div style="font-size:.76rem;font-weight:800;color:#1e293b;margin-bottom:4px;">🏥 ${getHospitalDisplayName(hid)}</div>
+          <div style="font-size:.68rem;color:#64748b;margin-bottom:10px;">🦠 ${d1.reduce((s,r)=>s+(r.t||0),0)} antibiogramas</div>
+          <div id="${cid}"></div>
+        </div>`).join('')}
     </div>`;
-  buildSRIChart(d1, d2, cid, `🔵 ${labelA}`, d2?`🟢 ${labelB}`:null);
+
+  // Renderizamos cada gráfica después de que el DOM esté listo
+  cards.forEach(({d1,d2,cid})=>{
+    buildSRIChart(d1, d2, cid, `🔵 ${labelA}`, d2?`🟢 ${labelB}`:null);
+  });
 }
 
 function onDrillSvcChange(){
