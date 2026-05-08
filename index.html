@@ -234,6 +234,37 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 
   <!-- ANÁLISIS DETALLADO (DRILL-DOWN) -->
   <div id="adv-drill" style="display:none;">
+
+    <!-- Selectores de período -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div class="adv-group-card">
+        <div class="adv-group-header adv-group-header-a">
+          <span class="adv-group-dot"></span>PERÍODO A
+          <span class="adv-group-badge">Referencia</span>
+        </div>
+        <div class="adv-group-body">
+          <label class="adv-field-label">Año</label>
+          <select id="drill-yearA" class="adv-select adv-select-a" onchange="buildDrillMonths('A')">
+            <option value="TODOS">Todo el período</option>
+          </select>
+          <div id="drill-monthsA" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;"></div>
+        </div>
+      </div>
+      <div class="adv-group-card">
+        <div class="adv-group-header adv-group-header-b">
+          <span class="adv-group-dot"></span>PERÍODO B
+          <span class="adv-group-badge">Comparar (opcional)</span>
+        </div>
+        <div class="adv-group-body">
+          <label class="adv-field-label">Año</label>
+          <select id="drill-yearB" class="adv-select adv-select-b" onchange="buildDrillMonths('B')">
+            <option value="">— Sin comparación —</option>
+          </select>
+          <div id="drill-monthsB" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="drill-steps-wrap">
       <div class="drill-step drill-active" id="drill-step-1">
         <div class="drill-step-header"><span class="drill-step-num">1</span>Servicio</div>
@@ -1891,11 +1922,95 @@ function buildDrillMaps(hospId){
 function initDrillPanel(){
   const hospId=getAdvHospitals()[0]||activeHospital;
   _drillMaps=buildDrillMaps(hospId);
+  // Populate year selectors
+  const years=RAW.años||[...new Set((RAW.periodos||[]).map(p=>String(p).split('-')[0]))].sort();
+  const yA=document.getElementById('drill-yearA');
+  const yB=document.getElementById('drill-yearB');
+  if(yA){
+    yA.innerHTML='<option value="TODOS">Todo el período</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+    yA.value='TODOS';
+  }
+  if(yB){
+    yB.innerHTML='<option value="">— Sin comparación —</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+    yB.value='';
+  }
+  buildDrillMonths('A'); buildDrillMonths('B');
+  // Populate servicio selector
   const svcSel=document.getElementById('drill-svc'); if(!svcSel) return;
   const svcs=Object.keys(_drillMaps.svcMap).sort();
   svcSel.innerHTML='<option value="">— Selecciona un servicio —</option>'+
     svcs.map(s=>`<option value="${s}">${s}</option>`).join('');
   resetDrillFrom(2);
+}
+
+// Selected months per group (for drill)
+let _drillMonthsA=[], _drillMonthsB=[];
+
+function buildDrillMonths(grp){
+  const year=document.getElementById(`drill-year${grp}`)?.value;
+  const wrap=document.getElementById(`drill-months${grp}`);
+  const set=grp==='A'?_drillMonthsA:_drillMonthsB;
+  set.length=0;
+  if(!wrap){return;}
+  wrap.innerHTML='';
+  if(!year||year==='TODOS'||year===''){return;}
+  const months=(RAW.periodos||[]).filter(p=>p.startsWith(year+'-')).sort();
+  if(!months.length){return;}
+  months.forEach(m=>{
+    const [,mo]=m.split('-');
+    const lb=document.createElement('label');
+    lb.style.cssText='display:flex;align-items:center;gap:3px;font-size:.68rem;cursor:pointer;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:2px 7px;';
+    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=m; ck.style.margin='0';
+    ck.onchange=()=>{
+      const i=set.indexOf(m);
+      if(ck.checked&&i<0) set.push(m);
+      else if(!ck.checked&&i>=0) set.splice(i,1);
+    };
+    lb.appendChild(ck);
+    lb.appendChild(document.createTextNode(MONTHS[parseInt(mo)]));
+    wrap.appendChild(lb);
+  });
+}
+
+function getDrillPeriods(grp){
+  const year=document.getElementById(`drill-year${grp}`)?.value;
+  const months=grp==='A'?_drillMonthsA:_drillMonthsB;
+  if(!year) return null;
+  if(year==='TODOS') return ['TODOS'];
+  if(months.length) return [...months];
+  return [year]; // whole year
+}
+
+function applyDrillChart(){
+  const svc=document.getElementById('drill-svc')?.value;
+  const inf=document.getElementById('drill-inf')?.value;
+  const cul=document.getElementById('drill-cul')?.value;
+  const micro=document.getElementById('drill-micro')?.value;
+  const result=document.getElementById('drill-result');
+  const status=document.getElementById('drill-status');
+  if(!micro||!result) return;
+  const hospId=getAdvHospitals()[0]||activeHospital;
+  const derived=getRawSliceForHospital(hospId)||RAW;
+  const microData=derived.micros?.data?.[micro];
+  if(!microData){result.innerHTML='<div class="empty">Sin datos de antibióticos para este microorganismo.</div>';return;}
+  const periodsA=getDrillPeriods('A');
+  const periodsB=getDrillPeriods('B');
+  const d1=sriMergedRaw(microData, periodsA||['TODOS']);
+  const d2=periodsB?sriMergedRaw(microData, periodsB):null;
+  if(!d1||!d1.length){result.innerHTML='<div class="empty">Sin datos para el período seleccionado.</div>';return;}
+  if(status) status.textContent='';
+  const breadcrumb=[svc,inf,cul,micro].filter(Boolean).join(' › ');
+  const labelA=periodsA?.includes('TODOS')?'Todo el período':(periodsA?.join(', ')||'Período A');
+  const labelB=periodsB?(periodsB.join(', ')||'Período B'):null;
+  const cid='drill-chart-'+Math.random().toString(36).slice(2,7);
+  result.innerHTML=`
+    <div style="background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
+      <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Ruta de análisis</div>
+      <div style="font-size:.75rem;color:#374151;margin-bottom:2px;">📍 ${breadcrumb}</div>
+      <div style="font-size:.72rem;color:#64748b;margin-bottom:14px;">🗓 ${labelA}${labelB?' vs '+labelB:''} · 🦠 ${d1.reduce((s,r)=>s+(r.t||0),0)} antibiogramas</div>
+      <div id="${cid}"></div>
+    </div>`;
+  buildSRIChart(d1, d2, cid, `🔵 ${labelA}`, d2?`🟢 ${labelB}`:null);
 }
 
 function onDrillSvcChange(){
@@ -2001,6 +2116,10 @@ function resetDrillFrom(step){
 
 function clearDrill(){
   const s=document.getElementById('drill-svc'); if(s) s.value='';
+  const yA=document.getElementById('drill-yearA'); if(yA) yA.value='TODOS';
+  const yB=document.getElementById('drill-yearB'); if(yB) yB.value='';
+  _drillMonthsA.length=0; _drillMonthsB.length=0;
+  buildDrillMonths('A'); buildDrillMonths('B');
   resetDrillFrom(2);
   const r=document.getElementById('drill-result'); if(r) r.innerHTML='';
   const st=document.getElementById('drill-status'); if(st) st.textContent='';
