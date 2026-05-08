@@ -1894,24 +1894,44 @@ function setAdvTab(t,el){
 // ── DRILL-DOWN FUNCTIONS ──
 let _drillMaps=null;
 
-function buildDrillMaps(hospId){
+// Expande períodos seleccionados a meses reales del JSON
+function expandDrillPeriods(periods){
+  if(!periods||!periods.length||periods.includes('TODOS')){
+    return (RAW.periodos||[]);
+  }
+  const expanded=[];
+  periods.forEach(p=>{
+    if(/^\d{4}$/.test(p)){
+      (RAW.periodos||[]).filter(m=>m.startsWith(p+'-')).forEach(m=>expanded.push(m));
+    } else if(/^\d{4}-\d{2}$/.test(p)){
+      expanded.push(p);
+    }
+  });
+  return [...new Set(expanded)];
+}
+
+// Construye los mapas SOLO con datos reales del período seleccionado
+function buildDrillMaps(hospId, periods){
   const svcMap={}, infMap={}, culMap={};
   const rawHosp=(RAW.data||{})[hospId];
   if(rawHosp&&rawHosp.data){
-    const periods=rawHosp.periodos||Object.keys(rawHosp.data).filter(k=>/^\d{4}-\d{2}$/.test(k));
-    periods.forEach(per=>{
-      const d=rawHosp.data[per]||{};
+    const expanded=expandDrillPeriods(periods);
+    expanded.forEach(per=>{
+      const d=rawHosp.data[per];
+      if(!d) return; // sin datos reales en ese período → omitir
       [['servicios',svcMap],['infecciones',infMap],['cultivos',culMap]].forEach(([sec,map])=>{
         const secObj=d[sec]||{};
         (secObj.subgrupos||[]).forEach(sg=>{
+          const micros=Object.keys((secObj.data||{})[sg]||{});
+          if(!micros.length) return; // sin datos reales → omitir
           if(!map[sg]) map[sg]=new Set();
-          Object.keys((secObj.data||{})[sg]||{}).forEach(m=>map[sg].add(m));
+          micros.forEach(m=>map[sg].add(m));
         });
       });
     });
     return {svcMap,infMap,culMap};
   }
-  // Fallback: derived data (sin detalle de micro por sección)
+  // Fallback: derived data
   const derived=getRawSliceForHospital(hospId)||RAW;
   (derived.servicios?.subgrupos||[]).forEach(sg=>{svcMap[sg]=new Set(['*']);});
   (derived.infecciones?.subgrupos||[]).forEach(sg=>{infMap[sg]=new Set(['*']);});
@@ -1921,8 +1941,6 @@ function buildDrillMaps(hospId){
 
 function initDrillPanel(){
   const hospId=getAdvHospitals()[0]||activeHospital;
-  _drillMaps=buildDrillMaps(hospId);
-  // Populate year selectors
   const years=RAW.años||[...new Set((RAW.periodos||[]).map(p=>String(p).split('-')[0]))].sort();
   const yA=document.getElementById('drill-yearA');
   const yB=document.getElementById('drill-yearB');
@@ -1934,11 +1952,19 @@ function initDrillPanel(){
     yB.innerHTML='<option value="">— Sin comparación —</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
     yB.value='';
   }
+  _drillMonthsA=[]; _drillMonthsB=[];
   buildDrillMonths('A'); buildDrillMonths('B');
-  // Populate servicio selector
+  rebuildDrillCascade();
+}
+
+// Reconstruye el cascada completo según el período A seleccionado
+function rebuildDrillCascade(){
+  const hospId=getAdvHospitals()[0]||activeHospital;
+  const periodsA=getDrillPeriods('A');
+  _drillMaps=buildDrillMaps(hospId, periodsA);
   const svcSel=document.getElementById('drill-svc'); if(!svcSel) return;
   const svcs=Object.keys(_drillMaps.svcMap).sort();
-  svcSel.innerHTML='<option value="">— Selecciona un servicio —</option>'+
+  svcSel.innerHTML='<option value="">— Selecciona ('+svcs.length+' con datos) —</option>'+
     svcs.map(s=>`<option value="${s}">${s}</option>`).join('');
   resetDrillFrom(2);
 }
@@ -1953,7 +1979,10 @@ function buildDrillMonths(grp){
   set.length=0;
   if(!wrap){return;}
   wrap.innerHTML='';
-  if(!year||year==='TODOS'||year===''){return;}
+  if(!year||year==='TODOS'||year===''){
+    if(grp==='A') rebuildDrillCascade(); // actualiza cascada al volver a "Todo"
+    return;
+  }
   const months=(RAW.periodos||[]).filter(p=>p.startsWith(year+'-')).sort();
   if(!months.length){return;}
   months.forEach(m=>{
@@ -1963,13 +1992,14 @@ function buildDrillMonths(grp){
     const ck=document.createElement('input'); ck.type='checkbox'; ck.value=m; ck.style.margin='0';
     ck.onchange=()=>{
       const i=set.indexOf(m);
-      if(ck.checked&&i<0) set.push(m);
-      else if(!ck.checked&&i>=0) set.splice(i,1);
+      if(ck.checked&&i<0) set.push(m); else if(!ck.checked&&i>=0) set.splice(i,1);
+      if(grp==='A') rebuildDrillCascade(); // reconstruye cascada al cambiar meses
     };
     lb.appendChild(ck);
     lb.appendChild(document.createTextNode(MONTHS[parseInt(mo)]));
     wrap.appendChild(lb);
   });
+  if(grp==='A') rebuildDrillCascade(); // reconstruye cascada al cambiar año
 }
 
 function getDrillPeriods(grp){
@@ -2069,30 +2099,6 @@ function onDrillMicroChange(){
   if(btn) btn.disabled=!micro;
 }
 
-function applyDrillChart(){
-  const svc=document.getElementById('drill-svc')?.value;
-  const inf=document.getElementById('drill-inf')?.value;
-  const cul=document.getElementById('drill-cul')?.value;
-  const micro=document.getElementById('drill-micro')?.value;
-  const result=document.getElementById('drill-result');
-  const status=document.getElementById('drill-status');
-  if(!micro||!result) return;
-  const hospId=getAdvHospitals()[0]||activeHospital;
-  const derived=getRawSliceForHospital(hospId)||RAW;
-  const rows=(derived.micros?.data?.[micro]?.['TODOS'])||[];
-  if(!rows.length){result.innerHTML='<div class="empty">Sin datos de antibióticos para este microorganismo.</div>';return;}
-  if(status) status.textContent='';
-  const breadcrumb=[svc,inf,cul,micro].filter(Boolean).join(' › ');
-  const cid='drill-chart-'+Math.random().toString(36).slice(2,7);
-  result.innerHTML=`
-    <div style="background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
-      <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Ruta de análisis</div>
-      <div style="font-size:.75rem;color:#374151;margin-bottom:2px;">📍 ${breadcrumb}</div>
-      <div style="font-size:.72rem;color:#64748b;margin-bottom:14px;">🦠 ${rows.reduce((s,r)=>s+(r.t||0),0)} antibiogramas totales</div>
-      <div id="${cid}"></div>
-    </div>`;
-  buildSRIChart(calcPct(rows).sort((a,b)=>b.pS-a.pS||a.pR-b.pR),null,cid,`🦠 ${micro}`,null);
-}
 
 function resetDrillFrom(step){
   if(step<=2){
