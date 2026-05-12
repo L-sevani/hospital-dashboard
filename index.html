@@ -119,6 +119,10 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .adv-btn-clear{padding:8px 16px;border-radius:8px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:.76rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
 .adv-btn-clear:hover{background:#e2e8f0;color:#374151;}
 .adv-status{font-size:.72rem;color:#64748b;font-style:italic;}
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 32px;background:#fff;border-bottom:1px solid #f1f5f9;}
+.fltab{padding:5px 14px;border-radius:20px;font-size:.74rem;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:#f8fafc;color:#374151;transition:all .15s;}
+.fltab:hover{border-color:#2563eb;color:#2563eb;}
 /* ── DRILL-DOWN ── */
 .drill-steps-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 @media(max-width:860px){.drill-steps-wrap{grid-template-columns:1fr 1fr;}}
@@ -182,6 +186,12 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
   <button onclick="toggleCompare()" id="btn-compare-mob" style="display:none;padding:5px 12px;border-radius:20px;font-size:.74rem;font-weight:500;cursor:pointer;border:1px solid #e2e8f0;background:#f8fafc;color:#374151;">⇄ Comparar</button>
 </div>
 
+<div id="filter-bar" class="filter-bar">
+  <span class="clabel">Cuadro básico:</span>
+  <button class="fltab active" onclick="setFilter('todos',this)">Todos los antibióticos</button>
+  <button class="fltab" onclick="setFilter('cb',this)">📋 Solo Cuadro Básico</button>
+</div>
+
 <!-- ADVANCED ANALYSIS SECTION -->
 <div id="sec-avanzado" class="section adv-wrapper">
 
@@ -198,6 +208,11 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 
   <!-- MULTI-PERÍODO -->
   <div id="adv-multi">
+    <div class="filter-bar" style="margin-bottom:10px;">
+      <span class="clabel">Cuadro básico:</span>
+      <button class="fltab active" onclick="setFilter('todos',this)">Todos los antibióticos</button>
+      <button class="fltab" onclick="setFilter('cb',this)">📋 Solo Cuadro Básico</button>
+    </div>
     <div class="adv-groups-grid">
       <div class="adv-group-card">
         <div class="adv-group-header adv-group-header-a">
@@ -234,6 +249,11 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 
   <!-- ANÁLISIS DETALLADO (DRILL-DOWN) -->
   <div id="adv-drill" style="display:none;">
+    <div class="filter-bar" style="margin-bottom:10px;">
+      <span class="clabel">Cuadro básico:</span>
+      <button class="fltab active" onclick="setFilter('todos',this)">Todos los antibióticos</button>
+      <button class="fltab" onclick="setFilter('cb',this)">📋 Solo Cuadro Básico</button>
+    </div>
 
     <!-- Selectores de período -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
@@ -2065,9 +2085,11 @@ function applyDrillChart(){
     const derived=getRawSliceForHospital(hid)||RAW;
     const microData=derived.micros?.data?.[micro];
     if(!microData) return;
-    const d1=sriMergedRaw(microData, periodsA||['TODOS']);
+    const d1raw=sriMergedRaw(microData, periodsA||['TODOS']);
+    const d1=activeFilter==='cb'?filterRowsToCb(d1raw):d1raw;
     if(!d1||!d1.length) return; // sin datos reales → omitir hospital
-    const d2=periodsB?sriMergedRaw(microData, periodsB):null;
+    const d2raw=periodsB?sriMergedRaw(microData, periodsB):null;
+    const d2=d2raw?(activeFilter==='cb'?filterRowsToCb(d2raw):d2raw):null;
     const cid='drill-chart-'+hid.replace(/[^A-Za-z0-9]/g,'-')+'-'+Math.random().toString(36).slice(2,5);
     cards.push({hid, d1, d2, cid});
   });
