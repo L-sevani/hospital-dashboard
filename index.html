@@ -1413,10 +1413,27 @@ function buildNarrativeHtml(rows, scopeLabel){
 function getActiveSubgroups(section, raw){
   const source=(raw&&raw.subgrupos)||[];
   const current=Array.isArray(activeSg[section])?activeSg[section]:[activeSg[section]].filter(Boolean);
-  const valid=current.filter(s=>source.includes(s));
-  if(!valid.length && source.length) valid.push(source[0]);
+  // Filtrar solo los que existen Y tienen datos en el período activo
+  const valid=current.filter(s=>source.includes(s) && sgHasData((raw.data||{})[s], p1));
+  if(!valid.length){
+    // Auto-seleccionar el primero que tenga datos
+    const firstWithData=source.find(s=>sgHasData((raw.data||{})[s], p1));
+    if(firstWithData) valid.push(firstWithData);
+  }
   activeSg[section]=valid;
   return valid;
+}
+
+// Verifica si un subgrupo tiene datos reales para el período dado
+function sgHasData(dataMap, period){
+  if(!dataMap) return false;
+  if(!period||period==='TODOS') return Object.keys(dataMap).some(k=>dataMap[k]&&dataMap[k].length>0);
+  if(dataMap[period]&&dataMap[period].length>0) return true;
+  // Si es año (ej. '2018'), verificar si existe algún mes con datos
+  if(/^\d{4}$/.test(String(period))){
+    return Object.keys(dataMap).some(k=>k.startsWith(period+'-')&&dataMap[k]&&dataMap[k].length>0);
+  }
+  return false;
 }
 
 function renderSg(section){
@@ -1433,7 +1450,10 @@ function renderSg(section){
     const paintTabs=()=>{
       const q=(input.value||'').trim().toLowerCase();
       sgsEl.dataset.q=q;
-      const visibles=(raw.subgrupos||[]).filter(s=>sgName(s).toLowerCase().includes(q));
+      const visibles=(raw.subgrupos||[]).filter(s=>{
+        if(!sgName(s).toLowerCase().includes(q)) return false;
+        return sgHasData((raw.data||{})[s], p1);
+      });
       list.innerHTML='';
       visibles.forEach(s=>{
         const t=document.createElement('div');
