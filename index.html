@@ -202,8 +202,13 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
     <span id="adv-hint" class="adv-hint">Selecciona períodos para el Grupo A y Grupo B</span>
   </div>
 
-  <div class="adv-hosp-row">
+  <div class="adv-hosp-row" id="adv-hosp-row">
     <div id="adv-hosp-select" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"></div>
+  </div>
+
+  <!-- Selector de período para Análisis Detallado (se muestra/oculta según pestaña) -->
+  <div id="adv-drill-period-row" class="adv-hosp-row" style="display:none;gap:10px;flex-wrap:wrap;align-items:center;">
+    <div id="drill-year-checks" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;"></div>
   </div>
 
   <!-- MULTI-PERÍODO -->
@@ -255,13 +260,6 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
       <button class="fltab" onclick="setFilter('cb',this)">📋 Solo Cuadro Básico</button>
     </div>
     <!-- Período compartido -->
-    <div style="background:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 2px 6px rgba(0,0,0,.06);margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-      <span style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">🗓 Período:</span>
-      <select id="drill-year-main" class="adv-select" style="max-width:200px;" onchange="buildDrillMonthsMain()">
-        <option value="TODOS">Todo el período</option>
-      </select>
-      <div id="drill-months-main" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
-    </div>
     <!-- Secciones por hospital (generadas dinámicamente) -->
     <div id="drill-hosp-sections" style="display:grid;gap:14px;margin-bottom:14px;"></div>
     <div class="adv-actions">
@@ -1880,6 +1878,11 @@ function setAdvTab(t,el){
   document.getElementById('adv-multi').style.display=t==='multi'?'block':'none';
   document.getElementById('adv-abx').style.display=t==='abx'?'block':'none';
   document.getElementById('adv-drill').style.display=t==='drill'?'block':'none';
+  // Alterna entre selector de hospitales y selector de período
+  const hospRow=document.getElementById('adv-hosp-row');
+  const periodRow=document.getElementById('adv-drill-period-row');
+  if(hospRow) hospRow.style.display=t==='drill'?'none':'flex';
+  if(periodRow) periodRow.style.display=t==='drill'?'flex':'none';
   const hints={multi:'Selecciona períodos para el Grupo A y Grupo B',abx:'Selecciona antibiótico y dimensión de análisis',drill:'Filtra paso a paso: Servicio → Infección → Cultivo → Microorganismo → Antibióticos'};
   document.getElementById('adv-hint').textContent=hints[t]||'';
   if(t==='drill') initDrillPanel();
@@ -1933,33 +1936,44 @@ function buildDrillMaps(hospId,periods){
 }
 
 function getDrillMainPeriods(){
-  const year=document.getElementById('drill-year-main')?.value;
-  if(!year||year==='TODOS') return ['TODOS'];
-  if(_drillSelectedMonths.length) return [..._drillSelectedMonths];
-  return [year];
+  const box=document.getElementById('drill-year-checks'); if(!box) return ['TODOS'];
+  const checked=[...box.querySelectorAll('input:checked')].map(i=>i.value);
+  if(!checked.length||checked.includes('TODOS')) return ['TODOS'];
+  return expandDrillPeriods(checked);
 }
 
-function buildDrillMonthsMain(){
-  const year=document.getElementById('drill-year-main')?.value;
-  const wrap=document.getElementById('drill-months-main');
-  _drillSelectedMonths=[];
-  if(!wrap) return;
-  wrap.innerHTML='';
-  if(!year||year==='TODOS'){rebuildAllDrillCascades();return;}
-  (RAW.periodos||[]).filter(p=>p.startsWith(year+'-')).sort().forEach(m=>{
-    const [,mo]=m.split('-');
+function buildDrillYearChecks(){
+  const box=document.getElementById('drill-year-checks'); if(!box) return;
+  const years=RAW.años||[...new Set((RAW.periodos||[]).map(p=>String(p).split('-')[0]))].sort();
+  const prev=[...box.querySelectorAll('input:checked')].map(i=>i.value);
+  box.innerHTML='<span style="font-size:.72rem;color:#64748b;font-weight:700;text-transform:uppercase;white-space:nowrap;">Período:</span>';
+  // Pill "Todo el período"
+  const lbAll=document.createElement('label');
+  lbAll.className='adv-pcheck'+((!prev.length||prev.includes('TODOS'))?' ckA':'');
+  lbAll.style.fontSize='.72rem';
+  const ckAll=document.createElement('input'); ckAll.type='checkbox'; ckAll.value='TODOS'; ckAll.checked=!prev.length||prev.includes('TODOS'); ckAll.style.marginRight='4px';
+  ckAll.onchange=()=>{
+    if(ckAll.checked){ box.querySelectorAll('input[data-year]').forEach(c=>{c.checked=false;c.closest('label').classList.remove('ckA');}); lbAll.classList.add('ckA'); }
+    rebuildAllDrillCascades();
+  };
+  lbAll.appendChild(ckAll); lbAll.appendChild(document.createTextNode('Todo el período')); box.appendChild(lbAll);
+  // Pills por año
+  years.forEach(y=>{
     const lb=document.createElement('label');
-    lb.style.cssText='display:flex;align-items:center;gap:3px;font-size:.68rem;cursor:pointer;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:2px 7px;';
-    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=m; ck.style.margin='0';
+    lb.className='adv-pcheck'+(prev.includes(y)?' ckA':'');
+    lb.style.fontSize='.72rem';
+    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=y; ck.dataset.year='1'; ck.checked=prev.includes(y); ck.style.marginRight='4px';
     ck.onchange=()=>{
-      const idx=_drillSelectedMonths.indexOf(m);
-      if(ck.checked&&idx<0) _drillSelectedMonths.push(m); else if(!ck.checked&&idx>=0) _drillSelectedMonths.splice(idx,1);
+      if(ck.checked){ ckAll.checked=false; lbAll.classList.remove('ckA'); lb.classList.add('ckA'); }
+      else{ lb.classList.remove('ckA'); if(!box.querySelectorAll('input[data-year]:checked').length){ ckAll.checked=true; lbAll.classList.add('ckA'); } }
       rebuildAllDrillCascades();
     };
-    lb.appendChild(ck); lb.appendChild(document.createTextNode(MONTHS[parseInt(mo)]));
-    wrap.appendChild(lb);
+    const months=(RAW.periodos||[]).filter(p=>p.startsWith(y+'-')).length;
+    lb.appendChild(ck);
+    lb.appendChild(document.createTextNode(y));
+    const ms=document.createElement('span'); ms.textContent=` (${months}m)`; ms.style.cssText='font-size:.62rem;color:#94a3b8;margin-left:2px;'; lb.appendChild(ms);
+    box.appendChild(lb);
   });
-  rebuildAllDrillCascades();
 }
 
 function rebuildAllDrillCascades(){
@@ -2036,11 +2050,7 @@ function resetDrillHospFrom(i,step){
 }
 
 function initDrillPanel(){
-  const years=RAW.años||[...new Set((RAW.periodos||[]).map(p=>String(p).split('-')[0]))].sort();
-  const ySel=document.getElementById('drill-year-main');
-  if(ySel){ySel.innerHTML='<option value="TODOS">Todo el período</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');ySel.value='TODOS';}
-  _drillSelectedMonths=[];
-  const mw=document.getElementById('drill-months-main');if(mw)mw.innerHTML='';
+  buildDrillYearChecks();
   const hospIds=getAdvHospitals();
   const container=document.getElementById('drill-hosp-sections');if(!container)return;
   container.style.gridTemplateColumns=hospIds.length===1?'1fr':hospIds.length===2?'1fr 1fr':'repeat(3,1fr)';
@@ -2082,6 +2092,7 @@ function applyDrillChart(){
   const hospIds=getAdvHospitals();
   const periods=getDrillMainPeriods();
   const periodLabel=periods.includes('TODOS')?'Todo el período':periods.join(', ');
+
   const datasets=[];
   hospIds.forEach((hid,i)=>{
     const micro=document.getElementById(`drill-micro-${i}`)?.value;
@@ -2097,73 +2108,38 @@ function applyDrillChart(){
     const rows=activeFilter==='cb'?filterRowsToCb(raw):raw;
     if(!rows.length) return;
     const col=DRILL_COLORS[i]||DRILL_COLORS[0];
-    datasets.push({label:getHospitalDisplayName(hid),micro,crumb:[svc,inf,cul,micro].filter(Boolean).join(' › '),rows,color:col.main});
+    const crumb=[svc,inf,cul,micro].filter(Boolean).join(' › ');
+    const cid='drill-h-'+Math.random().toString(36).slice(2,6);
+    datasets.push({label:getHospitalDisplayName(hid),micro,crumb,rows,color:col.main,cid});
   });
-  if(!datasets.length){result.innerHTML='<div class="empty">Selecciona un microorganismo en al menos un hospital para ver los antibióticos.</div>';return;}
-  if(status) status.textContent='';
-  const cid='drill-chart-'+Math.random().toString(36).slice(2,6);
-  result.innerHTML=`<div style="background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
-    <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Resultado · ${periodLabel}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-      ${datasets.map(d=>`<div style="display:flex;align-items:center;gap:6px;font-size:.72rem;background:#f8fafc;border-radius:8px;padding:4px 10px;border:1px solid #e2e8f0;">
-        <span style="width:10px;height:10px;border-radius:50%;background:${d.color};display:inline-block;flex-shrink:0;"></span>
-        <strong style="color:${d.color};">${d.label}</strong>
-        <span style="color:#64748b;">→ 🦠 ${d.micro}</span>
-      </div>`).join('')}
-    </div>
-    <div id="${cid}"></div>
-  </div>`;
-  buildMultiDrillChart(datasets,cid);
-}
 
-function buildMultiDrillChart(datasets,cid){
-  const el=document.getElementById(cid);if(!el)return;
-  const abxMap=new Map();
-  datasets.forEach(({rows})=>(rows||[]).forEach(r=>{if(!abxMap.has(r.a))abxMap.set(r.a,{a:r.a,c:r.c});}));
-  const sorted=[...abxMap.values()].sort((x,y)=>{
-    const avg=name=>datasets.reduce((s,d)=>{const r=(d.rows||[]).find(r=>r.a===name);return s+(r?r.pR||0:0);},0)/datasets.length;
-    return avg(y.a)-avg(x.a);
+  if(!datasets.length){result.innerHTML='<div class="empty">Selecciona un microorganismo en al menos un hospital.</div>';return;}
+  if(status) status.textContent='';
+
+  const cols=datasets.length===1?'1fr':datasets.length===2?'1fr 1fr':'repeat(3,1fr)';
+  result.innerHTML=`
+    <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">
+      Resultado · ${periodLabel}
+    </div>
+    <div style="display:grid;grid-template-columns:${cols};gap:14px;">
+      ${datasets.map(d=>`
+        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+          <div style="font-size:.76rem;font-weight:800;color:${d.color};margin-bottom:2px;">🏥 ${d.label}</div>
+          <div style="font-size:.68rem;color:#64748b;margin-bottom:10px;">📍 ${d.crumb}</div>
+          <div id="${d.cid}"></div>
+        </div>`).join('')}
+    </div>`;
+
+  datasets.forEach(d=>{
+    const sorted=[...d.rows].sort((a,b)=>b.pR-a.pR||a.pS-b.pS);
+    buildSRIChart(sorted,null,d.cid,d.label,null);
   });
-  if(!sorted.length){el.innerHTML='<div class="empty">Sin datos de antibióticos.</div>';return;}
-  const legend=`<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0 12px;margin-bottom:4px;border-bottom:2px solid #f1f5f9;">
-    <div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#16a34a;border-radius:2px;display:inline-block;"></span>Sensible</div>
-    <div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#f59e0b;border-radius:2px;display:inline-block;"></span>Intermedio</div>
-    <div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#dc2626;border-radius:2px;display:inline-block;"></span>Resistente</div>
-    <span style="color:#e2e8f0">|</span>
-    ${datasets.map(d=>`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:10px;height:10px;border-radius:50%;background:${d.color};display:inline-block;"></span><strong style="color:${d.color}">${d.label}</strong></div>`).join('')}
-  </div>`;
-  let rows='';
-  sorted.forEach(meta=>{
-    const c=meta.c&&['A','W','R'].includes(meta.c)?meta.c:'';
-    const tag=c?`<span class="atag t${c}">(${c})</span>`:'';
-    rows+=`<div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid #f8fafc;">
-      <div style="min-width:170px;font-size:.71rem;font-weight:600;color:#1e293b;padding-top:4px;flex-shrink:0;">${tag}${meta.a}</div>
-      <div style="flex:1;display:flex;flex-direction:column;gap:4px;">`;
-    datasets.forEach(({label,rows:drows,color})=>{
-      const r=(drows||[]).find(r=>r.a===meta.a);
-      if(!r||!r.t){rows+=`<div style="display:flex;align-items:center;gap:6px;opacity:.35;"><div style="font-size:.62rem;color:#94a3b8;width:90px;flex-shrink:0;">${label}</div><span style="font-size:.62rem;color:#94a3b8;">sin datos</span></div>`;return;}
-      const pS=Math.round(r.S/r.t*100),pR=Math.round(r.R/r.t*100),pI=Math.round(r.I/r.t*100);
-      rows+=`<div style="display:flex;align-items:center;gap:6px;">
-        <div style="font-size:.63rem;font-weight:700;color:${color};width:90px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${label}">${label}</div>
-        <div style="flex:1;display:flex;height:10px;border-radius:5px;overflow:hidden;background:#f1f5f9;min-width:80px;">
-          <div style="width:${pS}%;background:#16a34a;" title="S ${pS}%"></div>
-          <div style="width:${pI}%;background:#f59e0b;" title="I ${pI}%"></div>
-          <div style="width:${pR}%;background:#dc2626;" title="R ${pR}%"></div>
-        </div>
-        <span style="font-size:.68rem;color:#dc2626;font-weight:700;width:32px;text-align:right;">${pR}%R</span>
-        <span style="font-size:.68rem;color:#16a34a;width:32px;text-align:right;">${pS}%S</span>
-        <span style="font-size:.62rem;color:#94a3b8;width:24px;text-align:right;">(${r.t})</span>
-      </div>`;
-    });
-    rows+=`</div></div>`;
-  });
-  el.innerHTML=legend+`<div style="overflow-x:auto;"><div style="min-width:420px;">${rows}</div></div>`;
 }
 
 function clearDrill(){
-  const ySel=document.getElementById('drill-year-main');if(ySel)ySel.value='TODOS';
-  _drillSelectedMonths=[];
-  const mw=document.getElementById('drill-months-main');if(mw)mw.innerHTML='';
+  // Resetear checkboxes de año: marcar "Todo el período"
+  const box=document.getElementById('drill-year-checks');
+  if(box){ box.querySelectorAll('input').forEach(c=>{c.checked=c.value==='TODOS'; c.closest('label').classList.toggle('ckA',c.value==='TODOS');}); }
   const hospIds=getAdvHospitals();
   hospIds.forEach((_,i)=>resetDrillHospFrom(i,2));
   const r=document.getElementById('drill-result');if(r)r.innerHTML='';
