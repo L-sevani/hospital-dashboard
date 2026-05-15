@@ -254,65 +254,18 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
       <button class="fltab active" onclick="setFilter('todos',this)">Todos los antibióticos</button>
       <button class="fltab" onclick="setFilter('cb',this)">📋 Solo Cuadro Básico</button>
     </div>
-
-    <!-- Selectores de período -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-      <div class="adv-group-card">
-        <div class="adv-group-header adv-group-header-a">
-          <span class="adv-group-dot"></span>PERÍODO A
-          <span class="adv-group-badge">Referencia</span>
-        </div>
-        <div class="adv-group-body">
-          <label class="adv-field-label">Año</label>
-          <select id="drill-yearA" class="adv-select adv-select-a" onchange="buildDrillMonths('A')">
-            <option value="TODOS">Todo el período</option>
-          </select>
-          <div id="drill-monthsA" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;"></div>
-        </div>
-      </div>
-      <div class="adv-group-card">
-        <div class="adv-group-header adv-group-header-b">
-          <span class="adv-group-dot"></span>PERÍODO B
-          <span class="adv-group-badge">Comparar (opcional)</span>
-        </div>
-        <div class="adv-group-body">
-          <label class="adv-field-label">Año</label>
-          <select id="drill-yearB" class="adv-select adv-select-b" onchange="buildDrillMonths('B')">
-            <option value="">— Sin comparación —</option>
-          </select>
-          <div id="drill-monthsB" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;"></div>
-        </div>
-      </div>
+    <!-- Período compartido -->
+    <div style="background:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 2px 6px rgba(0,0,0,.06);margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;">🗓 Período:</span>
+      <select id="drill-year-main" class="adv-select" style="max-width:200px;" onchange="buildDrillMonthsMain()">
+        <option value="TODOS">Todo el período</option>
+      </select>
+      <div id="drill-months-main" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
     </div>
-
-    <div class="drill-steps-wrap">
-      <div class="drill-step drill-active" id="drill-step-1">
-        <div class="drill-step-header"><span class="drill-step-num">1</span>Servicio</div>
-        <select id="drill-svc" class="adv-select" onchange="onDrillSvcChange()">
-          <option value="">— Selecciona —</option>
-        </select>
-      </div>
-      <div class="drill-step drill-step-locked" id="drill-step-2">
-        <div class="drill-step-header"><span class="drill-step-num">2</span>Infección</div>
-        <select id="drill-inf" class="adv-select" onchange="onDrillInfChange()" disabled>
-          <option value="">— Primero selecciona Servicio —</option>
-        </select>
-      </div>
-      <div class="drill-step drill-step-locked" id="drill-step-3">
-        <div class="drill-step-header"><span class="drill-step-num">3</span>Cultivo</div>
-        <select id="drill-cul" class="adv-select" onchange="onDrillCulChange()" disabled>
-          <option value="">— Primero selecciona Infección —</option>
-        </select>
-      </div>
-      <div class="drill-step drill-step-locked" id="drill-step-4">
-        <div class="drill-step-header"><span class="drill-step-num">4</span>Microorganismo</div>
-        <select id="drill-micro" class="adv-select" onchange="onDrillMicroChange()" disabled>
-          <option value="">— Primero selecciona Cultivo —</option>
-        </select>
-      </div>
-    </div>
-    <div class="adv-actions" style="margin-top:12px;">
-      <button onclick="applyDrillChart()" class="adv-btn-apply" id="drill-apply-btn" disabled>📊 Ver antibióticos</button>
+    <!-- Secciones por hospital (generadas dinámicamente) -->
+    <div id="drill-hosp-sections" style="display:grid;gap:14px;margin-bottom:14px;"></div>
+    <div class="adv-actions">
+      <button onclick="applyDrillChart()" class="adv-btn-apply" id="drill-apply-btn">📊 Ver antibióticos</button>
       <button onclick="clearDrill()" class="adv-btn-clear">✕ Limpiar</button>
       <span id="drill-status" class="adv-status"></span>
     </div>
@@ -1936,35 +1889,35 @@ function setAdvTab(t,el){
 let _drillMaps=null;
 
 // Expande períodos seleccionados a meses reales del JSON
+// ── DRILL-DOWN MULTI-HOSPITAL ──
+const DRILL_COLORS=[
+  {main:'#1d4ed8',grad:'#1d4ed8,#3b82f6',text:'#fff'},
+  {main:'#15803d',grad:'#15803d,#22c55e',text:'#fff'},
+  {main:'#b45309',grad:'#b45309,#f59e0b',text:'#fff'},
+];
+let _drillMapsArr=[], _drillSelectedMonths=[];
+
 function expandDrillPeriods(periods){
-  if(!periods||!periods.length||periods.includes('TODOS')){
-    return (RAW.periodos||[]);
-  }
-  const expanded=[];
+  if(!periods||!periods.length||periods.includes('TODOS')) return (RAW.periodos||[]);
+  const out=[];
   periods.forEach(p=>{
-    if(/^\d{4}$/.test(p)){
-      (RAW.periodos||[]).filter(m=>m.startsWith(p+'-')).forEach(m=>expanded.push(m));
-    } else if(/^\d{4}-\d{2}$/.test(p)){
-      expanded.push(p);
-    }
+    if(/^\d{4}$/.test(p)) (RAW.periodos||[]).filter(m=>m.startsWith(p+'-')).forEach(m=>out.push(m));
+    else if(/^\d{4}-\d{2}$/.test(p)) out.push(p);
   });
-  return [...new Set(expanded)];
+  return [...new Set(out)];
 }
 
-// Construye los mapas SOLO con datos reales del período seleccionado
-function buildDrillMaps(hospId, periods){
-  const svcMap={}, infMap={}, culMap={};
+function buildDrillMaps(hospId,periods){
+  const svcMap={},infMap={},culMap={};
   const rawHosp=(RAW.data||{})[hospId];
   if(rawHosp&&rawHosp.data){
-    const expanded=expandDrillPeriods(periods);
-    expanded.forEach(per=>{
-      const d=rawHosp.data[per];
-      if(!d) return; // sin datos reales en ese período → omitir
+    expandDrillPeriods(periods).forEach(per=>{
+      const d=rawHosp.data[per]; if(!d) return;
       [['servicios',svcMap],['infecciones',infMap],['cultivos',culMap]].forEach(([sec,map])=>{
         const secObj=d[sec]||{};
         (secObj.subgrupos||[]).forEach(sg=>{
           const micros=Object.keys((secObj.data||{})[sg]||{});
-          if(!micros.length) return; // sin datos reales → omitir
+          if(!micros.length) return;
           if(!map[sg]) map[sg]=new Set();
           micros.forEach(m=>map[sg].add(m));
         });
@@ -1972,7 +1925,6 @@ function buildDrillMaps(hospId, periods){
     });
     return {svcMap,infMap,culMap};
   }
-  // Fallback: derived data
   const derived=getRawSliceForHospital(hospId)||RAW;
   (derived.servicios?.subgrupos||[]).forEach(sg=>{svcMap[sg]=new Set(['*']);});
   (derived.infecciones?.subgrupos||[]).forEach(sg=>{infMap[sg]=new Set(['*']);});
@@ -1980,234 +1932,243 @@ function buildDrillMaps(hospId, periods){
   return {svcMap,infMap,culMap};
 }
 
-function initDrillPanel(){
-  const hospId=getAdvHospitals()[0]||activeHospital;
-  const years=RAW.años||[...new Set((RAW.periodos||[]).map(p=>String(p).split('-')[0]))].sort();
-  const yA=document.getElementById('drill-yearA');
-  const yB=document.getElementById('drill-yearB');
-  if(yA){
-    yA.innerHTML='<option value="TODOS">Todo el período</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
-    yA.value='TODOS';
-  }
-  if(yB){
-    yB.innerHTML='<option value="">— Sin comparación —</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');
-    yB.value='';
-  }
-  _drillMonthsA=[]; _drillMonthsB=[];
-  buildDrillMonths('A'); buildDrillMonths('B');
-  rebuildDrillCascade();
+function getDrillMainPeriods(){
+  const year=document.getElementById('drill-year-main')?.value;
+  if(!year||year==='TODOS') return ['TODOS'];
+  if(_drillSelectedMonths.length) return [..._drillSelectedMonths];
+  return [year];
 }
 
-// Reconstruye el cascada completo según el período A y TODOS los hospitales seleccionados
-function rebuildDrillCascade(){
-  const hospIds=getAdvHospitals();
-  const periodsA=getDrillPeriods('A');
-  // Mergeamos mapas de todos los hospitales seleccionados
-  const merged={svcMap:{},infMap:{},culMap:{}};
-  hospIds.forEach(hid=>{
-    const maps=buildDrillMaps(hid, periodsA);
-    ['svcMap','infMap','culMap'].forEach(key=>{
-      Object.entries(maps[key]).forEach(([sg,micros])=>{
-        if(!merged[key][sg]) merged[key][sg]=new Set();
-        micros.forEach(m=>merged[key][sg].add(m));
-      });
-    });
-  });
-  _drillMaps=merged;
-  const svcSel=document.getElementById('drill-svc'); if(!svcSel) return;
-  const svcs=Object.keys(_drillMaps.svcMap).sort();
-  svcSel.innerHTML='<option value="">— Selecciona ('+svcs.length+' con datos) —</option>'+
-    svcs.map(s=>`<option value="${s}">${s}</option>`).join('');
-  resetDrillFrom(2);
-}
-
-// Selected months per group (for drill)
-let _drillMonthsA=[], _drillMonthsB=[];
-
-function buildDrillMonths(grp){
-  const year=document.getElementById(`drill-year${grp}`)?.value;
-  const wrap=document.getElementById(`drill-months${grp}`);
-  const set=grp==='A'?_drillMonthsA:_drillMonthsB;
-  set.length=0;
-  if(!wrap){return;}
+function buildDrillMonthsMain(){
+  const year=document.getElementById('drill-year-main')?.value;
+  const wrap=document.getElementById('drill-months-main');
+  _drillSelectedMonths=[];
+  if(!wrap) return;
   wrap.innerHTML='';
-  if(!year||year==='TODOS'||year===''){
-    if(grp==='A') rebuildDrillCascade(); // actualiza cascada al volver a "Todo"
-    return;
-  }
-  const months=(RAW.periodos||[]).filter(p=>p.startsWith(year+'-')).sort();
-  if(!months.length){return;}
-  months.forEach(m=>{
+  if(!year||year==='TODOS'){rebuildAllDrillCascades();return;}
+  (RAW.periodos||[]).filter(p=>p.startsWith(year+'-')).sort().forEach(m=>{
     const [,mo]=m.split('-');
     const lb=document.createElement('label');
     lb.style.cssText='display:flex;align-items:center;gap:3px;font-size:.68rem;cursor:pointer;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:2px 7px;';
     const ck=document.createElement('input'); ck.type='checkbox'; ck.value=m; ck.style.margin='0';
     ck.onchange=()=>{
-      const i=set.indexOf(m);
-      if(ck.checked&&i<0) set.push(m); else if(!ck.checked&&i>=0) set.splice(i,1);
-      if(grp==='A') rebuildDrillCascade(); // reconstruye cascada al cambiar meses
+      const idx=_drillSelectedMonths.indexOf(m);
+      if(ck.checked&&idx<0) _drillSelectedMonths.push(m); else if(!ck.checked&&idx>=0) _drillSelectedMonths.splice(idx,1);
+      rebuildAllDrillCascades();
     };
-    lb.appendChild(ck);
-    lb.appendChild(document.createTextNode(MONTHS[parseInt(mo)]));
+    lb.appendChild(ck); lb.appendChild(document.createTextNode(MONTHS[parseInt(mo)]));
     wrap.appendChild(lb);
   });
-  if(grp==='A') rebuildDrillCascade(); // reconstruye cascada al cambiar año
+  rebuildAllDrillCascades();
 }
 
-function getDrillPeriods(grp){
-  const year=document.getElementById(`drill-year${grp}`)?.value;
-  const months=grp==='A'?_drillMonthsA:_drillMonthsB;
-  if(!year) return null;
-  if(year==='TODOS') return ['TODOS'];
-  if(months.length) return [...months];
-  return [year]; // whole year
+function rebuildAllDrillCascades(){
+  getAdvHospitals().forEach((hid,i)=>rebuildDrillCascadeForHosp(i,hid));
+}
+
+function rebuildDrillCascadeForHosp(i,hospId){
+  _drillMapsArr[i]=buildDrillMaps(hospId,getDrillMainPeriods());
+  const sel=document.getElementById(`drill-svc-${i}`); if(!sel) return;
+  const svcs=Object.keys(_drillMapsArr[i].svcMap).sort();
+  sel.innerHTML=`<option value="">— Selecciona (${svcs.length}) —</option>`+svcs.map(s=>`<option value="${s}">${s}</option>`).join('');
+  resetDrillHospFrom(i,2);
+}
+
+function onDrillSvcChange(i){
+  const svc=document.getElementById(`drill-svc-${i}`)?.value;
+  resetDrillHospFrom(i,2);
+  if(!svc||!_drillMapsArr[i]) return;
+  const svcMicros=_drillMapsArr[i].svcMap[svc]||new Set();
+  const avail=Object.entries(_drillMapsArr[i].infMap)
+    .filter(([,ms])=>{if(ms.has('*'))return true;for(const m of ms)if(svcMicros.has(m))return true;return false;})
+    .map(([k])=>k).sort();
+  unlockDrillStep(i,2,`drill-inf-${i}`,avail,`onDrillInfChange(${i})`);
+}
+
+function onDrillInfChange(i){
+  const svc=document.getElementById(`drill-svc-${i}`)?.value;
+  const inf=document.getElementById(`drill-inf-${i}`)?.value;
+  resetDrillHospFrom(i,3);
+  if(!inf||!_drillMapsArr[i]) return;
+  const svcM=_drillMapsArr[i].svcMap[svc]||new Set();
+  const infM=_drillMapsArr[i].infMap[inf]||new Set();
+  const combo=infM.has('*')?svcM:new Set([...infM].filter(m=>svcM.has('*')||svcM.has(m)));
+  const avail=Object.entries(_drillMapsArr[i].culMap)
+    .filter(([,ms])=>{if(ms.has('*')||combo.size===0)return true;for(const m of ms)if(combo.has(m))return true;return false;})
+    .map(([k])=>k).sort();
+  unlockDrillStep(i,3,`drill-cul-${i}`,avail,`onDrillCulChange(${i})`);
+}
+
+function onDrillCulChange(i){
+  const svc=document.getElementById(`drill-svc-${i}`)?.value;
+  const inf=document.getElementById(`drill-inf-${i}`)?.value;
+  const cul=document.getElementById(`drill-cul-${i}`)?.value;
+  resetDrillHospFrom(i,4);
+  if(!cul||!_drillMapsArr[i]) return;
+  const svcM=_drillMapsArr[i].svcMap[svc]||new Set();
+  const infM=_drillMapsArr[i].infMap[inf]||new Set();
+  const culM=_drillMapsArr[i].culMap[cul]||new Set();
+  const micros=culM.has('*')?svcM:new Set([...culM].filter(m=>(svcM.has('*')||svcM.has(m))&&(infM.has('*')||infM.has(m))));
+  const avail=[...micros].filter(Boolean).sort();
+  unlockDrillStep(i,4,`drill-micro-${i}`,avail,null);
+}
+
+function unlockDrillStep(i,step,selId,avail,onchange){
+  const card=document.getElementById(`drill-step-${i}-${step}`);
+  const sel=document.getElementById(selId);
+  if(card){card.classList.remove('drill-step-locked');card.classList.add('drill-active');}
+  if(sel){
+    sel.disabled=false;
+    if(onchange) sel.setAttribute('onchange',onchange);
+    sel.innerHTML=`<option value="">— ${avail.length} disponibles —</option>`+avail.map(v=>`<option value="${v}">${v}</option>`).join('');
+  }
+}
+
+function resetDrillHospFrom(i,step){
+  [[2,'inf','Primero Servicio'],[3,'cul','Primero Infección'],[4,'micro','Primero Cultivo']].forEach(([s,key,ph])=>{
+    if(step>s) return;
+    const c=document.getElementById(`drill-step-${i}-${s}`);
+    const el=document.getElementById(`drill-${key}-${i}`);
+    if(c){c.classList.add('drill-step-locked');c.classList.remove('drill-active');}
+    if(el){el.disabled=true;el.innerHTML=`<option value="">— ${ph} —</option>`;}
+  });
+  if(step<=4){const r=document.getElementById('drill-result');if(r)r.innerHTML='';}
+}
+
+function initDrillPanel(){
+  const years=RAW.años||[...new Set((RAW.periodos||[]).map(p=>String(p).split('-')[0]))].sort();
+  const ySel=document.getElementById('drill-year-main');
+  if(ySel){ySel.innerHTML='<option value="TODOS">Todo el período</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');ySel.value='TODOS';}
+  _drillSelectedMonths=[];
+  const mw=document.getElementById('drill-months-main');if(mw)mw.innerHTML='';
+  const hospIds=getAdvHospitals();
+  const container=document.getElementById('drill-hosp-sections');if(!container)return;
+  container.style.gridTemplateColumns=hospIds.length===1?'1fr':hospIds.length===2?'1fr 1fr':'repeat(3,1fr)';
+  container.innerHTML=hospIds.map((hid,i)=>{
+    const col=DRILL_COLORS[i]||DRILL_COLORS[0];
+    return `<div class="adv-group-card" style="min-width:0;">
+      <div class="adv-group-header" style="background:linear-gradient(90deg,${col.grad});color:${col.text};font-size:.72rem;gap:6px;">
+        <span class="adv-group-dot"></span>
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🏥 ${getHospitalDisplayName(hid)}</span>
+      </div>
+      <div class="adv-group-body" style="gap:8px;">
+        <div class="drill-step drill-active" id="drill-step-${i}-1">
+          <div class="drill-step-header" style="margin-bottom:4px;"><span class="drill-step-num">1</span>Servicio</div>
+          <select id="drill-svc-${i}" class="adv-select" onchange="onDrillSvcChange(${i})"><option value="">— Cargando... —</option></select>
+        </div>
+        <div class="drill-step drill-step-locked" id="drill-step-${i}-2">
+          <div class="drill-step-header" style="margin-bottom:4px;"><span class="drill-step-num">2</span>Infección</div>
+          <select id="drill-inf-${i}" class="adv-select" disabled><option value="">— Primero Servicio —</option></select>
+        </div>
+        <div class="drill-step drill-step-locked" id="drill-step-${i}-3">
+          <div class="drill-step-header" style="margin-bottom:4px;"><span class="drill-step-num">3</span>Cultivo</div>
+          <select id="drill-cul-${i}" class="adv-select" disabled><option value="">— Primero Infección —</option></select>
+        </div>
+        <div class="drill-step drill-step-locked" id="drill-step-${i}-4">
+          <div class="drill-step-header" style="margin-bottom:4px;"><span class="drill-step-num">4</span>Microorganismo</div>
+          <select id="drill-micro-${i}" class="adv-select" disabled><option value="">— Primero Cultivo —</option></select>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  _drillMapsArr=new Array(hospIds.length).fill(null);
+  rebuildAllDrillCascades();
 }
 
 function applyDrillChart(){
-  const svc=document.getElementById('drill-svc')?.value;
-  const inf=document.getElementById('drill-inf')?.value;
-  const cul=document.getElementById('drill-cul')?.value;
-  const micro=document.getElementById('drill-micro')?.value;
   const result=document.getElementById('drill-result');
   const status=document.getElementById('drill-status');
-  if(!micro||!result) return;
-
+  if(!result) return;
   const hospIds=getAdvHospitals();
-  const periodsA=getDrillPeriods('A');
-  const periodsB=getDrillPeriods('B');
-  const labelA=periodsA?.includes('TODOS')?'Todo el período':(periodsA?.join(', ')||'Período A');
-  const labelB=periodsB?(periodsB.join(', ')||'Período B'):null;
-  const breadcrumb=[svc,inf,cul,micro].filter(Boolean).join(' › ');
-
-  // Construimos una tarjeta por hospital que tenga datos reales
-  const cards=[];
-  hospIds.forEach(hid=>{
+  const periods=getDrillMainPeriods();
+  const periodLabel=periods.includes('TODOS')?'Todo el período':periods.join(', ');
+  const datasets=[];
+  hospIds.forEach((hid,i)=>{
+    const micro=document.getElementById(`drill-micro-${i}`)?.value;
+    const svc=document.getElementById(`drill-svc-${i}`)?.value;
+    const inf=document.getElementById(`drill-inf-${i}`)?.value;
+    const cul=document.getElementById(`drill-cul-${i}`)?.value;
+    if(!micro) return;
     const derived=getRawSliceForHospital(hid)||RAW;
     const microData=derived.micros?.data?.[micro];
     if(!microData) return;
-    const d1raw=sriMergedRaw(microData, periodsA||['TODOS']);
-    const d1=activeFilter==='cb'?filterRowsToCb(d1raw):d1raw;
-    if(!d1||!d1.length) return; // sin datos reales → omitir hospital
-    const d2raw=periodsB?sriMergedRaw(microData, periodsB):null;
-    const d2=d2raw?(activeFilter==='cb'?filterRowsToCb(d2raw):d2raw):null;
-    const cid='drill-chart-'+hid.replace(/[^A-Za-z0-9]/g,'-')+'-'+Math.random().toString(36).slice(2,5);
-    cards.push({hid, d1, d2, cid});
+    const raw=sriMergedRaw(microData,periods);
+    if(!raw||!raw.length) return;
+    const rows=activeFilter==='cb'?filterRowsToCb(raw):raw;
+    if(!rows.length) return;
+    const col=DRILL_COLORS[i]||DRILL_COLORS[0];
+    datasets.push({label:getHospitalDisplayName(hid),micro,crumb:[svc,inf,cul,micro].filter(Boolean).join(' › '),rows,color:col.main});
   });
-
-  if(!cards.length){
-    result.innerHTML='<div class="empty">Sin datos reales para <strong>'+micro+'</strong> en el período y hospitales seleccionados.</div>';
-    if(status) status.textContent='';
-    return;
-  }
-
+  if(!datasets.length){result.innerHTML='<div class="empty">Selecciona un microorganismo en al menos un hospital para ver los antibióticos.</div>';return;}
   if(status) status.textContent='';
-  result.innerHTML=`
-    <div style="background:#f8fafc;border-radius:12px;padding:14px 16px;margin-bottom:12px;">
-      <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Ruta de análisis</div>
-      <div style="font-size:.75rem;color:#374151;">📍 ${breadcrumb}</div>
-      <div style="font-size:.72rem;color:#64748b;margin-top:2px;">🗓 ${labelA}${labelB?' vs '+labelB:''}</div>
+  const cid='drill-chart-'+Math.random().toString(36).slice(2,6);
+  result.innerHTML=`<div style="background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
+    <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Resultado · ${periodLabel}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+      ${datasets.map(d=>`<div style="display:flex;align-items:center;gap:6px;font-size:.72rem;background:#f8fafc;border-radius:8px;padding:4px 10px;border:1px solid #e2e8f0;">
+        <span style="width:10px;height:10px;border-radius:50%;background:${d.color};display:inline-block;flex-shrink:0;"></span>
+        <strong style="color:${d.color};">${d.label}</strong>
+        <span style="color:#64748b;">→ 🦠 ${d.micro}</span>
+      </div>`).join('')}
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px;">
-      ${cards.map(({hid,d1,cid})=>`
-        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);">
-          <div style="font-size:.76rem;font-weight:800;color:#1e293b;margin-bottom:4px;">🏥 ${getHospitalDisplayName(hid)}</div>
-          <div style="font-size:.68rem;color:#64748b;margin-bottom:10px;">🦠 ${d1.reduce((s,r)=>s+(r.t||0),0)} antibiogramas</div>
-          <div id="${cid}"></div>
-        </div>`).join('')}
-    </div>`;
+    <div id="${cid}"></div>
+  </div>`;
+  buildMultiDrillChart(datasets,cid);
+}
 
-  // Renderizamos cada gráfica después de que el DOM esté listo
-  cards.forEach(({d1,d2,cid})=>{
-    buildSRIChart(d1, d2, cid, `🔵 ${labelA}`, d2?`🟢 ${labelB}`:null);
+function buildMultiDrillChart(datasets,cid){
+  const el=document.getElementById(cid);if(!el)return;
+  const abxMap=new Map();
+  datasets.forEach(({rows})=>(rows||[]).forEach(r=>{if(!abxMap.has(r.a))abxMap.set(r.a,{a:r.a,c:r.c});}));
+  const sorted=[...abxMap.values()].sort((x,y)=>{
+    const avg=name=>datasets.reduce((s,d)=>{const r=(d.rows||[]).find(r=>r.a===name);return s+(r?r.pR||0:0);},0)/datasets.length;
+    return avg(y.a)-avg(x.a);
   });
-}
-
-function onDrillSvcChange(){
-  const svc=document.getElementById('drill-svc')?.value;
-  resetDrillFrom(2);
-  if(!svc||!_drillMaps) return;
-  const svcMicros=_drillMaps.svcMap[svc]||new Set();
-  const avail=Object.entries(_drillMaps.infMap)
-    .filter(([,micros])=>{ if(micros.has('*')) return true; for(const m of micros) if(svcMicros.has(m)) return true; return false; })
-    .map(([k])=>k).sort();
-  const s2=document.getElementById('drill-step-2');
-  const sel=document.getElementById('drill-inf');
-  if(s2){s2.classList.remove('drill-step-locked');s2.classList.add('drill-active');}
-  if(sel){sel.disabled=false;sel.innerHTML=`<option value="">— ${avail.length} disponibles —</option>`+avail.map(i=>`<option value="${i}">${i}</option>`).join('');}
-}
-
-function onDrillInfChange(){
-  const svc=document.getElementById('drill-svc')?.value;
-  const inf=document.getElementById('drill-inf')?.value;
-  resetDrillFrom(3);
-  if(!inf||!_drillMaps) return;
-  const svcMicros=_drillMaps.svcMap[svc]||new Set();
-  const infMicros=_drillMaps.infMap[inf]||new Set();
-  const combined=infMicros.has('*')?svcMicros:new Set([...infMicros].filter(m=>svcMicros.has('*')||svcMicros.has(m)));
-  const avail=Object.entries(_drillMaps.culMap)
-    .filter(([,micros])=>{ if(micros.has('*')||combined.size===0) return true; for(const m of micros) if(combined.has(m)) return true; return false; })
-    .map(([k])=>k).sort();
-  const s3=document.getElementById('drill-step-3');
-  const sel=document.getElementById('drill-cul');
-  if(s3){s3.classList.remove('drill-step-locked');s3.classList.add('drill-active');}
-  if(sel){sel.disabled=false;sel.innerHTML=`<option value="">— ${avail.length} disponibles —</option>`+avail.map(c=>`<option value="${c}">${c}</option>`).join('');}
-}
-
-function onDrillCulChange(){
-  const svc=document.getElementById('drill-svc')?.value;
-  const inf=document.getElementById('drill-inf')?.value;
-  const cul=document.getElementById('drill-cul')?.value;
-  resetDrillFrom(4);
-  if(!cul||!_drillMaps) return;
-  const svcMicros=_drillMaps.svcMap[svc]||new Set();
-  const infMicros=_drillMaps.infMap[inf]||new Set();
-  const culMicros=_drillMaps.culMap[cul]||new Set();
-  let micros;
-  if(culMicros.has('*')) micros=svcMicros;
-  else micros=new Set([...culMicros].filter(m=>(svcMicros.has('*')||svcMicros.has(m))&&(infMicros.has('*')||infMicros.has(m))));
-  const avail=[...micros].filter(Boolean).sort();
-  const s4=document.getElementById('drill-step-4');
-  const sel=document.getElementById('drill-micro');
-  if(s4){s4.classList.remove('drill-step-locked');s4.classList.add('drill-active');}
-  if(sel){sel.disabled=false;sel.innerHTML=`<option value="">— ${avail.length} disponibles —</option>`+avail.map(m=>`<option value="${m}">${m}</option>`).join('');}
-}
-
-function onDrillMicroChange(){
-  const micro=document.getElementById('drill-micro')?.value;
-  const btn=document.getElementById('drill-apply-btn');
-  if(btn) btn.disabled=!micro;
-}
-
-
-function resetDrillFrom(step){
-  if(step<=2){
-    const s=document.getElementById('drill-step-2'),el=document.getElementById('drill-inf');
-    if(s){s.classList.add('drill-step-locked');s.classList.remove('drill-active');}
-    if(el){el.disabled=true;el.innerHTML='<option value="">— Primero selecciona Servicio —</option>';}
-  }
-  if(step<=3){
-    const s=document.getElementById('drill-step-3'),el=document.getElementById('drill-cul');
-    if(s){s.classList.add('drill-step-locked');s.classList.remove('drill-active');}
-    if(el){el.disabled=true;el.innerHTML='<option value="">— Primero selecciona Infección —</option>';}
-  }
-  if(step<=4){
-    const s=document.getElementById('drill-step-4'),el=document.getElementById('drill-micro');
-    if(s){s.classList.add('drill-step-locked');s.classList.remove('drill-active');}
-    if(el){el.disabled=true;el.innerHTML='<option value="">— Primero selecciona Cultivo —</option>';}
-    const btn=document.getElementById('drill-apply-btn'); if(btn) btn.disabled=true;
-    const r=document.getElementById('drill-result'); if(r) r.innerHTML='';
-  }
+  if(!sorted.length){el.innerHTML='<div class="empty">Sin datos de antibióticos.</div>';return;}
+  const legend=`<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0 12px;margin-bottom:4px;border-bottom:2px solid #f1f5f9;">
+    <div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#16a34a;border-radius:2px;display:inline-block;"></span>Sensible</div>
+    <div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#f59e0b;border-radius:2px;display:inline-block;"></span>Intermedio</div>
+    <div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#dc2626;border-radius:2px;display:inline-block;"></span>Resistente</div>
+    <span style="color:#e2e8f0">|</span>
+    ${datasets.map(d=>`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:10px;height:10px;border-radius:50%;background:${d.color};display:inline-block;"></span><strong style="color:${d.color}">${d.label}</strong></div>`).join('')}
+  </div>`;
+  let rows='';
+  sorted.forEach(meta=>{
+    const c=meta.c&&['A','W','R'].includes(meta.c)?meta.c:'';
+    const tag=c?`<span class="atag t${c}">(${c})</span>`:'';
+    rows+=`<div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid #f8fafc;">
+      <div style="min-width:170px;font-size:.71rem;font-weight:600;color:#1e293b;padding-top:4px;flex-shrink:0;">${tag}${meta.a}</div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px;">`;
+    datasets.forEach(({label,rows:drows,color})=>{
+      const r=(drows||[]).find(r=>r.a===meta.a);
+      if(!r||!r.t){rows+=`<div style="display:flex;align-items:center;gap:6px;opacity:.35;"><div style="font-size:.62rem;color:#94a3b8;width:90px;flex-shrink:0;">${label}</div><span style="font-size:.62rem;color:#94a3b8;">sin datos</span></div>`;return;}
+      const pS=Math.round(r.S/r.t*100),pR=Math.round(r.R/r.t*100),pI=Math.round(r.I/r.t*100);
+      rows+=`<div style="display:flex;align-items:center;gap:6px;">
+        <div style="font-size:.63rem;font-weight:700;color:${color};width:90px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${label}">${label}</div>
+        <div style="flex:1;display:flex;height:10px;border-radius:5px;overflow:hidden;background:#f1f5f9;min-width:80px;">
+          <div style="width:${pS}%;background:#16a34a;" title="S ${pS}%"></div>
+          <div style="width:${pI}%;background:#f59e0b;" title="I ${pI}%"></div>
+          <div style="width:${pR}%;background:#dc2626;" title="R ${pR}%"></div>
+        </div>
+        <span style="font-size:.68rem;color:#dc2626;font-weight:700;width:32px;text-align:right;">${pR}%R</span>
+        <span style="font-size:.68rem;color:#16a34a;width:32px;text-align:right;">${pS}%S</span>
+        <span style="font-size:.62rem;color:#94a3b8;width:24px;text-align:right;">(${r.t})</span>
+      </div>`;
+    });
+    rows+=`</div></div>`;
+  });
+  el.innerHTML=legend+`<div style="overflow-x:auto;"><div style="min-width:420px;">${rows}</div></div>`;
 }
 
 function clearDrill(){
-  const s=document.getElementById('drill-svc'); if(s) s.value='';
-  const yA=document.getElementById('drill-yearA'); if(yA) yA.value='TODOS';
-  const yB=document.getElementById('drill-yearB'); if(yB) yB.value='';
-  _drillMonthsA.length=0; _drillMonthsB.length=0;
-  buildDrillMonths('A'); buildDrillMonths('B');
-  resetDrillFrom(2);
-  const r=document.getElementById('drill-result'); if(r) r.innerHTML='';
-  const st=document.getElementById('drill-status'); if(st) st.textContent='';
+  const ySel=document.getElementById('drill-year-main');if(ySel)ySel.value='TODOS';
+  _drillSelectedMonths=[];
+  const mw=document.getElementById('drill-months-main');if(mw)mw.innerHTML='';
+  const hospIds=getAdvHospitals();
+  hospIds.forEach((_,i)=>resetDrillHospFrom(i,2));
+  const r=document.getElementById('drill-result');if(r)r.innerHTML='';
+  const st=document.getElementById('drill-status');if(st)st.textContent='';
+  rebuildAllDrillCascades();
 }
 
 function buildAdvPills(){
