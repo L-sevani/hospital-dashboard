@@ -1015,6 +1015,103 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   });
 }
 
+// ── MULTI-HOSPITAL SRI CHART (N barras por antibiótico) ──
+function buildSRIMultiChart(datasets, cid){
+  const el=document.getElementById(cid); if(!el) return;
+  if(!datasets||!datasets.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
+  // Recopilar todos los antibióticos y ordenar por R promedio desc
+  const abxMap=new Map();
+  datasets.forEach(({rows})=>(rows||[]).forEach(r=>{if(!abxMap.has(r.a))abxMap.set(r.a,{a:r.a,c:r.c});}));
+  const allAbx=[...abxMap.values()].sort((x,y)=>{
+    const avgR=name=>{const vs=datasets.map(d=>(d.rows||[]).find(r=>r.a===name)).filter(Boolean);return vs.length?vs.reduce((s,r)=>s+(r.pR||0),0)/vs.length:0;};
+    return avgR(y.a)-avgR(x.a);
+  });
+  if(!allAbx.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
+  const N=datasets.length;
+  const pct=v=>(v*100).toFixed(1)+'%';
+  const isMobile=(window.innerWidth||1200)<768;
+  const sidePad=isMobile?32:96;
+  const availW=Math.max(isMobile?300:600,(window.innerWidth||1200)-sidePad);
+  const CH=isMobile?220:300, YW=isMobile?36:44, XLABELH=isMobile?120:155, PADTOP=12;
+  const n=allAbx.length;
+  const BW=Math.max(12,Math.min(22,Math.floor((availW-YW)/Math.max(n,1)/N*0.65)));
+  const GAP_BAR=2, GAP_GROUP=10;
+  const groupW=N*BW+(N-1)*GAP_BAR;
+  const SLOT=groupW+GAP_GROUP;
+  const slotPad=Math.round((SLOT-groupW)/2);
+  const totalW=YW+n*SLOT+slotPad;
+  const totalH=PADTOP+CH+XLABELH;
+  const HCOLORS=['#1d4ed8','#15803d','#b45309'];
+
+  let h=`<div style="width:100%;overflow-x:auto;">`;
+  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;">`;
+  [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].forEach(t=>{
+    const y=PADTOP+Math.round((1-t)*CH);
+    h+=`<div style="position:absolute;left:${YW}px;right:0;top:${y}px;border-top:1px solid ${t===0?'#9ca3af':'#e5e7eb'};"></div>`;
+    h+=`<div style="position:absolute;left:0;width:${YW-4}px;top:${y}px;transform:translateY(-50%);text-align:right;padding-right:4px;color:#6b7280;">${t===1?'1':t.toFixed(1)}</div>`;
+  });
+
+  allAbx.forEach((meta,i)=>{
+    const xGroup=YW+i*SLOT+slotPad;
+    const {tag,name,cls=''}=awareTag(lbl(meta));
+    const tagStr=tag?`<span class="atag ${cls}">(${tag})</span>`:'';
+    let totalN=0;
+    datasets.forEach(({rows,label},hi)=>{
+      const d=(rows||[]).find(r=>r.a===meta.a);
+      const x=xGroup+hi*(BW+GAP_BAR);
+      const hc=HCOLORS[hi]||'#374151';
+      if(!d||!d.t){
+        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;background:#f3f4f6;border-radius:2px;opacity:.4;"></div>`;
+      }else{
+        totalN+=d.t;
+        let yB=PADTOP+CH;
+        if(d.pS>0){const h2=Math.max(1,Math.round(d.pS*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#22c55e;"></div>`;}
+        if(d.pR>0){const h2=Math.max(1,Math.round(d.pR*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#ef4444;"></div>`;}
+        if(d.pI>0){const h2=Math.max(1,Math.round(d.pI*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#f59e0b;"></div>`;}
+        // Franja de color del hospital en la base
+        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH}px;width:${BW}px;height:4px;background:${hc};"></div>`;
+        // Zona de tooltip
+        const tipData=JSON.stringify({abx:meta.a,hosp:label,S:d.S,R:d.R,I:d.I,T:d.t,pS:pct(d.pS),pR:pct(d.pR),pI:pct(d.pI)}).replace(/'/g,'&apos;');
+        h+=`<div class="vbh" data-tip='${tipData}' data-multi="1" style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
+      }
+    });
+    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+6}px;width:${groupW}px;text-align:center;font-size:.6rem;color:#6b7280;">${totalN||''}</div>`;
+    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+20}px;width:${groupW}px;height:${XLABELH-20}px;display:flex;justify-content:center;overflow:hidden;">
+      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</div>
+    </div>`;
+  });
+  h+=`</div></div>`;
+
+  // Leyenda de hospitales
+  h+=`<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px;padding-top:6px;border-top:1px solid #f1f5f9;">`;
+  h+=`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#22c55e;border-radius:2px;display:inline-block;"></span>S</div>`;
+  h+=`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#ef4444;border-radius:2px;display:inline-block;"></span>R</div>`;
+  h+=`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#f59e0b;border-radius:2px;display:inline-block;"></span>I</div>`;
+  h+=`<span style="color:#e2e8f0;">|</span>`;
+  datasets.forEach(({label},hi)=>{h+=`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;"><span style="width:18px;height:4px;background:${HCOLORS[hi]||'#374151'};border-radius:2px;display:inline-block;"></span><strong style="color:${HCOLORS[hi]||'#374151'};">${label}</strong></div>`;});
+  h+=`</div>`;
+  el.innerHTML=h;
+
+  // Tooltip flotante (mismo sistema que buildSRIChart)
+  const tip=getFixedTip();
+  el.querySelectorAll('.vbh[data-multi]').forEach(bar=>{
+    bar.addEventListener('mouseenter',e=>{
+      try{
+        const d=JSON.parse(bar.dataset.tip.replace(/&apos;/g,"'"));
+        let inn=`<div style="font-weight:600;color:#fff;margin-bottom:3px;">${d.abx||''}</div>`;
+        inn+=`<div style="font-size:.65rem;color:#94a3b8;margin-bottom:4px;">${d.hosp}</div>`;
+        inn+=`<div style="color:#4ade80;">S: ${d.S} (${d.pS})</div>`;
+        inn+=`<div style="color:#f87171;">R: ${d.R} (${d.pR})</div>`;
+        inn+=`<div style="color:#fbbf24;">I: ${d.I} (${d.pI})</div>`;
+        inn+=`<div style="color:#94a3b8;border-top:1px solid #334155;margin-top:3px;padding-top:3px;">Total: ${d.T}</div>`;
+        tip.innerHTML=inn; tip.style.display='block'; placeTip(e);
+      }catch(ex){}
+    });
+    bar.addEventListener('mousemove',e=>placeTip(e));
+    bar.addEventListener('mouseleave',hideTip);
+  });
+}
+
 // ── COMPACT CHART (comparación rápida entre hospitales) ──
 function buildSRICompactChart(data, cid){
   const el=document.getElementById(cid); if(!el) return;
@@ -2116,24 +2213,21 @@ function applyDrillChart(){
   if(!datasets.length){result.innerHTML='<div class="empty">Selecciona un microorganismo en al menos un hospital.</div>';return;}
   if(status) status.textContent='';
 
-  const cols=datasets.length===1?'1fr':datasets.length===2?'1fr 1fr':'repeat(3,1fr)';
+  const cid='drill-multi-'+Math.random().toString(36).slice(2,6);
   result.innerHTML=`
-    <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">
-      Resultado · ${periodLabel}
-    </div>
-    <div style="display:grid;grid-template-columns:${cols};gap:14px;">
-      ${datasets.map(d=>`
-        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
-          <div style="font-size:.76rem;font-weight:800;color:${d.color};margin-bottom:2px;">🏥 ${d.label}</div>
-          <div style="font-size:.68rem;color:#64748b;margin-bottom:10px;">📍 ${d.crumb}</div>
-          <div id="${d.cid}"></div>
+    <div style="background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
+      <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Resultado · ${periodLabel}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+        ${datasets.map(d=>`<div style="display:flex;align-items:center;gap:6px;font-size:.72rem;background:#f8fafc;border-radius:8px;padding:4px 10px;border:1px solid #e2e8f0;">
+          <span style="width:10px;height:10px;border-radius:50%;background:${d.color};display:inline-block;flex-shrink:0;"></span>
+          <strong style="color:${d.color};">${d.label}</strong>
+          <span style="color:#64748b;">→ 🦠 ${d.micro}</span>
         </div>`).join('')}
+      </div>
+      <div id="${cid}"></div>
     </div>`;
 
-  datasets.forEach(d=>{
-    const sorted=[...d.rows].sort((a,b)=>b.pR-a.pR||a.pS-b.pS);
-    buildSRIChart(sorted,null,d.cid,d.label,null);
-  });
+  buildSRIMultiChart(datasets, cid);
 }
 
 function clearDrill(){
