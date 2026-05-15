@@ -1023,8 +1023,8 @@ function buildSRIMultiChart(datasets, cid){
   const abxMap=new Map();
   datasets.forEach(({rows})=>(rows||[]).forEach(r=>{if(!abxMap.has(r.a))abxMap.set(r.a,{a:r.a,c:r.c});}));
   const allAbx=[...abxMap.values()].sort((x,y)=>{
-    const avgR=name=>{const vs=datasets.map(d=>(d.rows||[]).find(r=>r.a===name)).filter(Boolean);return vs.length?vs.reduce((s,r)=>s+(r.pR||0),0)/vs.length:0;};
-    return avgR(y.a)-avgR(x.a);
+    const avgS=name=>{const vs=datasets.map(d=>(d.rows||[]).find(r=>r.a===name)).filter(Boolean);return vs.length?vs.reduce((s,r)=>s+(r.pS||0),0)/vs.length:0;};
+    return avgS(y.a)-avgS(x.a); // S mayor a menor (más sensible primero)
   });
   if(!allAbx.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
   const N=datasets.length;
