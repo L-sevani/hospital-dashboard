@@ -1605,13 +1605,12 @@ function cmpStatsFromRaw(raw){
   const topMicros=(raw.micros?raw.micros.subgrupos:[]).slice(0,5);
   const topRes=hosp.filter(r=>r.t>=3&&r.R>0).sort((a,b)=>(b.R/b.t)-(a.R/a.t)).slice(0,5).map(r=>({a:r.a,pct:Math.round(r.R/r.t*100)}));
   const topSen=hosp.filter(r=>r.t>=3&&r.S>0).sort((a,b)=>(b.S/b.t)-(a.S/a.t)).slice(0,5).map(r=>({a:r.a,pct:Math.round(r.S/r.t*100)}));
-  const findByName=(name)=>hosp.find(r=>normalizeAbxName(r.a)===name || r.a===name);
-  const linezolid=(findByName('Linezolid')||{}).t||0;
-  const vancomicina=(findByName('Vancomicina')||{}).t||0;
+  // Top 2 antibióticos por total de cultivos
+  const topUsed=[...hosp].sort((a,b)=>(b.t||0)-(a.t||0)).slice(0,2);
   const periodos=raw.periodos||[];
   const servicios=raw.servicios?raw.servicios.subgrupos:[];
   const infecciones=raw.infecciones?raw.infecciones.subgrupos:[];
-  return {totalT,totalR,totalS,totalI,pctR,pctS,topMicros,topRes,topSen,linezolid,vancomicina,periodos,servicios,infecciones};
+  return {totalT,totalR,totalS,totalI,pctR,pctS,topMicros,topRes,topSen,topUsed,periodos,servicios,infecciones};
 }
 
 function cmpBar(pct,color){
@@ -1639,6 +1638,16 @@ function renderComparar(){
   });
 
   const colColors=['#2563eb','#16a34a','#d97706'];
+
+  // Calcular microorganismos compartidos entre hospitales (aparecen en ≥2)
+  const allMicroSets=HOSPITALES_ORDEN.map(hid=>{
+    const st=statsMap[hid];
+    return new Set(st?st.topMicros:[]);
+  });
+  const microCount={};
+  allMicroSets.forEach(s=>s.forEach(m=>{ microCount[m]=(microCount[m]||0)+1; }));
+  const sharedMicros=new Set(Object.keys(microCount).filter(m=>microCount[m]>1));
+
   const hospitalCards=HOSPITALES_ORDEN.map((hid,idx)=>{
     const st=statsMap[hid];
     const color=colColors[idx];
@@ -1650,6 +1659,12 @@ function renderComparar(){
         <div style="font-size:.78rem;color:#9ca3af;text-align:center;margin-top:6px;">Sin datos disponibles<br><span style="font-size:.72rem;">Se habilitará al cargar datos</span></div>
       </div>`;
     }
+    // Top 2 antibióticos más usados
+    const topUsedHtml=st.topUsed.map(r=>`
+      <div style="background:#f8fafc;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:800;color:#7c3aed;">${r.t}</div>
+        <div style="font-size:.67rem;color:#6b7280;margin-top:2px;">${lblName(r.a)} usado</div>
+      </div>`).join('');
     return `<div style="background:#fff;border-radius:14px;border-top:4px solid ${color};box-shadow:0 2px 10px rgba(0,0,0,.07);padding:22px 20px;display:flex;flex-direction:column;gap:14px;">
       <div style="font-weight:800;font-size:.88rem;color:${color};border-bottom:1px solid #f3f4f6;padding-bottom:10px;">${nombre}</div>
       <!-- KPIs -->
@@ -1662,14 +1677,7 @@ function renderComparar(){
           <div style="font-size:1.5rem;font-weight:800;color:#dc2626;">${st.pctR}%</div>
           <div style="font-size:.68rem;color:#6b7280;margin-top:2px;">Resistencia global</div>
         </div>
-        <div style="background:#f8fafc;border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:1.5rem;font-weight:800;color:#7c3aed;">${st.linezolid}</div>
-          <div style="font-size:.68rem;color:#6b7280;margin-top:2px;">${lblName('Linezolid')} usado</div>
-        </div>
-        <div style="background:#f8fafc;border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:1.5rem;font-weight:800;color:#0891b2;">${st.vancomicina}</div>
-          <div style="font-size:.68rem;color:#6b7280;margin-top:2px;">${lblName('Vancomicina')} usada</div>
-        </div>
+        ${topUsedHtml}
       </div>
       <!-- Resistencia S/I/R -->
       <div>
@@ -1684,10 +1692,15 @@ function renderComparar(){
       <!-- Top Microorganismos -->
       <div>
         <div style="font-size:.72rem;font-weight:700;color:#374151;margin-bottom:6px;">TOP MICROORGANISMOS</div>
-        ${st.topMicros.map((m,i)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-          <span style="background:${color};color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:800;flex-shrink:0;">${i+1}</span>
-          <span style="font-size:.72rem;color:#374151;">${m}</span>
-        </div>`).join('')}
+        ${st.topMicros.map((m,i)=>{
+          const shared=sharedMicros.has(m);
+          return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;${shared?`background:linear-gradient(90deg,${color}18,transparent);border-left:3px solid ${color};border-radius:0 5px 5px 0;padding:2px 6px 2px 4px;`:'padding:2px 0;'}" title="${shared?'También presente en otros hospitales':''}">
+            <span style="background:${color};color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:800;flex-shrink:0;">${i+1}</span>
+            <span style="font-size:.72rem;color:#374151;font-weight:${shared?'700':'400'};">${m}</span>
+            ${shared?`<span style="font-size:.6rem;color:${color};font-weight:700;margin-left:auto;">↔</span>`:''}
+          </div>`;
+        }).join('')}
+        ${sharedMicros.size>0?`<div style="font-size:.62rem;color:#94a3b8;margin-top:4px;">↔ Presente en otros hospitales</div>`:''}
       </div>
       <!-- Más resistentes -->
       <div>
