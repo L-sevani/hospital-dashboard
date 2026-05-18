@@ -303,6 +303,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
         </div>
       </div>
       <button onclick="applyAdvAbx()" class="adv-btn-apply" style="margin-bottom:1px;">▶ Ver en las 4 dimensiones</button>
+      <button onclick="clearAdvAbx()" class="adv-btn-clear" style="margin-bottom:1px;">✕ Limpiar</button>
     </div>
     <div id="adv-abx-chart" style="margin-top:14px;display:flex;flex-direction:column;gap:20px;"></div>
   </div>
@@ -1124,6 +1125,7 @@ function buildSRICompactChart(data, cid){
   const slotPad=Math.round((SLOT-BW)/2);
   const totalW=YW+n*SLOT+slotPad;
   const totalH=PADTOP+CH+XLABELH;
+  const pct=v=>v!=null?(v*100).toFixed(1)+'%':'–';
 
   let h=`<div style="width:100%;overflow-x:auto;">`;
   h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.66rem;color:#374151;">`;
@@ -1142,10 +1144,30 @@ function buildSRICompactChart(data, cid){
     if(d.pI>0){const h2=Math.max(1,Math.round(d.pI*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#f59e0b;"></div>`;}
     h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${BW}px;text-align:center;font-size:.62rem;color:#6b7280;">${d.t||0}</div>`;
     h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;text-align:center;font-size:.64rem;color:#334155;white-space:normal;line-height:1.2;">${d.a}</div>`;
+    // Tooltip zone
+    const tipData=JSON.stringify({a:d.a,S:d.S,R:d.R,I:d.I,t:d.t,pS:pct(d.pS),pR:pct(d.pR),pI:pct(d.pI)}).replace(/'/g,'&apos;');
+    h+=`<div class="vbh" data-tip='${tipData}' data-compact="1" style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
   });
 
   h+=`</div></div>`;
   el.innerHTML=h;
+
+  const tip=getFixedTip();
+  el.querySelectorAll('.vbh[data-compact]').forEach(bar=>{
+    bar.addEventListener('mouseenter',e=>{
+      try{
+        const d=JSON.parse(bar.dataset.tip.replace(/&apos;/g,"'"));
+        let inn=`<div style="font-weight:600;color:#fff;margin-bottom:3px;">${d.a}</div>`;
+        inn+=`<div style="color:#4ade80;">S: ${d.S} (${d.pS})</div>`;
+        inn+=`<div style="color:#f87171;">R: ${d.R} (${d.pR})</div>`;
+        inn+=`<div style="color:#fbbf24;">I: ${d.I} (${d.pI})</div>`;
+        inn+=`<div style="color:#94a3b8;border-top:1px solid #334155;margin-top:3px;padding-top:3px;">Total: ${d.t}</div>`;
+        tip.innerHTML=inn; tip.style.display='block'; placeTip(e);
+      }catch(ex){}
+    });
+    bar.addEventListener('mousemove',e=>placeTip(e));
+    bar.addEventListener('mouseleave',hideTip);
+  });
 }
 
 // ── VERTICAL STACKED CHART (frecuencias) ──
@@ -2116,29 +2138,61 @@ function applyDrillChart(){
 
   const datasets=[];
   hospIds.forEach((hid,i)=>{
-    // Leer microorganismos seleccionados (puede ser más de uno)
-    const microBox=document.getElementById(`drill-micro-checks-${i}`);
-    const selectedMicros=microBox?[...microBox.querySelectorAll('input:checked')].map(c=>c.value):[];
-    if(!selectedMicros.length) return;
     const derived=getRawSliceForHospital(hid)||RAW;
-    // Merge rows de todos los micros seleccionados
-    const allRows=[];
-    selectedMicros.forEach(micro=>{
-      const microData=derived.micros?.data?.[micro];
-      if(!microData) return;
-      const raw=sriMergedRaw(microData,periods);
-      if(raw&&raw.length) allRows.push(...raw);
-    });
+    const col=DRILL_COLORS[i]||DRILL_COLORS[0];
+
+    // Prioridad: Microorganismo → Cultivo → Infección → Servicio
+    const getChecked=key=>{
+      const box=document.getElementById(`drill-${key}-checks-${i}`);
+      return box?[...box.querySelectorAll('input:checked')].map(c=>c.value):[];
+    };
+    const selMicros=getChecked('micro');
+    const selCul=getChecked('cul');
+    const selInf=getChecked('inf');
+    const selSvc=getChecked('svc');
+
+    let allRows=[], selLabel='', dimIcon='';
+    if(selMicros.length){
+      selMicros.forEach(m=>{
+        const raw=sriMergedRaw(derived.micros?.data?.[m],periods);
+        if(raw) allRows.push(...raw);
+      });
+      selLabel=selMicros.length===1?selMicros[0]:`${selMicros.length} microorganismos`;
+      dimIcon='🦠';
+    } else if(selCul.length){
+      selCul.forEach(sg=>{
+        const raw=sriMergedRaw(derived.cultivos?.data?.[sg],periods);
+        if(raw) allRows.push(...raw);
+      });
+      selLabel=selCul.length===1?selCul[0]:`${selCul.length} cultivos`;
+      dimIcon='🧫';
+    } else if(selInf.length){
+      selInf.forEach(sg=>{
+        const raw=sriMergedRaw(derived.infecciones?.data?.[sg],periods);
+        if(raw) allRows.push(...raw);
+      });
+      selLabel=selInf.length===1?selInf[0]:`${selInf.length} infecciones`;
+      dimIcon='🩺';
+    } else if(selSvc.length){
+      selSvc.forEach(sg=>{
+        const raw=sriMergedRaw(derived.servicios?.data?.[sg],periods);
+        if(raw) allRows.push(...raw);
+      });
+      selLabel=selSvc.length===1?selSvc[0]:`${selSvc.length} servicios`;
+      dimIcon='🏥';
+    }
+
     if(!allRows.length) return;
     const merged=calcPct(allRows);
     const rows=activeFilter==='cb'?filterRowsToCb(merged):merged;
     if(!rows.length) return;
-    const col=DRILL_COLORS[i]||DRILL_COLORS[0];
-    const microLabel=selectedMicros.length===1?selectedMicros[0]:`${selectedMicros.length} microorganismos`;
-    datasets.push({label:getHospitalDisplayName(hid),micro:microLabel,rows,color:col.main});
+    datasets.push({label:getHospitalDisplayName(hid),micro:`${dimIcon} ${selLabel}`,rows,color:col.main});
   });
 
-  if(!datasets.length){result.innerHTML='<div class="empty">Selecciona un microorganismo en al menos un hospital.</div>';return;}
+  if(!datasets.length){
+    result.innerHTML='<div class="empty">Selecciona al menos un Servicio, Infección, Cultivo o Microorganismo en algún hospital.</div>';
+    return;
+  }
   if(status) status.textContent='';
 
   const cid='drill-multi-'+Math.random().toString(36).slice(2,6);
@@ -2149,7 +2203,7 @@ function applyDrillChart(){
         ${datasets.map(d=>`<div style="display:flex;align-items:center;gap:6px;font-size:.72rem;background:#f8fafc;border-radius:8px;padding:4px 10px;border:1px solid #e2e8f0;">
           <span style="width:10px;height:10px;border-radius:50%;background:${d.color};display:inline-block;flex-shrink:0;"></span>
           <strong style="color:${d.color};">${d.label}</strong>
-          <span style="color:#64748b;">→ 🦠 ${d.micro}</span>
+          <span style="color:#64748b;">→ ${d.micro}</span>
         </div>`).join('')}
       </div>
       <div id="${cid}"></div>
@@ -2554,6 +2608,14 @@ function clearAdv(){
   buildAdvPills();
   const box=document.getElementById('adv-multi-results'); if(box) box.innerHTML='';
   const st=document.getElementById('adv-multi-status'); if(st) st.textContent='';
+}
+
+function clearAdvAbx(){
+  document.querySelectorAll('#adv-abx-dd-panel input').forEach(c=>c.checked=false);
+  document.querySelectorAll('#adv-per-dd-panel input').forEach(c=>c.checked=false);
+  const lbl=document.getElementById('adv-abx-dd-label'); if(lbl) lbl.textContent='(Ninguno)';
+  const lbl2=document.getElementById('adv-per-dd-label'); if(lbl2) lbl2.textContent='(Ninguno)';
+  const box=document.getElementById('adv-abx-chart'); if(box) box.innerHTML='';
 }
 
 function applyAdvAbx(){
