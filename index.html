@@ -168,16 +168,16 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 <div class="controls" id="controls-bar">
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <span class="clabel">Período principal:</span>
-    <select class="csel" id="main-year-sel" onchange="onMainYearChange()"></select>
+    <select class="csel" id="main-year-sel" onchange="onMainYearChange()" style="display:none;"></select>
     <select class="csel" id="main-period-sel" onchange="onMainPeriodChange()"></select>
   </div>
 
   <div id="compare-ctrl" class="cmp-panel">
     <div class="cmp-top">
       <span class="clabel">Comparar con:</span>
-      <select class="csel" id="cmp-year-sel" onchange="onCmpYearChange()"></select>
+      <select class="csel" id="cmp-year-sel" onchange="onCmpYearChange()" style="display:none;"></select>
       <button type="button" class="cmp-toggle" id="cmp-toggle" onclick="toggleCmpList()">Ocultar lista</button>
-      <span style="font-size:.7rem;color:#94a3b8;font-style:italic;">Puedes seleccionar uno o varios</span>
+      <span style="font-size:.7rem;color:#94a3b8;font-style:italic;">Puedes seleccionar uno o varios años</span>
     </div>
     <div id="cmp-selected" class="cmp-summary"></div>
     <div id="cmp-checks" class="cmp-groups"></div>
@@ -444,6 +444,7 @@ const ABX_ALIASES = {
 };
 
 const CB_ABX_META = {
+  'Amikacina': {a:'Amikacina', c:'A'},
   'Amoxicilina': {a:'Amoxicilina', c:'A'},
   'Amoxicilina Acido Clavulanico': {a:'Amoxicilina Acido Clavulanico', c:'A'},
   'Ampicilina': {a:'Ampicilina', c:'A'},
@@ -1281,72 +1282,31 @@ function monthsForYear(y){
 }
 
 function buildMainPeriodOptions(){
-  const ySel=document.getElementById('main-year-sel');
   const pSel=document.getElementById('main-period-sel');
-  if(!ySel||!pSel) return;
-  const y=ySel.value;
+  if(!pSel) return;
   pSel.innerHTML='';
   const add=(v,t)=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; pSel.appendChild(o); };
   add('TODOS','Todo el período');
-  if(y==='ALL'){
-    getYears().forEach(yy=>add(yy,yy));
-    (RAW.periodos||[]).forEach(m=>add(m,fmtP(m)));
-  }else{
-    add(y,y);
-    monthsForYear(y).forEach(m=>add(m,fmtP(m)));
-  }
+  getYears().forEach(yy=>add(yy,yy));
   if([...pSel.options].some(o=>o.value===p1)) pSel.value=p1;
   else { p1='TODOS'; pSel.value='TODOS'; }
 }
 
 function buildCmpChecks(){
-  const ySel=document.getElementById('cmp-year-sel');
   const box=document.getElementById('cmp-checks');
-  if(!ySel||!box) return;
-  const y=ySel.value;
+  if(!box) return;
   const selected=(p2==='__adv_B__'?(advSetB||[]):(p2?[p2]:[])).filter(v=>v!==p1);
-  const years=(y==='ALL')?getYears():[y];
   box.innerHTML='';
-
-  years.forEach(yy=>{
-    const yearWrap=document.createElement('div');
-    yearWrap.className='cmp-year';
-    const months=monthsForYear(yy).filter(m=>m!==p1);
-    const yearId='cmp-year-'+yy;
-
-    const head=document.createElement('div');
-    head.className='cmp-year-head';
-    head.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><label class="adv-pcheck" style="font-size:.72rem;padding:3px 8px;"><input type="checkbox" id="${yearId}" value="${yy}" ${selected.includes(yy)?'checked':''}> <span>${yy}</span></label><span style="font-size:.68rem;color:#64748b;">${months.length} mes(es)</span></div><span style="font-size:.66rem;color:#94a3b8;">▾</span>`;
-    yearWrap.appendChild(head);
-
-    const monthsWrap=document.createElement('div');
-    monthsWrap.className='cmp-months';
-    months.forEach(m=>{
-      const lb=document.createElement('label');
-      lb.className='adv-pcheck';
-      lb.style.fontSize='.71rem';
-      lb.style.padding='3px 8px';
-      const ck=document.createElement('input'); ck.type='checkbox'; ck.value=m; ck.checked=selected.includes(m);
-      ck.onchange=onCmpChecksChange;
-      lb.appendChild(ck);
-      const sp=document.createElement('span'); sp.textContent=fmtP(m); lb.appendChild(sp);
-      monthsWrap.appendChild(lb);
-    });
-    yearWrap.appendChild(monthsWrap);
-    box.appendChild(yearWrap);
-
-    const yearCk=head.querySelector(`#${yearId}`);
-    if(yearCk){
-      yearCk.onchange=()=>{
-        monthsWrap.querySelectorAll('input[type="checkbox"]').forEach(ck=>{ ck.checked=yearCk.checked; });
-        onCmpChecksChange();
-      };
-    }
-
-    head.addEventListener('click',(e)=>{
-      if(e.target.tagName==='INPUT' || e.target.tagName==='LABEL' || e.target.closest('label')) return;
-      monthsWrap.style.display=monthsWrap.style.display==='none'?'flex':'none';
-    });
+  getYears().forEach(yy=>{
+    if(yy===p1) return; // no mostrar el año que ya es p1
+    const lb=document.createElement('label');
+    lb.className='adv-pcheck'+(selected.includes(yy)?' ckB':'');
+    lb.style.cssText='font-size:.72rem;padding:3px 10px;';
+    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=yy; ck.checked=selected.includes(yy); ck.style.marginRight='4px';
+    ck.onchange=onCmpChecksChange;
+    lb.appendChild(ck);
+    const sp=document.createElement('span'); sp.textContent=yy; lb.appendChild(sp);
+    box.appendChild(lb);
   });
   renderCmpSummary();
 }
@@ -1457,19 +1417,30 @@ function renderHospitalText(){
 
 function buildNarrativeHtml(rows, scopeLabel){
   const baseRows=rows||[];
-  const byName=(n)=>baseRows.find(r=>normalizeAbxName(r.a)===n || r.a===n);
-  const linez=(byName('Linezolid')||{}).t||0;
-  const vanco=(byName('Vancomicina')||{}).t||0;
+  // Top 2 antibióticos con más cultivos
+  const topUsed=[...baseRows].sort((a,b)=>(b.t||0)-(a.t||0)).slice(0,2);
+  const topUsedHtml=topUsed.length
+    ? topUsed.map(r=>`<strong>${lblHtml(r)} ${r.t}</strong>`).join(' y ')
+    : 'N/D';
+  // Antibióticos W con R < 50%
+  const wLowR=baseRows.filter(r=>r.c==='W'&&(r.pR||0)<0.5).sort((a,b)=>(a.pR||0)-(b.pR||0));
+  const wLowRHtml=wLowR.length ? wLowR.map(r=>lblHtml(r)).join(', ') : 'Ninguno';
+  // Antibióticos A con S > 50%
+  const aHighS=baseRows.filter(r=>r.c==='A'&&(r.pS||0)>0.5).sort((a,b)=>(b.pS||0)-(a.pS||0));
+  const aHighSHtml=aHighS.length ? aHighS.map(r=>lblHtml(r)).join(', ') : 'Ninguno';
+  // Antibióticos con R > 50%
   const topRList=baseRows.filter(r=>(r.pR||0)>0.5).slice(0,4).map(r=>lblHtml(r));
   const topR=topRList.length?topRList.join(', '):'Ninguno';
   const N=baseRows.reduce((sum,r)=>sum+(r.t||0),0);
   const scope=scopeLabel||'todo el hospital';
   return `<div style="display:flex;flex-direction:column;gap:8px;">
     <p><strong>Resumen rápido (${scope})</strong></p>
-    <ul style="margin-left:18px;display:flex;flex-direction:column;gap:4px;">
+    <ul style="margin-left:18px;display:flex;flex-direction:column;gap:6px;">
       <li><strong>N-${N}</strong> cultivos analizados.</li>
-      <li>Uso reportado: <strong>${lblName('Linezolid')} ${linez}</strong> y <strong>${lblName('Vancomicina')} ${vanco}</strong>.</li>
-      <li>Antimicrobianos con resistencia &gt;50%: <strong>${topR}</strong>.</li>
+      <li>Uso reportado: ${topUsedHtml}.</li>
+      <li>Antimicrobianos con resistencia &gt;50%: ${topR}.</li>
+      <li>Los antibióticos de observación <span class="atag tW">(W)</span> con resistencia menor al 50% son ${wLowRHtml}, por lo que se recomienda disminuir su consumo y uso en los servicios e infecciones que se presenten.</li>
+      <li>Los antibióticos de acceso <span class="atag tA">(A)</span> con sensibilidad mayor al 50% son ${aHighSHtml}, por lo que se recomienda preferentemente estos antibióticos.</li>
     </ul>
     <details>
       <summary style="cursor:pointer;color:#1d4ed8;font-weight:600;">Ver interpretación completa</summary>
@@ -2077,73 +2048,35 @@ function rebuildAllDrillCascades(){
   getAdvHospitals().forEach((hid,i)=>rebuildDrillCascadeForHosp(i,hid));
 }
 
+function fillDrillChecks(boxId, items, prevSet){
+  const box=document.getElementById(boxId); if(!box) return;
+  box.innerHTML='';
+  [...items].sort().forEach(v=>{
+    const lb=document.createElement('label');
+    lb.style.cssText='display:flex;align-items:center;gap:5px;padding:3px 5px;border-radius:4px;cursor:pointer;font-size:.68rem;line-height:1.3;';
+    lb.onmouseenter=()=>lb.style.background='#f1f5f9';
+    lb.onmouseleave=()=>lb.style.background='';
+    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=v; ck.checked=prevSet.has(v);
+    ck.style.cssText='flex-shrink:0;accent-color:#7c3aed;';
+    const sp=document.createElement('span'); sp.textContent=v;
+    lb.appendChild(ck); lb.appendChild(sp); box.appendChild(lb);
+  });
+}
+
 function rebuildDrillCascadeForHosp(i,hospId){
   _drillMapsArr[i]=buildDrillMaps(hospId,getDrillMainPeriods());
-  const sel=document.getElementById(`drill-svc-${i}`); if(!sel) return;
-  const svcs=Object.keys(_drillMapsArr[i].svcMap).sort();
-  sel.innerHTML=`<option value="">— Selecciona (${svcs.length}) —</option>`+svcs.map(s=>`<option value="${s}">${s}</option>`).join('');
-  resetDrillHospFrom(i,2);
-}
-
-function onDrillSvcChange(i){
-  const svc=document.getElementById(`drill-svc-${i}`)?.value;
-  resetDrillHospFrom(i,2);
-  if(!svc||!_drillMapsArr[i]) return;
-  const svcMicros=_drillMapsArr[i].svcMap[svc]||new Set();
-  const avail=Object.entries(_drillMapsArr[i].infMap)
-    .filter(([,ms])=>{if(ms.has('*'))return true;for(const m of ms)if(svcMicros.has(m))return true;return false;})
-    .map(([k])=>k).sort();
-  unlockDrillStep(i,2,`drill-inf-${i}`,avail,`onDrillInfChange(${i})`);
-}
-
-function onDrillInfChange(i){
-  const svc=document.getElementById(`drill-svc-${i}`)?.value;
-  const inf=document.getElementById(`drill-inf-${i}`)?.value;
-  resetDrillHospFrom(i,3);
-  if(!inf||!_drillMapsArr[i]) return;
-  const svcM=_drillMapsArr[i].svcMap[svc]||new Set();
-  const infM=_drillMapsArr[i].infMap[inf]||new Set();
-  const combo=infM.has('*')?svcM:new Set([...infM].filter(m=>svcM.has('*')||svcM.has(m)));
-  const avail=Object.entries(_drillMapsArr[i].culMap)
-    .filter(([,ms])=>{if(ms.has('*')||combo.size===0)return true;for(const m of ms)if(combo.has(m))return true;return false;})
-    .map(([k])=>k).sort();
-  unlockDrillStep(i,3,`drill-cul-${i}`,avail,`onDrillCulChange(${i})`);
-}
-
-function onDrillCulChange(i){
-  const svc=document.getElementById(`drill-svc-${i}`)?.value;
-  const inf=document.getElementById(`drill-inf-${i}`)?.value;
-  const cul=document.getElementById(`drill-cul-${i}`)?.value;
-  resetDrillHospFrom(i,4);
-  if(!cul||!_drillMapsArr[i]) return;
-  const svcM=_drillMapsArr[i].svcMap[svc]||new Set();
-  const infM=_drillMapsArr[i].infMap[inf]||new Set();
-  const culM=_drillMapsArr[i].culMap[cul]||new Set();
-  const micros=culM.has('*')?svcM:new Set([...culM].filter(m=>(svcM.has('*')||svcM.has(m))&&(infM.has('*')||infM.has(m))));
-  const avail=[...micros].filter(Boolean).sort();
-  unlockDrillStep(i,4,`drill-micro-${i}`,avail,null);
-}
-
-function unlockDrillStep(i,step,selId,avail,onchange){
-  const card=document.getElementById(`drill-step-${i}-${step}`);
-  const sel=document.getElementById(selId);
-  if(card){card.classList.remove('drill-step-locked');card.classList.add('drill-active');}
-  if(sel){
-    sel.disabled=false;
-    if(onchange) sel.setAttribute('onchange',onchange);
-    sel.innerHTML=`<option value="">— ${avail.length} disponibles —</option>`+avail.map(v=>`<option value="${v}">${v}</option>`).join('');
-  }
-}
-
-function resetDrillHospFrom(i,step){
-  [[2,'inf','Primero Servicio'],[3,'cul','Primero Infección'],[4,'micro','Primero Cultivo']].forEach(([s,key,ph])=>{
-    if(step>s) return;
-    const c=document.getElementById(`drill-step-${i}-${s}`);
-    const el=document.getElementById(`drill-${key}-${i}`);
-    if(c){c.classList.add('drill-step-locked');c.classList.remove('drill-active');}
-    if(el){el.disabled=true;el.innerHTML=`<option value="">— ${ph} —</option>`;}
+  const m=_drillMapsArr[i];
+  ['svc','inf','cul'].forEach(key=>{
+    const map=key==='svc'?m.svcMap:key==='inf'?m.infMap:m.culMap;
+    const box=document.getElementById(`drill-${key}-checks-${i}`);
+    const prev=box?new Set([...box.querySelectorAll('input:checked')].map(c=>c.value)):new Set();
+    fillDrillChecks(`drill-${key}-checks-${i}`, Object.keys(map), prev);
   });
-  if(step<=4){const r=document.getElementById('drill-result');if(r)r.innerHTML='';}
+  const allMicros=new Set();
+  [m.svcMap,m.infMap,m.culMap].forEach(map=>Object.values(map).forEach(s=>s.forEach(v=>v!=='*'&&allMicros.add(v))));
+  const mBox=document.getElementById(`drill-micro-checks-${i}`);
+  const prevM=mBox?new Set([...mBox.querySelectorAll('input:checked')].map(c=>c.value)):new Set();
+  fillDrillChecks(`drill-micro-checks-${i}`, allMicros, prevM);
 }
 
 function initDrillPanel(){
@@ -2158,22 +2091,13 @@ function initDrillPanel(){
         <span class="adv-group-dot"></span>
         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🏥 ${getHospitalDisplayName(hid)}</span>
       </div>
-      <div class="adv-group-body" style="gap:8px;">
-        <div class="drill-step drill-active" id="drill-step-${i}-1">
-          <div class="drill-step-header" style="margin-bottom:4px;"><span class="drill-step-num">1</span>Servicio</div>
-          <select id="drill-svc-${i}" class="adv-select" onchange="onDrillSvcChange(${i})"><option value="">— Cargando... —</option></select>
-        </div>
-        <div class="drill-step drill-step-locked" id="drill-step-${i}-2">
-          <div class="drill-step-header" style="margin-bottom:4px;"><span class="drill-step-num">2</span>Infección</div>
-          <select id="drill-inf-${i}" class="adv-select" disabled><option value="">— Primero Servicio —</option></select>
-        </div>
-        <div class="drill-step drill-step-locked" id="drill-step-${i}-3">
-          <div class="drill-step-header" style="margin-bottom:4px;"><span class="drill-step-num">3</span>Cultivo</div>
-          <select id="drill-cul-${i}" class="adv-select" disabled><option value="">— Primero Infección —</option></select>
-        </div>
-        <div class="drill-step drill-step-locked" id="drill-step-${i}-4">
-          <div class="drill-step-header" style="margin-bottom:4px;"><span class="drill-step-num">4</span>Microorganismo</div>
-          <select id="drill-micro-${i}" class="adv-select" disabled><option value="">— Primero Cultivo —</option></select>
+      <div class="adv-group-body" style="padding:10px 12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          ${[['svc','Servicio'],['inf','Infección'],['cul','Cultivo'],['micro','Microorganismo ⭐']].map(([key,label])=>`
+          <div>
+            <div style="font-size:.66rem;font-weight:700;color:${key==='micro'?col.main:'#475569'};text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">${label}</div>
+            <div id="drill-${key}-checks-${i}" style="max-height:140px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px;padding:4px;background:${key==='micro'?'#faf5ff':'#f8fafc'};"></div>
+          </div>`).join('')}
         </div>
       </div>
     </div>`;
@@ -2192,21 +2116,27 @@ function applyDrillChart(){
 
   const datasets=[];
   hospIds.forEach((hid,i)=>{
-    const micro=document.getElementById(`drill-micro-${i}`)?.value;
-    const svc=document.getElementById(`drill-svc-${i}`)?.value;
-    const inf=document.getElementById(`drill-inf-${i}`)?.value;
-    const cul=document.getElementById(`drill-cul-${i}`)?.value;
-    if(!micro) return;
+    // Leer microorganismos seleccionados (puede ser más de uno)
+    const microBox=document.getElementById(`drill-micro-checks-${i}`);
+    const selectedMicros=microBox?[...microBox.querySelectorAll('input:checked')].map(c=>c.value):[];
+    if(!selectedMicros.length) return;
     const derived=getRawSliceForHospital(hid)||RAW;
-    const microData=derived.micros?.data?.[micro];
-    if(!microData) return;
-    const raw=sriMergedRaw(microData,periods);
-    if(!raw||!raw.length) return;
-    const rows=activeFilter==='cb'?filterRowsToCb(raw):raw;
+    // Merge rows de todos los micros seleccionados
+    const allRows=[];
+    selectedMicros.forEach(micro=>{
+      const microData=derived.micros?.data?.[micro];
+      if(!microData) return;
+      const raw=sriMergedRaw(microData,periods);
+      if(raw&&raw.length) allRows.push(...raw);
+    });
+    if(!allRows.length) return;
+    const merged=calcPct(allRows);
+    const rows=activeFilter==='cb'?filterRowsToCb(merged):merged;
     if(!rows.length) return;
     const col=DRILL_COLORS[i]||DRILL_COLORS[0];
-    const crumb=[svc,inf,cul,micro].filter(Boolean).join(' › ');
-    const cid='drill-h-'+Math.random().toString(36).slice(2,6);
+    const microLabel=selectedMicros.length===1?selectedMicros[0]:`${selectedMicros.length} microorganismos`;
+    datasets.push({label:getHospitalDisplayName(hid),micro:microLabel,rows,color:col.main});
+  });
     datasets.push({label:getHospitalDisplayName(hid),micro,crumb,rows,color:col.main,cid});
   });
 
@@ -2231,11 +2161,15 @@ function applyDrillChart(){
 }
 
 function clearDrill(){
-  // Resetear checkboxes de año: marcar "Todo el período"
   const box=document.getElementById('drill-year-checks');
-  if(box){ box.querySelectorAll('input').forEach(c=>{c.checked=c.value==='TODOS'; c.closest('label').classList.toggle('ckA',c.value==='TODOS');}); }
+  if(box) box.querySelectorAll('input').forEach(c=>{c.checked=c.value==='TODOS'; c.closest('label')?.classList.toggle('ckA',c.value==='TODOS');});
+  // Desmarcar todos los checkboxes de las listas
   const hospIds=getAdvHospitals();
-  hospIds.forEach((_,i)=>resetDrillHospFrom(i,2));
+  hospIds.forEach((_,i)=>{
+    ['svc','inf','cul','micro'].forEach(key=>{
+      document.getElementById(`drill-${key}-checks-${i}`)?.querySelectorAll('input').forEach(c=>c.checked=false);
+    });
+  });
   const r=document.getElementById('drill-result');if(r)r.innerHTML='';
   const st=document.getElementById('drill-status');if(st)st.textContent='';
   rebuildAllDrillCascades();
@@ -2276,74 +2210,24 @@ function buildAdvPills(){
   const buildChecks=(gid,set,cls,yearSel)=>{
     const el=document.getElementById('adv-per'+gid); if(!el) return;
     el.innerHTML='';
-    const y=(yearSel&&yearSel.value)||'ALL';
-
     const summary=document.createElement('div');
     summary.className='adv-per-summary';
     summary.innerHTML=`<span class="cmp-chip-muted">${describeSet(set)}</span>`;
     el.appendChild(summary);
-
-    const quick=document.createElement('div');
-    quick.style.cssText='display:flex;gap:6px;flex-wrap:wrap;';
-    const quickVals=['TODOS',...(y==='ALL'?[]:[y])];
-    quickVals.forEach(v=>{
-      const lb=document.createElement('label'); lb.className='adv-pcheck'+(set.includes(v)?(' ck'+cls):'');
-      lb.style.fontSize='.71rem';
-      const ck=document.createElement('input'); ck.type='checkbox'; ck.checked=set.includes(v); ck.style.marginRight='4px';
-      ck.onchange=()=>{ toggleValue(set,v); buildAdvPills(); updateAdvStatus(); };
-      lb.appendChild(ck);
-      const sp=document.createElement('span'); sp.textContent=fmtP(v); lb.appendChild(sp);
-      quick.appendChild(lb);
-    });
-    el.appendChild(quick);
-
     const list=document.createElement('div');
     list.className='adv-per-wrap';
-    const yearsToShow=(y==='ALL')?years:[y];
-    yearsToShow.forEach(yy=>{
-      const wrap=document.createElement('div');
-      wrap.className='adv-per-year';
-      const months=monthsForYear(yy);
-
-      const head=document.createElement('div');
-      head.className='adv-per-year-head';
-      head.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><label class="adv-pcheck${set.includes(yy)?(' ck'+cls):''}" style="font-size:.71rem;padding:3px 8px;"><input type="checkbox" value="${yy}" ${set.includes(yy)?'checked':''}> <span>${yy}</span></label><span style="font-size:.66rem;color:#64748b;">${months.length} mes(es)</span></div><span style="font-size:.66rem;color:#94a3b8;">▾</span>`;
-      wrap.appendChild(head);
-
-      const mWrap=document.createElement('div');
-      mWrap.className='adv-per-months';
-      if(y==='ALL') mWrap.style.display='none';
-      months.forEach(v=>{
-        const lb=document.createElement('label'); lb.className='adv-pcheck'+(set.includes(v)?(' ck'+cls):'');
-        lb.style.fontSize='.7rem'; lb.style.padding='3px 8px';
-        const ck=document.createElement('input'); ck.type='checkbox'; ck.checked=set.includes(v); ck.style.marginRight='4px';
-        ck.onchange=()=>{ toggleValue(set,v); buildAdvPills(); updateAdvStatus(); };
-        lb.appendChild(ck);
-        const sp=document.createElement('span'); sp.textContent=fmtP(v); lb.appendChild(sp);
-        mWrap.appendChild(lb);
-      });
-      wrap.appendChild(mWrap);
-      list.appendChild(wrap);
-
-      const yearCk=head.querySelector('input[type="checkbox"]');
-      if(yearCk){
-        yearCk.onchange=()=>{
-          const hasYear=set.includes(yy);
-          if(yearCk.checked && !hasYear) set.push(yy);
-          if(!yearCk.checked && hasYear) set.splice(set.indexOf(yy),1);
-          months.forEach(m=>{
-            const has=set.includes(m);
-            if(yearCk.checked && !has) set.push(m);
-            if(!yearCk.checked && has) set.splice(set.indexOf(m),1);
-          });
-          buildAdvPills(); updateAdvStatus();
-        };
-      }
-
-      head.addEventListener('click',(e)=>{
-        if(e.target.tagName==='INPUT' || e.target.closest('label')) return;
-        mWrap.style.display=mWrap.style.display==='none'?'flex':'none';
-      });
+    list.style.flexWrap='wrap';
+    // "Todo el período" pill
+    const lbAll=document.createElement('label'); lbAll.className='adv-pcheck'+(set.includes('TODOS')?(' ck'+cls):''); lbAll.style.fontSize='.71rem'; lbAll.style.padding='3px 8px';
+    const ckAll=document.createElement('input'); ckAll.type='checkbox'; ckAll.checked=set.includes('TODOS'); ckAll.style.marginRight='4px';
+    ckAll.onchange=()=>{ toggleValue(set,'TODOS'); buildAdvPills(); updateAdvStatus(); };
+    lbAll.appendChild(ckAll); const spAll=document.createElement('span'); spAll.textContent='Todo el período'; lbAll.appendChild(spAll); list.appendChild(lbAll);
+    // Year pills only
+    getYears().forEach(yy=>{
+      const lb=document.createElement('label'); lb.className='adv-pcheck'+(set.includes(yy)?(' ck'+cls):''); lb.style.fontSize='.71rem'; lb.style.padding='3px 8px';
+      const ck=document.createElement('input'); ck.type='checkbox'; ck.checked=set.includes(yy); ck.style.marginRight='4px';
+      ck.onchange=()=>{ toggleValue(set,yy); buildAdvPills(); updateAdvStatus(); };
+      lb.appendChild(ck); const sp=document.createElement('span'); sp.textContent=yy; lb.appendChild(sp); list.appendChild(lb);
     });
     el.appendChild(list);
   };
