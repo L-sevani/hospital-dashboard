@@ -2137,8 +2137,6 @@ function applyDrillChart(){
     const microLabel=selectedMicros.length===1?selectedMicros[0]:`${selectedMicros.length} microorganismos`;
     datasets.push({label:getHospitalDisplayName(hid),micro:microLabel,rows,color:col.main});
   });
-    datasets.push({label:getHospitalDisplayName(hid),micro,crumb,rows,color:col.main,cid});
-  });
 
   if(!datasets.length){result.innerHTML='<div class="empty">Selecciona un microorganismo en al menos un hospital.</div>';return;}
   if(status) status.textContent='';
