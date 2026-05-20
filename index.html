@@ -171,17 +171,27 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 </div>
 
 <div class="controls" id="controls-bar">
+  <!-- Período principal dropdown -->
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <span class="clabel">Período principal:</span>
-    <div id="main-period-checks" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;"></div>
+    <div class="csel" id="main-period-dd" style="min-width:160px;padding:0;position:relative;">
+      <div onclick="togglePeriodDd('main')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <span id="main-period-dd-label">Todo el período</span><span>▾</span>
+      </div>
+      <div id="main-period-checks" style="display:none;position:absolute;top:100%;left:0;z-index:300;background:#fff;border:1px solid #ddd6fe;border-radius:0 0 8px 8px;padding:8px;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;flex-direction:column;gap:4px;"></div>
+    </div>
   </div>
 
-  <div id="compare-ctrl" class="cmp-panel" style="border:none;padding:0;background:transparent;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span class="clabel">Comparar con:</span>
-      <div id="cmp-checks" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;"></div>
+  <!-- Comparar con dropdown -->
+  <div id="compare-ctrl" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <span class="clabel">Comparar con:</span>
+    <div class="csel" id="cmp-period-dd" style="min-width:160px;padding:0;position:relative;">
+      <div onclick="togglePeriodDd('cmp')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <span id="cmp-period-dd-label">(Ninguno)</span><span>▾</span>
+      </div>
+      <div id="cmp-checks" style="display:none;position:absolute;top:100%;left:0;z-index:300;background:#fff;border:1px solid #ddd6fe;border-radius:0 0 8px 8px;padding:8px;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,.1);flex-direction:column;gap:4px;"></div>
     </div>
-    <div id="cmp-selected" class="cmp-summary" style="margin-top:4px;"></div>
+    <div id="cmp-selected" class="cmp-summary"></div>
   </div>
 
   <button onclick="toggleCompare()" id="btn-compare-mob" style="display:none;padding:5px 12px;border-radius:20px;font-size:.74rem;font-weight:500;cursor:pointer;border:1px solid #e2e8f0;background:#f8fafc;color:#374151;">⇄ Comparar</button>
@@ -1288,6 +1298,26 @@ function monthsForYear(y){
   return (RAW.periodos||[]).filter(p=>String(p).startsWith(y+'-'));
 }
 
+function togglePeriodDd(kind){
+  const id=kind==='main'?'main-period-checks':'cmp-checks';
+  const panel=document.getElementById(id); if(!panel) return;
+  const open=panel.style.display==='flex';
+  // close all period dropdowns first
+  ['main-period-checks','cmp-checks'].forEach(i=>{
+    const p=document.getElementById(i); if(p) p.style.display='none';
+  });
+  if(!open) panel.style.display='flex';
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#main-period-dd')&&!e.target.closest('#cmp-period-dd')){
+    ['main-period-checks','cmp-checks'].forEach(i=>{
+      const p=document.getElementById(i); if(p) p.style.display='none';
+    });
+  }
+});
+
 function buildMainPeriodOptions(){
   const box=document.getElementById('main-period-checks'); if(!box) return;
   box.innerHTML='';
@@ -1295,14 +1325,17 @@ function buildMainPeriodOptions(){
   opts.forEach(yy=>{
     const lb=document.createElement('label');
     lb.className='adv-pcheck'+(p1===yy?' ckA':'');
-    lb.style.cssText='font-size:.72rem;padding:3px 10px;cursor:pointer;';
-    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=yy; ck.checked=p1===yy; ck.style.marginRight='4px';
+    lb.style.cssText='font-size:.72rem;padding:4px 10px;width:100%;box-sizing:border-box;border-radius:6px;';
+    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=yy; ck.checked=p1===yy; ck.style.marginRight='6px';
     ck.onchange=()=>{
-      if(!ck.checked){ ck.checked=true; return; } // no deselect solo
+      if(!ck.checked){ ck.checked=true; return; }
       p1=yy;
       box.querySelectorAll('label').forEach(l=>l.classList.remove('ckA'));
       box.querySelectorAll('input').forEach(c=>c.checked=c.value===yy);
       lb.classList.add('ckA');
+      // update label
+      const lbl=document.getElementById('main-period-dd-label');
+      if(lbl) lbl.textContent=yy==='TODOS'?'Todo el período':yy;
       if(p2===p1) p2=null;
       if(p2==='__adv_B__') advSetB=(advSetB||[]).filter(v=>v!==p1);
       buildCmpChecks(); renderAll();
@@ -1310,6 +1343,9 @@ function buildMainPeriodOptions(){
     lb.appendChild(ck); lb.appendChild(document.createTextNode(yy==='TODOS'?'Todo el período':yy));
     box.appendChild(lb);
   });
+  // update button label
+  const lbl=document.getElementById('main-period-dd-label');
+  if(lbl) lbl.textContent=p1==='TODOS'?'Todo el período':p1;
 }
 
 function buildCmpChecks(){
@@ -1320,8 +1356,8 @@ function buildCmpChecks(){
     if(yy===p1) return;
     const lb=document.createElement('label');
     lb.className='adv-pcheck'+(selected.includes(yy)?' ckB':'');
-    lb.style.cssText='font-size:.72rem;padding:3px 10px;cursor:pointer;';
-    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=yy; ck.checked=selected.includes(yy); ck.style.marginRight='4px';
+    lb.style.cssText='font-size:.72rem;padding:4px 10px;width:100%;box-sizing:border-box;border-radius:6px;';
+    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=yy; ck.checked=selected.includes(yy); ck.style.marginRight='6px';
     ck.onchange=onCmpChecksChange;
     lb.appendChild(ck); lb.appendChild(document.createTextNode(yy));
     box.appendChild(lb);
@@ -1351,7 +1387,11 @@ function onCmpChecksChange(){
 function renderCmpSummary(){
   const el=document.getElementById('cmp-selected'); if(!el) return;
   const vals=(p2==='__adv_B__'?(advSetB||[]):(p2?[p2]:[])).filter(v=>v!==p1);
-  if(!vals.length){ el.innerHTML=''; return; }
+  el.innerHTML='';
+  // update button label
+  const lbl=document.getElementById('cmp-period-dd-label');
+  if(lbl) lbl.textContent=vals.length===0?'(Ninguno)':vals.length===1?vals[0]:`${vals.length} seleccionados`;
+  if(!vals.length) return;
   el.innerHTML=vals.map(v=>`<span class="cmp-chip">${fmtP(v)}</span>`).join('');
 }
 
