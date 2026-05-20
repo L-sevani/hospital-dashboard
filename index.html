@@ -173,19 +173,15 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 <div class="controls" id="controls-bar">
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <span class="clabel">Período principal:</span>
-    <select class="csel" id="main-year-sel" onchange="onMainYearChange()" style="display:none;"></select>
-    <select class="csel" id="main-period-sel" onchange="onMainPeriodChange()"></select>
+    <div id="main-period-checks" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;"></div>
   </div>
 
-  <div id="compare-ctrl" class="cmp-panel">
-    <div class="cmp-top">
+  <div id="compare-ctrl" class="cmp-panel" style="border:none;padding:0;background:transparent;">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span class="clabel">Comparar con:</span>
-      <select class="csel" id="cmp-year-sel" onchange="onCmpYearChange()" style="display:none;"></select>
-      <button type="button" class="cmp-toggle" id="cmp-toggle" onclick="toggleCmpList()">Ocultar lista</button>
-      <span style="font-size:.7rem;color:#94a3b8;font-style:italic;">Puedes seleccionar uno o varios años</span>
+      <div id="cmp-checks" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;"></div>
     </div>
-    <div id="cmp-selected" class="cmp-summary"></div>
-    <div id="cmp-checks" class="cmp-groups"></div>
+    <div id="cmp-selected" class="cmp-summary" style="margin-top:4px;"></div>
   </div>
 
   <button onclick="toggleCompare()" id="btn-compare-mob" style="display:none;padding:5px 12px;border-radius:20px;font-size:.74rem;font-weight:500;cursor:pointer;border:1px solid #e2e8f0;background:#f8fafc;color:#374151;">⇄ Comparar</button>
@@ -232,7 +228,6 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
         </div>
         <div class="adv-group-body">
           <label class="adv-field-label">Año</label>
-          <select id="adv-yearA" class="adv-select adv-select-a" onchange="buildAdvPills()"></select>
           <div id="adv-perA" class="adv-pills-wrap"></div>
         </div>
       </div>
@@ -244,7 +239,6 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
         </div>
         <div class="adv-group-body">
           <label class="adv-field-label">Año</label>
-          <select id="adv-yearB" class="adv-select adv-select-b" onchange="buildAdvPills()"></select>
           <div id="adv-perB" class="adv-pills-wrap"></div>
         </div>
       </div>
@@ -290,22 +284,8 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
       </div>
       <div></div>
       <div>
-        <div style="font-size:.7rem;font-weight:700;color:#5b21b6;text-transform:uppercase;margin-bottom:5px;">Período</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
-          <div>
-            <div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Año</div>
-            <select id="adv-abx-year" class="csel" onchange="buildAdvAbxSelect()" style="min-width:140px;"></select>
-          </div>
-          <div>
-            <div style="font-size:.66rem;color:#64748b;margin-bottom:4px;">Mes</div>
-            <div id="adv-per-dd" class="csel" style="min-width:280px;padding:0;">
-              <div onclick="toggleAdvDd('per')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-                <span id="adv-per-dd-label">(Ninguno)</span><span>▾</span>
-              </div>
-              <div id="adv-per-dd-panel" style="display:none;border-top:1px solid #ddd6fe;max-height:180px;overflow:auto;padding:6px;background:#fff;"></div>
-            </div>
-          </div>
-        </div>
+        <div style="font-size:.7rem;font-weight:700;color:#5b21b6;text-transform:uppercase;margin-bottom:8px;">Período</div>
+        <div id="adv-abx-per-checks" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
       </div>
       <button onclick="applyAdvAbx()" class="adv-btn-apply" style="margin-bottom:1px;">▶ Ver en las 4 dimensiones</button>
       <button onclick="clearAdvAbx()" class="adv-btn-clear" style="margin-bottom:1px;">✕ Limpiar</button>
@@ -1309,118 +1289,77 @@ function monthsForYear(y){
 }
 
 function buildMainPeriodOptions(){
-  const pSel=document.getElementById('main-period-sel');
-  if(!pSel) return;
-  pSel.innerHTML='';
-  const add=(v,t)=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; pSel.appendChild(o); };
-  add('TODOS','Todo el período');
-  getYears().forEach(yy=>add(yy,yy));
-  if([...pSel.options].some(o=>o.value===p1)) pSel.value=p1;
-  else { p1='TODOS'; pSel.value='TODOS'; }
+  const box=document.getElementById('main-period-checks'); if(!box) return;
+  box.innerHTML='';
+  const opts=['TODOS',...getYears()];
+  opts.forEach(yy=>{
+    const lb=document.createElement('label');
+    lb.className='adv-pcheck'+(p1===yy?' ckA':'');
+    lb.style.cssText='font-size:.72rem;padding:3px 10px;cursor:pointer;';
+    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=yy; ck.checked=p1===yy; ck.style.marginRight='4px';
+    ck.onchange=()=>{
+      if(!ck.checked){ ck.checked=true; return; } // no deselect solo
+      p1=yy;
+      box.querySelectorAll('label').forEach(l=>l.classList.remove('ckA'));
+      box.querySelectorAll('input').forEach(c=>c.checked=c.value===yy);
+      lb.classList.add('ckA');
+      if(p2===p1) p2=null;
+      if(p2==='__adv_B__') advSetB=(advSetB||[]).filter(v=>v!==p1);
+      buildCmpChecks(); renderAll();
+    };
+    lb.appendChild(ck); lb.appendChild(document.createTextNode(yy==='TODOS'?'Todo el período':yy));
+    box.appendChild(lb);
+  });
 }
 
 function buildCmpChecks(){
-  const box=document.getElementById('cmp-checks');
-  if(!box) return;
+  const box=document.getElementById('cmp-checks'); if(!box) return;
   const selected=(p2==='__adv_B__'?(advSetB||[]):(p2?[p2]:[])).filter(v=>v!==p1);
   box.innerHTML='';
   getYears().forEach(yy=>{
-    if(yy===p1) return; // no mostrar el año que ya es p1
+    if(yy===p1) return;
     const lb=document.createElement('label');
     lb.className='adv-pcheck'+(selected.includes(yy)?' ckB':'');
-    lb.style.cssText='font-size:.72rem;padding:3px 10px;';
+    lb.style.cssText='font-size:.72rem;padding:3px 10px;cursor:pointer;';
     const ck=document.createElement('input'); ck.type='checkbox'; ck.value=yy; ck.checked=selected.includes(yy); ck.style.marginRight='4px';
     ck.onchange=onCmpChecksChange;
-    lb.appendChild(ck);
-    const sp=document.createElement('span'); sp.textContent=yy; lb.appendChild(sp);
+    lb.appendChild(ck); lb.appendChild(document.createTextNode(yy));
     box.appendChild(lb);
   });
   renderCmpSummary();
 }
 
-function onMainYearChange(){
-  buildMainPeriodOptions();
-  onMainPeriodChange();
-}
-
-function onMainPeriodChange(){
-  const pSel=document.getElementById('main-period-sel');
-  if(!pSel) return;
-  p1=pSel.value;
-  if(p2===p1) p2=null;
-  if(p2==='__adv_B__') advSetB=(advSetB||[]).filter(v=>v!==p1);
-  buildCmpChecks();
-  renderAll();
-}
-
-function onCmpYearChange(){
-  buildCmpChecks();
-}
+function onMainYearChange(){ buildMainPeriodOptions(); }
+function onMainPeriodChange(){ buildMainPeriodOptions(); }
+function onCmpYearChange(){ buildCmpChecks(); }
 
 function onCmpChecksChange(){
-  const box=document.getElementById('cmp-checks');
-  if(!box) return;
-  const vals=[...box.querySelectorAll('input[type="checkbox"]:checked')].map(i=>i.value).filter(v=>v!==p1);
+  const box=document.getElementById('cmp-checks'); if(!box) return;
+  const vals=[...box.querySelectorAll('input:checked')].map(i=>i.value).filter(v=>v!==p1);
   if(!vals.length){ p2=null; }
   else if(vals.length===1){ p2=vals[0]; }
   else { advSetB=[...vals]; p2='__adv_B__'; }
+  // update pill styles
+  box.querySelectorAll('label').forEach(lb=>{
+    const ck=lb.querySelector('input');
+    lb.classList.toggle('ckB', ck&&ck.checked);
+  });
   renderCmpSummary();
   renderAll();
 }
 
 function renderCmpSummary(){
-  const el=document.getElementById('cmp-selected');
-  if(!el) return;
+  const el=document.getElementById('cmp-selected'); if(!el) return;
   const vals=(p2==='__adv_B__'?(advSetB||[]):(p2?[p2]:[])).filter(v=>v!==p1);
-  el.innerHTML='';
-  if(!vals.length){
-    el.innerHTML='<span class="cmp-chip-muted">Sin períodos seleccionados para comparar.</span>';
-    return;
-  }
-  vals.slice(0,8).forEach(v=>{
-    const sp=document.createElement('span');
-    sp.className='cmp-chip';
-    sp.textContent=fmtP(v);
-    el.appendChild(sp);
-  });
-  if(vals.length>8){
-    const more=document.createElement('span');
-    more.className='cmp-chip-muted';
-    more.textContent='+'+(vals.length-8)+' más';
-    el.appendChild(more);
-  }
+  if(!vals.length){ el.innerHTML=''; return; }
+  el.innerHTML=vals.map(v=>`<span class="cmp-chip">${fmtP(v)}</span>`).join('');
 }
 
-function toggleCmpList(){
-  const box=document.getElementById('cmp-checks');
-  const btn=document.getElementById('cmp-toggle');
-  if(!box||!btn) return;
-  const hidden=box.style.display==='none';
-  box.style.display=hidden?'flex':'none';
-  btn.textContent=hidden?'Ocultar lista':'Mostrar lista';
-}
+function toggleCmpList(){ /* no-op: siempre visible */ }
 
 function renderPills(){
-  const years=getYears();
-  const yMain=document.getElementById('main-year-sel');
-  const yCmp=document.getElementById('cmp-year-sel');
-  if(yMain){
-    const prev=yMain.value||'ALL';
-    yMain.innerHTML='';
-    const oAll=document.createElement('option'); oAll.value='ALL'; oAll.textContent='Todos los años'; yMain.appendChild(oAll);
-    years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y; yMain.appendChild(o); });
-    yMain.value=[...yMain.options].some(o=>o.value===prev)?prev:'ALL';
-  }
-  if(yCmp){
-    const prev=yCmp.value||'ALL';
-    yCmp.innerHTML='';
-    const oAll=document.createElement('option'); oAll.value='ALL'; oAll.textContent='Todos los años'; yCmp.appendChild(oAll);
-    years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y; yCmp.appendChild(o); });
-    yCmp.value=[...yCmp.options].some(o=>o.value===prev)?prev:'ALL';
-  }
   buildMainPeriodOptions();
   buildCmpChecks();
-
   const l2=document.getElementById('leg2');
   if(l2){if(p2){l2.style.display='flex';document.getElementById('leg2-label').textContent='= '+fmtP(p2);}else l2.style.display='none';}
 }
@@ -2253,28 +2192,15 @@ function clearDrill(){
 
 function buildAdvPills(){
   const years=getYears();
-  const yA=document.getElementById('adv-yearA');
-  const yB=document.getElementById('adv-yearB');
-  const fillYear=(sel,def)=>{
-    if(!sel) return;
-    const prev=sel.value||def;
-    sel.innerHTML='';
-    const oa=document.createElement('option'); oa.value='ALL'; oa.textContent='Todos'; sel.appendChild(oa);
-    years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); });
-    sel.value=[...sel.options].some(o=>o.value===prev)?prev:def;
-  };
-  fillYear(yA,'ALL'); fillYear(yB,'ALL');
 
   const describeSet=(set)=>{
     const vals=(set||[]).filter(Boolean);
     const y=vals.filter(v=>/^\d{4}$/.test(v)).length;
-    const m=vals.filter(v=>/^\d{4}-\d{2}$/.test(v)).length;
     const t=vals.includes('TODOS')?1:0;
     if(!vals.length) return 'Sin selección';
     const parts=[];
     if(t) parts.push('Todo');
     if(y) parts.push(`${y} año(s)`);
-    if(m) parts.push(`${m} mes(es)`);
     return parts.join(' · ');
   };
 
@@ -2283,32 +2209,37 @@ function buildAdvPills(){
     if(i>=0) set.splice(i,1); else set.push(v);
   };
 
-  const buildChecks=(gid,set,cls,yearSel)=>{
+  const buildChecks=(gid,set,cls)=>{
     const el=document.getElementById('adv-per'+gid); if(!el) return;
     el.innerHTML='';
-    const summary=document.createElement('div');
-    summary.className='adv-per-summary';
-    summary.innerHTML=`<span class="cmp-chip-muted">${describeSet(set)}</span>`;
-    el.appendChild(summary);
     const list=document.createElement('div');
     list.className='adv-per-wrap';
-    list.style.flexWrap='wrap';
-    // "Todo el período" pill
-    const lbAll=document.createElement('label'); lbAll.className='adv-pcheck'+(set.includes('TODOS')?(' ck'+cls):''); lbAll.style.fontSize='.71rem'; lbAll.style.padding='3px 8px';
+    list.style.cssText='display:flex;flex-wrap:wrap;gap:5px;';
+    // Summary label
+    const sumDiv=document.createElement('div');
+    sumDiv.style.cssText='width:100%;font-size:.68rem;color:#94a3b8;margin-bottom:4px;';
+    sumDiv.textContent=describeSet(set);
+    el.appendChild(sumDiv);
+    // "Todo el período"
+    const lbAll=document.createElement('label');
+    lbAll.className='adv-pcheck'+(set.includes('TODOS')?(' ck'+cls):'');
+    lbAll.style.cssText='font-size:.71rem;padding:3px 8px;';
     const ckAll=document.createElement('input'); ckAll.type='checkbox'; ckAll.checked=set.includes('TODOS'); ckAll.style.marginRight='4px';
     ckAll.onchange=()=>{ toggleValue(set,'TODOS'); buildAdvPills(); updateAdvStatus(); };
     lbAll.appendChild(ckAll); const spAll=document.createElement('span'); spAll.textContent='Todo el período'; lbAll.appendChild(spAll); list.appendChild(lbAll);
-    // Year pills only
-    getYears().forEach(yy=>{
-      const lb=document.createElement('label'); lb.className='adv-pcheck'+(set.includes(yy)?(' ck'+cls):''); lb.style.fontSize='.71rem'; lb.style.padding='3px 8px';
+    // Year pills
+    years.forEach(yy=>{
+      const lb=document.createElement('label');
+      lb.className='adv-pcheck'+(set.includes(yy)?(' ck'+cls):'');
+      lb.style.cssText='font-size:.71rem;padding:3px 8px;';
       const ck=document.createElement('input'); ck.type='checkbox'; ck.checked=set.includes(yy); ck.style.marginRight='4px';
       ck.onchange=()=>{ toggleValue(set,yy); buildAdvPills(); updateAdvStatus(); };
       lb.appendChild(ck); const sp=document.createElement('span'); sp.textContent=yy; lb.appendChild(sp); list.appendChild(lb);
     });
     el.appendChild(list);
   };
-  buildChecks('A',advSetA,'A',yA);
-  buildChecks('B',advSetB,'B',yB);
+  buildChecks('A',advSetA,'A');
+  buildChecks('B',advSetB,'B');
   updateAdvStatus();
 }
 
@@ -2340,15 +2271,7 @@ function buildAdvAbxSelect(){
     else allPers.forEach(per=>scanRows(obj[per]));
   });
 
-  const ySel=document.getElementById('adv-abx-year');
-  const years=getYears();
-  if(ySel){
-    const prev=ySel.value||'ALL';
-    ySel.innerHTML='';
-    const oa=document.createElement('option'); oa.value='ALL'; oa.textContent='Todos'; ySel.appendChild(oa);
-    years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y; ySel.appendChild(o); });
-    ySel.value=[...ySel.options].some(o=>o.value===prev)?prev:'ALL';
-  }
+  // Antibiótico dropdown
   const abxPanel=document.getElementById('adv-abx-dd-panel');
   if(abxPanel){
     const prev=[...abxPanel.querySelectorAll('input:checked')].map(i=>i.value);
@@ -2363,20 +2286,23 @@ function buildAdvAbxSelect(){
     setDdLabel('abx',[...abxPanel.querySelectorAll('input:checked')].map(i=>formatAbxUiName(i.value)));
   }
 
-  const perPanel=document.getElementById('adv-per-dd-panel');
-  if(perPanel){
-    const prev=[...perPanel.querySelectorAll('input:checked')].map(i=>i.value);
-    const y=ySel?ySel.value:'ALL';
-    const vals=(y==='ALL')?['TODOS',...RAW.años,...RAW.periodos]:['TODOS',y,...monthsForYear(y)];
-    perPanel.innerHTML='';
-    vals.forEach(p=>{
-      const lb=document.createElement('label'); lb.className='adv-pcheck'; lb.style.fontSize='.72rem';
-      const ck=document.createElement('input'); ck.type='checkbox'; ck.value=p; ck.checked=prev.includes(p); ck.style.marginRight='4px';
-      ck.onchange=()=>setDdLabel('per',[...perPanel.querySelectorAll('input:checked')].map(i=>fmtP(i.value)));
-      lb.appendChild(ck); const sp=document.createElement('span'); sp.textContent=fmtP(p); lb.appendChild(sp);
-      perPanel.appendChild(lb);
+  // Período: checkboxes de años
+  const perBox=document.getElementById('adv-abx-per-checks');
+  if(perBox){
+    const prev=new Set([...perBox.querySelectorAll('input:checked')].map(c=>c.value));
+    perBox.innerHTML='';
+    const years=getYears();
+    // Todo el período
+    const lbAll=document.createElement('label'); lbAll.className='adv-pcheck'+(prev.has('TODOS')?' ckA':''); lbAll.style.fontSize='.71rem'; lbAll.style.padding='3px 8px';
+    const ckAll=document.createElement('input'); ckAll.type='checkbox'; ckAll.value='TODOS'; ckAll.checked=prev.has('TODOS'); ckAll.style.marginRight='4px';
+    ckAll.onchange=()=>{ if(ckAll.checked) perBox.querySelectorAll('input[data-yr]').forEach(c=>{c.checked=false;c.closest('label')?.classList.remove('ckA');}); lbAll.classList.toggle('ckA',ckAll.checked); };
+    lbAll.appendChild(ckAll); lbAll.appendChild(document.createTextNode('Todo')); perBox.appendChild(lbAll);
+    years.forEach(yy=>{
+      const lb=document.createElement('label'); lb.className='adv-pcheck'+(prev.has(yy)?' ckA':''); lb.style.fontSize='.71rem'; lb.style.padding='3px 8px';
+      const ck=document.createElement('input'); ck.type='checkbox'; ck.value=yy; ck.dataset.yr='1'; ck.checked=prev.has(yy); ck.style.marginRight='4px';
+      ck.onchange=()=>{ lb.classList.toggle('ckA',ck.checked); if(ck.checked){ckAll.checked=false;lbAll.classList.remove('ckA');} if(!perBox.querySelectorAll('input[data-yr]:checked').length){ckAll.checked=true;lbAll.classList.add('ckA');} };
+      lb.appendChild(ck); lb.appendChild(document.createTextNode(yy)); perBox.appendChild(lb);
     });
-    setDdLabel('per',[...perPanel.querySelectorAll('input:checked')].map(i=>fmtP(i.value)));
   }
 }
 
@@ -2636,15 +2562,15 @@ function clearAdv(){
 
 function clearAdvAbx(){
   document.querySelectorAll('#adv-abx-dd-panel input').forEach(c=>c.checked=false);
-  document.querySelectorAll('#adv-per-dd-panel input').forEach(c=>c.checked=false);
+  document.querySelectorAll('#adv-abx-per-checks input').forEach(c=>c.checked=false);
   const lbl=document.getElementById('adv-abx-dd-label'); if(lbl) lbl.textContent='(Ninguno)';
-  const lbl2=document.getElementById('adv-per-dd-label'); if(lbl2) lbl2.textContent='(Ninguno)';
   const box=document.getElementById('adv-abx-chart'); if(box) box.innerHTML='';
 }
 
 function applyAdvAbx(){
   const abx=[...document.querySelectorAll('#adv-abx-dd-panel input:checked')].map(i=>i.value);
-  const pers=[...document.querySelectorAll('#adv-per-dd-panel input:checked')].map(i=>i.value);
+  const perChecked=[...document.querySelectorAll('#adv-abx-per-checks input:checked')].map(i=>i.value);
+  const pers=perChecked.length?perChecked:['TODOS'];
   const selectedHospitals=getAdvHospitals();
   if(!abx.length){alert('Selecciona al menos un antibiótico.');return;}
   if(!pers.length){alert('Selecciona al menos un período.');return;}
