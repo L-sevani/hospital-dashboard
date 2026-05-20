@@ -295,7 +295,12 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
       <div></div>
       <div>
         <div style="font-size:.7rem;font-weight:700;color:#5b21b6;text-transform:uppercase;margin-bottom:8px;">Período</div>
-        <div id="adv-abx-per-checks" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        <div class="csel" id="adv-abx-per-dd" style="min-width:160px;padding:0;position:relative;">
+          <div onclick="togglePeriodDd('abx-per')" style="padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span id="adv-abx-per-dd-label">Todo el período</span><span>▾</span>
+          </div>
+          <div id="adv-abx-per-checks" style="display:none;position:absolute;top:100%;left:0;z-index:300;background:#fff;border:1px solid #ddd6fe;border-radius:0 0 8px 8px;padding:8px;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,.1);flex-direction:column;gap:2px;"></div>
+        </div>
       </div>
       <button onclick="applyAdvAbx()" class="adv-btn-apply" style="margin-bottom:1px;">▶ Ver en las 4 dimensiones</button>
       <button onclick="clearAdvAbx()" class="adv-btn-clear" style="margin-bottom:1px;">✕ Limpiar</button>
@@ -1299,20 +1304,19 @@ function monthsForYear(y){
 }
 
 function togglePeriodDd(kind){
-  const id=kind==='main'?'main-period-checks':'cmp-checks';
+  const idMap={'main':'main-period-checks','cmp':'cmp-checks','abx-per':'adv-abx-per-checks'};
+  const id=idMap[kind]; if(!id) return;
   const panel=document.getElementById(id); if(!panel) return;
   const open=panel.style.display==='flex';
-  // close all period dropdowns first
-  ['main-period-checks','cmp-checks'].forEach(i=>{
+  ['main-period-checks','cmp-checks','adv-abx-per-checks'].forEach(i=>{
     const p=document.getElementById(i); if(p) p.style.display='none';
   });
   if(!open) panel.style.display='flex';
 }
 
-// Close dropdowns when clicking outside
 document.addEventListener('click',e=>{
-  if(!e.target.closest('#main-period-dd')&&!e.target.closest('#cmp-period-dd')){
-    ['main-period-checks','cmp-checks'].forEach(i=>{
+  if(!e.target.closest('#main-period-dd')&&!e.target.closest('#cmp-period-dd')&&!e.target.closest('#adv-abx-per-dd')){
+    ['main-period-checks','cmp-checks','adv-abx-per-checks'].forEach(i=>{
       const p=document.getElementById(i); if(p) p.style.display='none';
     });
   }
@@ -2317,33 +2321,43 @@ function buildAdvAbxSelect(){
     const prev=[...abxPanel.querySelectorAll('input:checked')].map(i=>i.value);
     abxPanel.innerHTML='';
     [...abxSet].sort().forEach(a=>{
-      const lb=document.createElement('label'); lb.className='adv-pcheck'; lb.style.fontSize='.72rem';
-      const ck=document.createElement('input'); ck.type='checkbox'; ck.value=a; ck.checked=prev.includes(a); ck.style.marginRight='4px';
+      const lb=document.createElement('label'); lb.className='adv-pcheck'; lb.style.cssText='font-size:.72rem;width:100%;box-sizing:border-box;padding:3px 8px;border-radius:5px;';
+      const ck=document.createElement('input'); ck.type='checkbox'; ck.value=a; ck.checked=prev.includes(a); ck.style.marginRight='6px';
       ck.onchange=()=>setDdLabel('abx',[...abxPanel.querySelectorAll('input:checked')].map(i=>formatAbxUiName(i.value)));
-      lb.appendChild(ck); const sp=document.createElement('span'); sp.textContent=formatAbxUiName(a); lb.appendChild(sp);
+      lb.appendChild(ck);
+      const sp=document.createElement('span'); sp.innerHTML=lblName(a); lb.appendChild(sp);
       abxPanel.appendChild(lb);
     });
     setDdLabel('abx',[...abxPanel.querySelectorAll('input:checked')].map(i=>formatAbxUiName(i.value)));
   }
 
-  // Período: checkboxes de años
+  // Período: checkboxes de años en dropdown
   const perBox=document.getElementById('adv-abx-per-checks');
   if(perBox){
     const prev=new Set([...perBox.querySelectorAll('input:checked')].map(c=>c.value));
     perBox.innerHTML='';
     const years=getYears();
-    // Todo el período
-    const lbAll=document.createElement('label'); lbAll.className='adv-pcheck'+(prev.has('TODOS')?' ckA':''); lbAll.style.fontSize='.71rem'; lbAll.style.padding='3px 8px';
+    const lbAll=document.createElement('label'); lbAll.className='adv-pcheck'+(prev.has('TODOS')?' ckA':''); lbAll.style.cssText='font-size:.71rem;padding:4px 10px;width:100%;box-sizing:border-box;border-radius:6px;';
     const ckAll=document.createElement('input'); ckAll.type='checkbox'; ckAll.value='TODOS'; ckAll.checked=prev.has('TODOS'); ckAll.style.marginRight='4px';
-    ckAll.onchange=()=>{ if(ckAll.checked) perBox.querySelectorAll('input[data-yr]').forEach(c=>{c.checked=false;c.closest('label')?.classList.remove('ckA');}); lbAll.classList.toggle('ckA',ckAll.checked); };
+    ckAll.onchange=()=>{ if(ckAll.checked) perBox.querySelectorAll('input[data-yr]').forEach(c=>{c.checked=false;c.closest('label')?.classList.remove('ckA');}); lbAll.classList.toggle('ckA',ckAll.checked); updateAbxPerLabel(); };
     lbAll.appendChild(ckAll); lbAll.appendChild(document.createTextNode('Todo')); perBox.appendChild(lbAll);
     years.forEach(yy=>{
-      const lb=document.createElement('label'); lb.className='adv-pcheck'+(prev.has(yy)?' ckA':''); lb.style.fontSize='.71rem'; lb.style.padding='3px 8px';
+      const lb=document.createElement('label'); lb.className='adv-pcheck'+(prev.has(yy)?' ckA':''); lb.style.cssText='font-size:.71rem;padding:4px 10px;width:100%;box-sizing:border-box;border-radius:6px;';
       const ck=document.createElement('input'); ck.type='checkbox'; ck.value=yy; ck.dataset.yr='1'; ck.checked=prev.has(yy); ck.style.marginRight='4px';
-      ck.onchange=()=>{ lb.classList.toggle('ckA',ck.checked); if(ck.checked){ckAll.checked=false;lbAll.classList.remove('ckA');} if(!perBox.querySelectorAll('input[data-yr]:checked').length){ckAll.checked=true;lbAll.classList.add('ckA');} };
+      ck.onchange=()=>{ lb.classList.toggle('ckA',ck.checked); if(ck.checked){ckAll.checked=false;lbAll.classList.remove('ckA');} if(!perBox.querySelectorAll('input[data-yr]:checked').length){ckAll.checked=true;lbAll.classList.add('ckA');} updateAbxPerLabel(); };
       lb.appendChild(ck); lb.appendChild(document.createTextNode(yy)); perBox.appendChild(lb);
     });
+    updateAbxPerLabel();
   }
+}
+
+function updateAbxPerLabel(){
+  const perBox=document.getElementById('adv-abx-per-checks'); if(!perBox) return;
+  const checked=[...perBox.querySelectorAll('input:checked')].map(c=>c.value);
+  const lbl=document.getElementById('adv-abx-per-dd-label'); if(!lbl) return;
+  if(!checked.length||checked.includes('TODOS')) lbl.textContent='Todo el período';
+  else if(checked.length===1) lbl.textContent=checked[0];
+  else lbl.textContent=`${checked.length} años`;
 }
 
 function applyAdvMulti(){
@@ -2421,7 +2435,7 @@ function applyAdvMulti(){
         if(!b||a.t<3||b.t<3) return;
         const dR=Math.round(b.pR*100)-Math.round(a.pR*100);
         const dS=Math.round(a.pS*100)-Math.round(b.pS*100);
-        rows.push({name:lbl(a),tA:a.t,tB:b.t,rA:Math.round(a.pR*100),rB:Math.round(b.pR*100),sA:Math.round(a.pS*100),sB:Math.round(b.pS*100),dR,dS});
+        rows.push({name:lblHtml(a),tA:a.t,tB:b.t,rA:Math.round(a.pR*100),rB:Math.round(b.pR*100),sA:Math.round(a.pS*100),sB:Math.round(b.pS*100),dR,dS});
       });
       rows.sort((a,b)=>Math.abs(b.dR)-Math.abs(a.dR));
       const top=rows.slice(0,10);
