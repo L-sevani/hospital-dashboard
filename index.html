@@ -168,6 +168,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
   <div class="ntab" onclick="setSection('frecuencias',this)">📊 Frecuencias</div>
   <div class="ntab" onclick="setSection('avanzado',this)">🔬 Análisis Avanzado</div>
   <div class="ntab" onclick="setSection('comparar',this)">⚖️ Comparar Hospitales</div>
+  <div class="ntab" onclick="setSection('aware',this)">🌐 Clasificación AWaRe</div>
 </div>
 
 <div class="controls" id="controls-bar">
@@ -362,6 +363,28 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 
   <div class="section" id="sec-comparar" style="padding:22px 32px;flex-direction:column;gap:20px;background:#f0f9ff;">
     <div id="comparar-body"></div>
+  </div>
+
+  <!-- CLASIFICACIÓN AWaRe -->
+  <div class="section" id="sec-aware" style="padding:28px 32px;flex-direction:column;gap:20px;background:#f8fafc;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:4px;">
+      <div>
+        <h2 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin:0;">🌐 Lista de Antibióticos — Clasificación AWaRe</h2>
+        <p style="font-size:.75rem;color:#64748b;margin:4px 0 0;">Fuente: WHO Essential Medicines — <a href="https://aware.essentialmeds.org/list" target="_blank" style="color:#154f39;font-weight:600;">aware.essentialmeds.org</a></p>
+      </div>
+      <div id="aware-stats" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+    </div>
+    <!-- Buscador y filtros -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <div style="position:relative;flex:1;min-width:240px;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;">🔍</span>
+        <input id="aware-search" type="text" placeholder="Buscar antibiótico..." oninput="renderAwareList()" style="width:100%;padding:9px 12px 9px 34px;border:1px solid #e2e8f0;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='#154f39'" onblur="this.style.borderColor='#e2e8f0'">
+      </div>
+      <div id="aware-filters" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    </div>
+    <!-- Lista -->
+    <div id="aware-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;"></div>
+    <div id="aware-count" style="font-size:.72rem;color:#94a3b8;text-align:center;padding-top:4px;"></div>
   </div>
 </div>
 
@@ -1800,7 +1823,7 @@ function renderComparar(){
 }
 
 function sectionLabel(sec){
-  const labels={hospital:'Todo el hospital',servicio:'Por servicio',infeccion:'Por infección',cultivo:'Por cultivo',micro:'Por microorganismo',frecuencias:'Frecuencias',avanzado:'Análisis avanzado',comparar:'Comparar hospitales'};
+  const labels={hospital:'Todo el hospital',servicio:'Por servicio',infeccion:'Por infección',cultivo:'Por cultivo',micro:'Por microorganismo',frecuencias:'Frecuencias',avanzado:'Análisis avanzado',comparar:'Comparar hospitales',aware:'Clasificación AWaRe'};
   return labels[sec]||sec;
 }
 
@@ -1839,14 +1862,16 @@ function setSection(sec,el){
   const isAdv=sec==='avanzado';
   const isFreq=sec==='frecuencias';
   const isCmp=sec==='comparar';
-  if(fb) fb.style.display=(isFreq||isAdv||isCmp)?'none':'flex';
-  if(ctrl) ctrl.style.display=(isAdv||isCmp)?'none':'flex';
-  if(cmp) cmp.style.display=(isFreq||isAdv||isCmp)?'none':'flex';
-  if(legSri) legSri.style.display=(isAdv||isFreq||isCmp)?'none':'flex';
+  const isAware=sec==='aware';
+  if(fb) fb.style.display=(isFreq||isAdv||isCmp||isAware)?'none':'flex';
+  if(ctrl) ctrl.style.display=(isAdv||isCmp||isAware)?'none':'flex';
+  if(cmp) cmp.style.display=(isFreq||isAdv||isCmp||isAware)?'none':'flex';
+  if(legSri) legSri.style.display=(isAdv||isFreq||isCmp||isAware)?'none':'flex';
   if(isAdv){ buildAdvPills(); buildAdvAbxSelect(); buildAdvHospitalSelector(); }
+  if(isAware){ initAwareTab(); }
   activeSection=sec;
   renderContextBar();
-  if(!isAdv) renderAll();
+  if(!isAdv&&!isAware) renderAll();
 }
 
 function setMode(m){mode=m;p1='TODOS';p2=null;renderPills();renderAll();}
@@ -2795,6 +2820,427 @@ async function reloadData(){
     setTimeout(()=>{ btn.textContent='↺ Actualizar'; }, 2500);
   }
 }
+
+// ── CLASIFICACIÓN AWaRe (WHO) ──
+const AWARE_DATA=[
+  {n:'Amikacina',e:'Amikacin',c:'A'},
+  {n:'Amoxicilina',e:'Amoxicillin',c:'A'},
+  {n:'Amoxicilina + Ácido Clavulánico',e:'Amoxicillin + clavulanic acid',c:'A'},
+  {n:'Amoxicilina + Sulbactam',e:'Amoxicillin + sulbactam',c:'A'},
+  {n:'Ampicilina',e:'Ampicillin',c:'A'},
+  {n:'Ampicilina + Sulbactam',e:'Ampicillin + sulbactam',c:'A'},
+  {n:'Azanidazol',e:'Azanidazole',c:'A'},
+  {n:'Azidocilina',e:'Azidocillin',c:'A'},
+  {n:'Bacampicilina',e:'Bacampicillin',c:'A'},
+  {n:'Bencilpenicilina Benzatínica',e:'Benzathine benzylpenicillin',c:'A'},
+  {n:'Fenoximetilpenicilina Benzatínica',e:'Benzathine phenoxymethylpenicillin',c:'A'},
+  {n:'Bencilpenicilina',e:'Benzylpenicillin',c:'A'},
+  {n:'Brodimoprim',e:'Brodimoprim',c:'A'},
+  {n:'Capreomicina',e:'Capreomycin',c:'A'},
+  {n:'Cefacetril',e:'Cefacetrile',c:'A'},
+  {n:'Cefadroxil',e:'Cefadroxil',c:'A'},
+  {n:'Cefalexina',e:'Cefalexin',c:'A'},
+  {n:'Cefaloridina',e:'Cefaloridine',c:'A'},
+  {n:'Cefalotina',e:'Cefalotin',c:'A'},
+  {n:'Cefapirina',e:'Cefapirin',c:'A'},
+  {n:'Cefatrizina',e:'Cefatrizine',c:'A'},
+  {n:'Cefazedona',e:'Cefazedone',c:'A'},
+  {n:'Cefazolina',e:'Cefazolin',c:'A'},
+  {n:'Cefradina',e:'Cefradine',c:'A'},
+  {n:'Cefroxadina',e:'Cefroxadine',c:'A'},
+  {n:'Ceftezol',e:'Ceftezole',c:'A'},
+  {n:'Cloranfenicol',e:'Chloramphenicol',c:'A'},
+  {n:'Clindamicina',e:'Clindamycin',c:'A'},
+  {n:'Clometocilina',e:'Clometocillin',c:'A'},
+  {n:'Cloxacilina',e:'Cloxacillin',c:'A'},
+  {n:'Dicloxacilina',e:'Dicloxacillin',c:'A'},
+  {n:'Doxiciclina',e:'Doxycycline',c:'A'},
+  {n:'Epicilina',e:'Epicillin',c:'A'},
+  {n:'Flucloxacilina',e:'Flucloxacillin',c:'A'},
+  {n:'Furazidina',e:'Furazidin',c:'A'},
+  {n:'Gentamicina',e:'Gentamicin',c:'A'},
+  {n:'Hetacilina',e:'Hetacillin',c:'A'},
+  {n:'Mecilinam',e:'Mecillinam',c:'A'},
+  {n:'Metampicilina',e:'Metampicillin',c:'A'},
+  {n:'Meticilina',e:'Meticillin',c:'A'},
+  {n:'Metronidazol',e:'Metronidazole',c:'A'},
+  {n:'Nafcilina',e:'Nafcillin',c:'A'},
+  {n:'Nifurtoinol',e:'Nifurtoinol',c:'A'},
+  {n:'Nimorazol',e:'Nimorazole',c:'A'},
+  {n:'Nitrofurantoína',e:'Nitrofurantoin',c:'A'},
+  {n:'Ornidazol iny.',e:'Ornidazole (injection)',c:'A'},
+  {n:'Ornidazol oral',e:'Ornidazole (oral)',c:'A'},
+  {n:'Oxacilina',e:'Oxacillin',c:'A'},
+  {n:'Penamicilina',e:'Penamecillin',c:'A'},
+  {n:'Fenoximetilpenicilina',e:'Phenoxymethylpenicillin',c:'A'},
+  {n:'Pivampicilina',e:'Pivampicillin',c:'A'},
+  {n:'Pivmecilinam',e:'Pivmecillinam',c:'A'},
+  {n:'Penicilina Procaína',e:'Procaine benzylpenicillin',c:'A'},
+  {n:'Propenidazol',e:'Propenidazole',c:'A'},
+  {n:'Propicilina',e:'Propicillin',c:'A'},
+  {n:'Satranidazol',e:'Satranidazole',c:'A'},
+  {n:'Secnidazol',e:'Secnidazole',c:'A'},
+  {n:'Espectinomicina',e:'Spectinomycin',c:'A'},
+  {n:'Sulbactam',e:'Sulbactam',c:'A'},
+  {n:'Sulfadiazina',e:'Sulfadiazine',c:'A'},
+  {n:'Sulfadiazina + Tetroxoprim',e:'Sulfadiazine + tetroxoprim',c:'A'},
+  {n:'Sulfadiazina + Trimetoprim',e:'Sulfadiazine + trimethoprim',c:'A'},
+  {n:'Sulfadimetoxina',e:'Sulfadimethoxine',c:'A'},
+  {n:'Sulfadimidina',e:'Sulfadimidine',c:'A'},
+  {n:'Sulfadimidina + Trimetoprim',e:'Sulfadimidine + trimethoprim',c:'A'},
+  {n:'Sulfafurazol',e:'Sulfafurazole',c:'A'},
+  {n:'Sulfaisodimidina',e:'Sulfaisodimidine',c:'A'},
+  {n:'Sulfaleno',e:'Sulfalene',c:'A'},
+  {n:'Sulfamazona',e:'Sulfamazone',c:'A'},
+  {n:'Sulfamerazina',e:'Sulfamerazine',c:'A'},
+  {n:'Sulfamerazina + Trimetoprim',e:'Sulfamerazine + trimethoprim',c:'A'},
+  {n:'Sulfametizol',e:'Sulfamethizole',c:'A'},
+  {n:'Sulfametizol + Trimetoprim',e:'Sulfamethizole + trimethoprim',c:'A'},
+  {n:'Sulfametoxazol',e:'Sulfamethoxazole',c:'A'},
+  {n:'Trimetoprim/Sulfametoxazol',e:'Sulfamethoxazole + trimethoprim',c:'A'},
+  {n:'Sulfametoxipiridazina',e:'Sulfamethoxypyridazine',c:'A'},
+  {n:'Sulfametomidina',e:'Sulfametomidine',c:'A'},
+  {n:'Sulfametoxydiazina',e:'Sulfametoxydiazine',c:'A'},
+  {n:'Sulfametrole + Trimetoprim',e:'Sulfametrole + trimethoprim',c:'A'},
+  {n:'Sulfamoxol',e:'Sulfamoxole',c:'A'},
+  {n:'Sulfamoxol + Trimetoprim',e:'Sulfamoxole + trimethoprim',c:'A'},
+  {n:'Sulfanilamida',e:'Sulfanilamide',c:'A'},
+  {n:'Sulfaperina',e:'Sulfaperin',c:'A'},
+  {n:'Sulfafenazol',e:'Sulfaphenazole',c:'A'},
+  {n:'Sulfapiridina',e:'Sulfapyridine',c:'A'},
+  {n:'Sulfatiazol',e:'Sulfathiazole',c:'A'},
+  {n:'Sulfatiourea',e:'Sulfathiourea',c:'A'},
+  {n:'Sultamicilina',e:'Sultamicillin',c:'A'},
+  {n:'Talampicilina',e:'Talampicillin',c:'A'},
+  {n:'Tetraciclina',e:'Tetracycline',c:'A'},
+  {n:'Tiamfenicol',e:'Thiamphenicol',c:'A'},
+  {n:'Tinidazol iny.',e:'Tinidazole (injection)',c:'A'},
+  {n:'Tinidazol oral',e:'Tinidazole (oral)',c:'A'},
+  {n:'Trimetoprim',e:'Trimethoprim',c:'A'},
+  {n:'Arbekacina',e:'Arbekacin',c:'W'},
+  {n:'Aspoxicilina',e:'Aspoxicillin',c:'W'},
+  {n:'Azlocilina',e:'Azlocillin',c:'W'},
+  {n:'Bekanamicina',e:'Bekanamycin',c:'W'},
+  {n:'Biapenem',e:'Biapenem',c:'W'},
+  {n:'Carbenicilina',e:'Carbenicillin',c:'W'},
+  {n:'Carindacilina',e:'Carindacillin',c:'W'},
+  {n:'Cefaclor',e:'Cefaclor',c:'W'},
+  {n:'Cefamandol',e:'Cefamandole',c:'W'},
+  {n:'Cefbuperazona',e:'Cefbuperazone',c:'W'},
+  {n:'Cefcapeno',e:'Cefcapene',c:'W'},
+  {n:'Cefdinir',e:'Cefdinir',c:'W'},
+  {n:'Cefditoren',e:'Cefditoren',c:'W'},
+  {n:'Cefepima',e:'Cefepime',c:'W'},
+  {n:'Cefetamet',e:'Cefetamet',c:'W'},
+  {n:'Cefixima',e:'Cefixime',c:'W'},
+  {n:'Cefmenoxima',e:'Cefmenoxime',c:'W'},
+  {n:'Cefmetazol',e:'Cefmetazole',c:'W'},
+  {n:'Cefminox',e:'Cefminox',c:'W'},
+  {n:'Cefodizima',e:'Cefodizime',c:'W'},
+  {n:'Cefónicida',e:'Cefonicid',c:'W'},
+  {n:'Cefoperazona',e:'Cefoperazone',c:'W'},
+  {n:'Ceforanida',e:'Ceforanide',c:'W'},
+  {n:'Cefoselis',e:'Cefoselis',c:'W'},
+  {n:'Cefotaxima',e:'Cefotaxime',c:'W'},
+  {n:'Cefotetan',e:'Cefotetan',c:'W'},
+  {n:'Cefotiam',e:'Cefotiam',c:'W'},
+  {n:'Cefoxitina',e:'Cefoxitin',c:'W'},
+  {n:'Cefozopran',e:'Cefozopran',c:'W'},
+  {n:'Cefpiramida',e:'Cefpiramide',c:'W'},
+  {n:'Cefpirome',e:'Cefpirome',c:'W'},
+  {n:'Cefpodoxima',e:'Cefpodoxime',c:'W'},
+  {n:'Cefprozil',e:'Cefprozil',c:'W'},
+  {n:'Cefsulodin',e:'Cefsulodin',c:'W'},
+  {n:'Ceftazidima',e:'Ceftazidime',c:'W'},
+  {n:'Cefteram',e:'Cefteram',c:'W'},
+  {n:'Ceftibuten',e:'Ceftibuten',c:'W'},
+  {n:'Ceftizoxima',e:'Ceftizoxime',c:'W'},
+  {n:'Ceftriaxona',e:'Ceftriaxone',c:'W'},
+  {n:'Cefuroxima',e:'Cefuroxime',c:'W'},
+  {n:'Clortetraciclina',e:'Chlortetracycline',c:'W'},
+  {n:'Cinoxacina',e:'Cinoxacin',c:'W'},
+  {n:'Ciprofloxacina',e:'Ciprofloxacin',c:'W'},
+  {n:'Claritromicina',e:'Clarithromycin',c:'W'},
+  {n:'Clofoctol',e:'Clofoctol',c:'W'},
+  {n:'Clomociclina',e:'Clomocycline',c:'W'},
+  {n:'Delafloxacina',e:'Delafloxacin',c:'W'},
+  {n:'Demeclociclina',e:'Demeclocycline',c:'W'},
+  {n:'Dibekacina',e:'Dibekacin',c:'W'},
+  {n:'Dirithromicina',e:'Dirithromycin',c:'W'},
+  {n:'Doripenem',e:'Doripenem',c:'W'},
+  {n:'Enoxacina',e:'Enoxacin',c:'W'},
+  {n:'Ertapenem',e:'Ertapenem',c:'W'},
+  {n:'Eritromicina',e:'Erythromycin',c:'W'},
+  {n:'Fidaxomicina',e:'Fidaxomycin',c:'W'},
+  {n:'Fleroxacina',e:'Fleroxacin',c:'W'},
+  {n:'Flomoxef',e:'Flomoxef',c:'W'},
+  {n:'Flumequina',e:'Flumequine',c:'W'},
+  {n:'Fluritromicina',e:'Flurithromycin',c:'W'},
+  {n:'Fosfomicina oral',e:'Fosfomycin (oral)',c:'W'},
+  {n:'Ácido Fusídico',e:'Fusidic acid',c:'W'},
+  {n:'Garenoxacina',e:'Garenoxacin',c:'W'},
+  {n:'Gatifloxacina',e:'Gatifloxacin',c:'W'},
+  {n:'Gemifloxacina',e:'Gemifloxacin',c:'W'},
+  {n:'Gepotidacina',e:'Gepotidacin',c:'W'},
+  {n:'Grepafloxacina',e:'Grepafloxacin',c:'W'},
+  {n:'Imipenem + Cilastatina',e:'Imipenem + cilastatin',c:'W'},
+  {n:'Isepamicina',e:'Isepamicin',c:'W'},
+  {n:'Josamicina',e:'Josamycin',c:'W'},
+  {n:'Kanamicina',e:'Kanamycin',c:'W'},
+  {n:'Kanamicina iny.',e:'Kanamycin (injection)',c:'W'},
+  {n:'Kanamicina oral',e:'Kanamycin (oral)',c:'W'},
+  {n:'Lascufloxacina',e:'Lascufloxacin',c:'W'},
+  {n:'Latamoxef',e:'Latamoxef',c:'W'},
+  {n:'Levofloxacina',e:'Levofloxacin',c:'W'},
+  {n:'Levonadifloxacina',e:'Levonadifloxacin',c:'W'},
+  {n:'Lincomicina',e:'Lincomycin',c:'W'},
+  {n:'Lomefloxacina',e:'Lomefloxacin',c:'W'},
+  {n:'Loracarbef',e:'Loracarbef',c:'W'},
+  {n:'Limeciclina',e:'Lymecycline',c:'W'},
+  {n:'Meropenem',e:'Meropenem',c:'W'},
+  {n:'Metaciclina',e:'Metacycline',c:'W'},
+  {n:'Mezlocilina',e:'Mezlocillin',c:'W'},
+  {n:'Micronomicina',e:'Micronomicin',c:'W'},
+  {n:'Midecamicina',e:'Midecamycin',c:'W'},
+  {n:'Minociclina oral',e:'Minocycline (oral)',c:'W'},
+  {n:'Miocamicina',e:'Miocamycin',c:'W'},
+  {n:'Moxifloxacina',e:'Moxifloxacin',c:'W'},
+  {n:'Ácido Nalidíxico',e:'Nalidixic acid',c:'W'},
+  {n:'Nemonoxacina',e:'Nemonoxacin',c:'W'},
+  {n:'Neomicina iny.',e:'Neomycin (injection)',c:'W'},
+  {n:'Neomicina oral',e:'Neomycin (oral)',c:'W'},
+  {n:'Netilmicina',e:'Netilmicin',c:'W'},
+  {n:'Norfloxacina',e:'Norfloxacin',c:'W'},
+  {n:'Ofloxacina',e:'Ofloxacin',c:'W'},
+  {n:'Oleandomicina',e:'Oleandomycin',c:'W'},
+  {n:'Ácido Oxolínico',e:'Oxolinic acid',c:'W'},
+  {n:'Oxitetraciclina',e:'Oxytetracycline',c:'W'},
+  {n:'Panipenem',e:'Panipenem',c:'W'},
+  {n:'Paromomicina',e:'Paromomycin',c:'W'},
+  {n:'Pazufloxacina',e:'Pazufloxacin',c:'W'},
+  {n:'Pefloxacina',e:'Pefloxacin',c:'W'},
+  {n:'Penimepiciclina',e:'Penimepicycline',c:'W'},
+  {n:'Feneticilina',e:'Pheneticillin',c:'W'},
+  {n:'Ácido Pipemídico',e:'Pipemidic acid',c:'W'},
+  {n:'Piperacilina',e:'Piperacillin',c:'W'},
+  {n:'Piperacilina + Tazobactam',e:'Piperacillin + tazobactam',c:'W'},
+  {n:'Ácido Piromídico',e:'Piromidic acid',c:'W'},
+  {n:'Pristinamicina',e:'Pristinamycin',c:'W'},
+  {n:'Prulifloxacina',e:'Prulifloxacin',c:'W'},
+  {n:'Ribostamicina',e:'Ribostamycin',c:'W'},
+  {n:'Rifabutina',e:'Rifabutin',c:'W'},
+  {n:'Rifampicina',e:'Rifampicin',c:'W'},
+  {n:'Rifamicina iny.',e:'Rifamycin (injection)',c:'W'},
+  {n:'Rifamicina oral',e:'Rifamycin (oral)',c:'W'},
+  {n:'Rifaximina',e:'Rifaximin',c:'W'},
+  {n:'Rokitamicina',e:'Rokitamycin',c:'W'},
+  {n:'Rolitetraciclina',e:'Rolitetracycline',c:'W'},
+  {n:'Rosoxacina',e:'Rosoxacin',c:'W'},
+  {n:'Roxitromicina',e:'Roxithromycin',c:'W'},
+  {n:'Rufloxacina',e:'Rufloxacin',c:'W'},
+  {n:'Sareciclina',e:'Sarecycline',c:'W'},
+  {n:'Sisomicina',e:'Sisomicin',c:'W'},
+  {n:'Sitafloxacina',e:'Sitafloxacin',c:'W'},
+  {n:'Solitromicina',e:'Solithromycin',c:'W'},
+  {n:'Esparfloxacina',e:'Sparfloxacin',c:'W'},
+  {n:'Espiramicina',e:'Spiramycin',c:'W'},
+  {n:'Estreptomicina iny.',e:'Streptomycin (injection)',c:'W'},
+  {n:'Estreptomicina oral',e:'Streptomycin (oral)',c:'W'},
+  {n:'Sulbenicilina',e:'Sulbenicillin',c:'W'},
+  {n:'Tazobactam',e:'Tazobactam',c:'W'},
+  {n:'Tebipenem',e:'Tebipenem',c:'W'},
+  {n:'Teicoplanina',e:'Teicoplanin',c:'W'},
+  {n:'Telitromicina',e:'Telithromycin',c:'W'},
+  {n:'Temafloxacina',e:'Temafloxacin',c:'W'},
+  {n:'Temocilina',e:'Temocillin',c:'W'},
+  {n:'Ticarcilina',e:'Ticarcillin',c:'W'},
+  {n:'Ticarcilina + Clavulanato',e:'Ticarcillin + clavulanic acid',c:'W'},
+  {n:'Tobramicina',e:'Tobramycin',c:'W'},
+  {n:'Tosufloxacina',e:'Tosufloxacin',c:'W'},
+  {n:'Troleandomicina',e:'Troleandomycin',c:'W'},
+  {n:'Trovafloxacina',e:'Trovafloxacin',c:'W'},
+  {n:'Vancomicina',e:'Vancomycin',c:'W'},
+  {n:'Streptoduocin',e:'Streptoduocin',c:'W'},
+  {n:'Aztreonam',e:'Aztreonam',c:'R'},
+  {n:'Aztreonam + Avibactam',e:'Aztreonam + avibactam',c:'R'},
+  {n:'Carumonam',e:'Carumonam',c:'R'},
+  {n:'Ceftarolina',e:'Ceftaroline',c:'R'},
+  {n:'Ceftazidima + Avibactam',e:'Ceftazidime + avibactam',c:'R'},
+  {n:'Ceftobiprole',e:'Ceftobiprole',c:'R'},
+  {n:'Ceftolozano + Tazobactam',e:'Ceftolozane + tazobactam',c:'R'},
+  {n:'Cefiderocol',e:'Cefiderocol',c:'R'},
+  {n:'Colistina iny.',e:'Colistin (injection)',c:'R'},
+  {n:'Colistina oral',e:'Colistin (oral)',c:'R'},
+  {n:'Dalbavancina',e:'Dalbavancin',c:'R'},
+  {n:'Dalfopristina + Quinupristina',e:'Dalfopristin + quinupristin',c:'R'},
+  {n:'Daptomicina',e:'Daptomycin',c:'R'},
+  {n:'Eravaciciclina',e:'Eravacycline',c:'R'},
+  {n:'Faropenem',e:'Faropenem',c:'R'},
+  {n:'Fosfomicina iny.',e:'Fosfomycin (injection)',c:'R'},
+  {n:'Iclaprim',e:'Iclaprim',c:'R'},
+  {n:'Imipenem + Cilastatina + Relebactam',e:'Imipenem + cilastatin + relebactam',c:'R'},
+  {n:'Lefamulina',e:'Lefamulin',c:'R'},
+  {n:'Linezolid',e:'Linezolid',c:'R'},
+  {n:'Meropenem + Vaborbactam',e:'Meropenem + vaborbactam',c:'R'},
+  {n:'Minociclina iny.',e:'Minocycline (injection)',c:'R'},
+  {n:'Omadaciclina',e:'Omadacycline',c:'R'},
+  {n:'Oritavancina',e:'Oritavancin',c:'R'},
+  {n:'Plazomicina',e:'Plazomicin',c:'R'},
+  {n:'Polimixina B iny.',e:'Polymyxin B (injection)',c:'R'},
+  {n:'Polimixina B oral',e:'Polymyxin B (oral)',c:'R'},
+  {n:'Tedizolid',e:'Tedizolid',c:'R'},
+  {n:'Telavancina',e:'Telavancin',c:'R'},
+  {n:'Tigeciclina',e:'Tigecycline',c:'R'},
+  {n:'Acetilspiramicina + Metronidazol',e:'Acetylspiramycin + metronidazole',c:'N'},
+  {n:'Amikacina + Cefepima',e:'Amikacin + cefepime',c:'N'},
+  {n:'Amoxicilina + Coagulans + Cloxacilina',e:'Amoxicillin + bacillus coagulans + cloxacillin',c:'N'},
+  {n:'Amoxicilina + Coagulans + Dicloxacilina',e:'Amoxicillin + bacillus coagulans + dicloxacillin',c:'N'},
+  {n:'Amoxicilina + Ac.Clavulánico + Fermentos',e:'Amoxicillin + clavulanic acid + lactic ferments',c:'N'},
+  {n:'Amoxicilina + Ac.Clavulánico + Lactobacillus',e:'Amoxicillin + clavulanic acid + lactobacillus acidophilus',c:'N'},
+  {n:'Amoxicilina + Ac.Clavulánico + Nimesulida',e:'Amoxicillin + clavulanic acid + nimesulide',c:'N'},
+  {n:'Amoxicilina + Cloxacilina',e:'Amoxicillin + cloxacillin',c:'N'},
+  {n:'Amoxicilina + Cloxacilina + Ácido Láctico',e:'Amoxicillin + cloxacillin + lactic acid',c:'N'},
+  {n:'Amoxicilina + Cloxacilina + Serrapeptasa',e:'Amoxicillin + cloxacillin + serrapeptase',c:'N'},
+  {n:'Amoxicilina + Dicloxacilina',e:'Amoxicillin + dicloxacillin',c:'N'},
+  {n:'Amoxicilina + Flucloxacilina',e:'Amoxicillin + flucloxacillin',c:'N'},
+  {n:'Amoxicilina + Metronidazol',e:'Amoxicillin + metronidazole',c:'N'},
+  {n:'Amoxicilina + Pivsulbactam',e:'Amoxicillin + pivsulbactam',c:'N'},
+  {n:'Ampicilina + Cloxacilina',e:'Ampicillin + cloxacillin',c:'N'},
+  {n:'Ampicilina + Dicloxacilina',e:'Ampicillin + dicloxacillin',c:'N'},
+  {n:'Ampicilina + Flucloxacilina',e:'Ampicillin + flucloxacillin',c:'N'},
+  {n:'Ampicilina + Oxacilina',e:'Ampicillin + oxacillin',c:'N'},
+  {n:'Ampicilina + Sultamicilina',e:'Ampicillin + sultamicillin',c:'N'},
+  {n:'Azitromicina + Cefixima',e:'Azithromycin + cefixime',c:'N'},
+  {n:'Azitromicina + Cefpodoxima',e:'Azithromycin + cefpodoxime proxetil',c:'N'},
+  {n:'Azitromicina + Fluconazol + Secnidazol',e:'Azithromycin + fluconazole + secnidazole',c:'N'},
+  {n:'Azitromicina + Levofloxacina',e:'Azithromycin + levofloxacin',c:'N'},
+  {n:'Azitromicina + Ofloxacina',e:'Azithromycin + ofloxacin',c:'N'},
+  {n:'Bencilpenicilina + Estreptomicina',e:'Benzylpenicillin + streptomycin',c:'N'},
+  {n:'Bencilpenicilina triple combo',e:'Benzylpenicillin + procaine + benzathine',c:'N'},
+  {n:'Cefaclor + Ac.Clavulánico',e:'Cefaclor + clavulanic acid',c:'N'},
+  {n:'Cefadroxil + Ac.Clavulánico',e:'Cefadroxil + clavulanic acid',c:'N'},
+  {n:'Cefadroxil + Trimetoprim',e:'Cefadroxil + trimethoprim',c:'N'},
+  {n:'Cefalexina + Trimetoprim',e:'Cefalexin + trimethoprim',c:'N'},
+  {n:'Cefdinir + Ac.Clavulánico',e:'Cefdinir + clavulanic acid',c:'N'},
+  {n:'Cefepima + Sulbactam',e:'Cefepime + sulbactam',c:'N'},
+  {n:'Cefepima + Tazobactam',e:'Cefepime + tazobactam',c:'N'},
+  {n:'Cefixima + Cefpodoxima',e:'Cefixime + cefpodoxime proxetil',c:'N'},
+  {n:'Cefixima + Ac.Clavulánico',e:'Cefixime + clavulanic acid',c:'N'},
+  {n:'Cefixima + Cloxacilina',e:'Cefixime + cloxacillin',c:'N'},
+  {n:'Cefixima + Dicloxacilina',e:'Cefixime + dicloxacillin',c:'N'},
+  {n:'Cefixima + Levofloxacina',e:'Cefixime + levofloxacin',c:'N'},
+  {n:'Cefixima + Linezolid',e:'Cefixime + linezolid',c:'N'},
+  {n:'Cefixima + Moxifloxacina',e:'Cefixime + moxifloxacin',c:'N'},
+  {n:'Cefixima + Ofloxacina',e:'Cefixime + ofloxacin',c:'N'},
+  {n:'Cefixima + Ornidazol',e:'Cefixime + ornidazole',c:'N'},
+  {n:'Cefmenoxima + Sulbactam (no rec)',e:'Cefotaxime + sulbactam',c:'N'},
+  {n:'Cefoperazona + Sulbactam',e:'Cefoperazone + sulbactam',c:'N'},
+  {n:'Cefoperazona + Tazobactam',e:'Cefoperazone + tazobactam',c:'N'},
+  {n:'Cefpodoxima + Ac.Clavulánico',e:'Cefpodoxime proxetil + clavulanic acid',c:'N'},
+  {n:'Cefpodoxima + Dicloxacilina',e:'Cefpodoxime proxetil + dicloxacillin',c:'N'},
+  {n:'Cefpodoxima + Levofloxacina',e:'Cefpodoxime proxetil + levofloxacin',c:'N'},
+  {n:'Cefpodoxima + Ofloxacina',e:'Cefpodoxime proxetil + ofloxacin',c:'N'},
+  {n:'Cefpodoxima + Sulbactam',e:'Cefpodoxime proxetil + sulbactam',c:'N'},
+  {n:'Ceftazidima + Sulbactam',e:'Ceftazidime + sulbactam',c:'N'},
+  {n:'Ceftazidima + Tazobactam',e:'Ceftazidime + tazobactam',c:'N'},
+  {n:'Ceftibuten + Ac.Clavulánico',e:'Ceftibuten + clavulanic acid',c:'N'},
+  {n:'Ceftriaxona + Sulbactam',e:'Ceftriaxone + sulbactam',c:'N'},
+  {n:'Ceftriaxona + Tazobactam',e:'Ceftriaxone + tazobactam',c:'N'},
+  {n:'Ceftriaxona + Vancomicina',e:'Ceftriaxone + vancomycin',c:'N'},
+  {n:'Cefuroxima + Ac.Clavulánico',e:'Cefuroxime + clavulanic acid',c:'N'},
+  {n:'Cefuroxima + Metronidazol',e:'Cefuroxime + metronidazole',c:'N'},
+  {n:'Cefuroxima + Linezolid',e:'Cefuroxime axetil + linezolid',c:'N'},
+  {n:'Cloranfenicol + Tetraciclina',e:'Chloramphenicol + tetracycline',c:'N'},
+  {n:'Ciprofloxacina + Metronidazol',e:'Ciprofloxacin + metronidazole',c:'N'},
+  {n:'Ciprofloxacina + Ornidazol',e:'Ciprofloxacin + ornidazole',c:'N'},
+  {n:'Ciprofloxacina + Tinidazol',e:'Ciprofloxacin + tinidazole',c:'N'},
+  {n:'Doxiciclina + Tinidazol',e:'Doxycycline + tinidazole',c:'N'},
+  {n:'Eritromicina + TMP/SMX',e:'Erythromycin + sulfamethoxazole + trimethoprim',c:'N'},
+  {n:'Eritromicina + Trimetoprim',e:'Erythromycin + trimethoprim',c:'N'},
+  {n:'Fosfomicina + Trimetoprim',e:'Fosfomycin + trimethoprim',c:'N'},
+  {n:'Gatifloxacina + Ornidazol',e:'Gatifloxacin + ornidazole',c:'N'},
+  {n:'Kanamicina + Bencilpenicilina',e:'Kanamycin + benzylpenicillin',c:'N'},
+  {n:'Levofloxacina + Metronidazol',e:'Levofloxacin + metronidazole',c:'N'},
+  {n:'Levofloxacina + Ornidazol',e:'Levofloxacin + ornidazole',c:'N'},
+  {n:'Meropenem + Sulbactam',e:'Meropenem + sulbactam',c:'N'},
+  {n:'Metronidazol + Diloxanida',e:'Metronidazole + diloxanide',c:'N'},
+  {n:'Metronidazol + Furazolidona',e:'Metronidazole + furazolidone',c:'N'},
+  {n:'Metronidazol + Norfloxacina',e:'Metronidazole + norfloxacin',c:'N'},
+  {n:'Metronidazol + Espiramicina',e:'Metronidazole + spiramycin',c:'N'},
+  {n:'Metronidazol + Tetraciclina',e:'Metronidazole + tetracycline',c:'N'},
+  {n:'Mezlocilina + Sulbactam',e:'Mezlocillin + sulbactam',c:'N'},
+  {n:'Norfloxacina + Tinidazol',e:'Norfloxacin + tinidazole',c:'N'},
+  {n:'Ofloxacina + Nitazoxanida',e:'Ofloxacin + nitazoxanide',c:'N'},
+  {n:'Ofloxacina + Ornidazol',e:'Ofloxacin + ornidazole',c:'N'},
+  {n:'Ofloxacina + Tinidazol',e:'Ofloxacin + tinidazole',c:'N'},
+  {n:'Oleandomicina + Tetraciclina',e:'Oleandomycin + tetracycline',c:'N'},
+  {n:'Pivampicilina + Pivmecilinam',e:'Pivampicillin + pivmecillinam',c:'N'},
+  {n:'Piperacilina + Sulbactam',e:'Piperacillin + sulbactam',c:'N'},
+  {n:'Sulfacarbamida + Sulfadiazina + Sulfadimidina',e:'Sulfacarbamide + sulfadiazine + sulfadimidine',c:'N'},
+  {n:'Sulfadiazina + Sulfametoxazol + Trimetoprim',e:'Sulfadiazine + sulfamethoxazole + trimethoprim',c:'N'},
+  {n:'Combinaciones Sulfonamidas',e:'Sulfonamide combinations (excl trimethoprim)',c:'N'},
+  {n:'Tetraciclina + Clortetraciclina + Demeclociclina',e:'Tetracycline + chlortetracycline + demeclocycline',c:'N'},
+  {n:'Tetraciclina + Nistatina',e:'Tetracycline + nystatin',c:'N'},
+  {n:'Tinidazol + Diloxanida',e:'Tinidazole + diloxanide',c:'N'}
+];
+let _awareFilter='all';
+
+function initAwareTab(){
+  if(document.getElementById('aware-filters').children.length) return;
+  buildAwareFilters(); buildAwareStats(); renderAwareList();
+}
+
+function buildAwareFilters(){
+  const box=document.getElementById('aware-filters'); if(!box) return;
+  box.innerHTML='';
+  const filters=[{id:'all',label:'Todos',col:'#374151',bg:'#f1f5f9'},{id:'A',label:'(A) Access',col:'#15803d',bg:'#dcfce7'},{id:'W',label:'(W) Watch',col:'#92400e',bg:'#fef3c7'},{id:'R',label:'(R) Reserve',col:'#991b1b',bg:'#fee2e2'},{id:'N',label:'No Recomendado',col:'#4b5563',bg:'#f3f4f6'}];
+  filters.forEach(f=>{
+    const btn=document.createElement('button');
+    btn.innerHTML=f.label;
+    const active=_awareFilter===f.id;
+    btn.style.cssText=`padding:6px 16px;border-radius:20px;font-size:.74rem;font-weight:700;cursor:pointer;border:2px solid ${active?f.col:'#e2e8f0'};background:${active?f.bg:'#fff'};color:${active?f.col:'#374151'};transition:all .15s;font-family:'DM Sans',sans-serif;`;
+    btn.onclick=()=>{ _awareFilter=f.id; buildAwareFilters(); renderAwareList(); };
+    box.appendChild(btn);
+  });
+}
+
+function buildAwareStats(){
+  const box=document.getElementById('aware-stats'); if(!box) return;
+  const c={A:0,W:0,R:0,N:0};
+  AWARE_DATA.forEach(d=>{ if(c[d.c]!==undefined) c[d.c]++; });
+  box.innerHTML=[{c:'A',label:'Access',col:'#15803d',bg:'#dcfce7'},{c:'W',label:'Watch',col:'#92400e',bg:'#fef3c7'},{c:'R',label:'Reserve',col:'#991b1b',bg:'#fee2e2'},{c:'N',label:'No Rec.',col:'#4b5563',bg:'#f3f4f6'}]
+    .map(f=>`<div style="background:${f.bg};border-radius:10px;padding:8px 18px;text-align:center;">
+      <div style="font-size:1.5rem;font-weight:800;color:${f.col};">${c[f.c]}</div>
+      <div style="font-size:.68rem;font-weight:700;color:${f.col};">${f.label}</div>
+    </div>`).join('');
+}
+
+function renderAwareList(){
+  const box=document.getElementById('aware-list'); if(!box) return;
+  const q=(document.getElementById('aware-search')?.value||'').toLowerCase().trim();
+  const cfg={A:{label:'Access',col:'#15803d',bg:'#f0fdf4',border:'#bbf7d0'},W:{label:'Watch',col:'#92400e',bg:'#fffbeb',border:'#fde68a'},R:{label:'Reserve',col:'#991b1b',bg:'#fff1f2',border:'#fecaca'},N:{label:'No Rec.',col:'#4b5563',bg:'#f9fafb',border:'#e5e7eb'}};
+  const filtered=AWARE_DATA.filter(d=>{
+    if(_awareFilter!=='all'&&d.c!==_awareFilter) return false;
+    if(q&&!d.n.toLowerCase().includes(q)&&!d.e.toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b)=>a.n.localeCompare(b.n));
+  box.innerHTML=filtered.map(d=>{
+    const s=cfg[d.c]||{label:'N/A',col:'#374151',bg:'#f1f5f9',border:'#e2e8f0'};
+    const badge=d.c==='N'
+      ?`<span style="flex-shrink:0;font-size:.68rem;padding:3px 8px;border-radius:4px;font-weight:700;background:#e5e7eb;color:#4b5563;">✗ No Rec.</span>`
+      :`<span class="atag t${d.c}" style="flex-shrink:0;font-size:.7rem;padding:3px 8px;">${d.c}</span>`;
+    return `<div style="background:${s.bg};border:1px solid ${s.border};border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+      ${badge}
+      <div style="min-width:0;">
+        <div style="font-size:.8rem;font-weight:700;color:#1e293b;">${d.n}</div>
+        <div style="font-size:.67rem;color:#64748b;margin-top:1px;font-style:italic;">${d.e}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const cnt=document.getElementById('aware-count');
+  if(cnt) cnt.textContent=`Mostrando ${filtered.length} de ${AWARE_DATA.length} antibióticos · Fuente: WHO AWaRe List 2024`;
+}
+
 initDashboard();
 </script>
 
