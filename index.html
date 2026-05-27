@@ -1830,7 +1830,7 @@ function sectionLabel(sec){
 function renderContextBar(){
   const bar=document.getElementById('context-bar');
   if(!bar) return;
-  const compareLabel=p2?('Comparando: '+fmtP(p1)+' vs '+fmtP(p2)):('Período: '+fmtP(p1));
+  if(activeSection==='aware'){ bar.innerHTML=''; return; }
   const filterLabel=activeFilter==='cb'?'Cuadro básico':'Todos los antibióticos';
   bar.innerHTML=`<span class="context-chip">🏥 ${getHospitalDisplayName(activeHospital)}</span><span class="context-chip muted">Sección: ${sectionLabel(activeSection)}</span><span class="context-chip muted">${compareLabel}</span><span class="context-chip muted">Filtro: ${filterLabel}</span>`;
   const hide=(activeSection==='avanzado'||activeSection==='comparar');
