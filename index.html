@@ -366,22 +366,27 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
   </div>
 
   <!-- CLASIFICACIÓN AWaRe -->
-  <div class="section" id="sec-aware" style="padding:28px 32px;flex-direction:column;gap:20px;background:#f8fafc;">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:4px;">
+  <div class="section" id="sec-aware" style="padding:28px 32px;flex-direction:column;gap:16px;background:#f8fafc;">
+    <!-- Buscador arriba prominente -->
+    <div style="position:relative;">
+      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1.1rem;color:#94a3b8;">🔍</span>
+      <input id="aware-search" type="text" placeholder="Buscar antibiótico en español o inglés..." oninput="renderAwareList()" style="width:100%;padding:12px 16px 12px 42px;border:2px solid #e2e8f0;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;box-sizing:border-box;background:#fff;transition:border-color .15s;" onfocus="this.style.borderColor='#154f39'" onblur="this.style.borderColor='#e2e8f0'">
+    </div>
+    <!-- Título + stats + descarga -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
       <div>
         <h2 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin:0;">🌐 Lista de Antibióticos — Clasificación AWaRe</h2>
         <p style="font-size:.75rem;color:#64748b;margin:4px 0 0;">Fuente: WHO Essential Medicines — <a href="https://aware.essentialmeds.org/list" target="_blank" style="color:#154f39;font-weight:600;">aware.essentialmeds.org</a></p>
       </div>
-      <div id="aware-stats" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
-    </div>
-    <!-- Buscador y filtros -->
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <div style="position:relative;flex:1;min-width:240px;">
-        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;">🔍</span>
-        <input id="aware-search" type="text" placeholder="Buscar antibiótico..." oninput="renderAwareList()" style="width:100%;padding:9px 12px 9px 34px;border:1px solid #e2e8f0;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='#154f39'" onblur="this.style.borderColor='#e2e8f0'">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div id="aware-stats" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        <button onclick="downloadAwareExcel()" style="padding:9px 18px;background:linear-gradient(135deg,#154f39,#1a6347);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;box-shadow:0 2px 8px rgba(21,79,57,.3);transition:all .15s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
+          📥 Descargar Excel
+        </button>
       </div>
-      <div id="aware-filters" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
     </div>
+    <!-- Filtros -->
+    <div id="aware-filters" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
     <!-- Lista -->
     <div id="aware-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;"></div>
     <div id="aware-count" style="font-size:.72rem;color:#94a3b8;text-align:center;padding-top:4px;"></div>
@@ -739,6 +744,16 @@ const PALETTE=['#2563eb','#16a34a','#dc2626','#d97706','#7c3aed','#0891b2','#be1
 
 let mode='mes', p1='TODOS', p2=null, activeFilter='todos';
 let activeSection='hospital', activeSg={}, activeFreqTab=0;
+
+// Estado de período independiente por pestaña
+const _TAB_PERIODS={
+  hospital:{p1:'TODOS',p2:null,setB:[]},
+  servicio:{p1:'TODOS',p2:null,setB:[]},
+  infeccion:{p1:'TODOS',p2:null,setB:[]},
+  cultivo:{p1:'TODOS',p2:null,setB:[]},
+  micro:{p1:'TODOS',p2:null,setB:[]},
+};
+const _DATA_TABS=new Set(['hospital','servicio','infeccion','cultivo','micro']);
 let activeHospital = (RAW.hospitales && RAW.hospitales[0]) || 'HGZ 1 TLAXCALA';
 
 // Multi-hospital support: if RAW has 'data' keyed by hospital, remap for compatibility
@@ -1012,6 +1027,10 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
 
   h+=`</div></div>`;
   el.innerHTML=h;
+  // Leyenda S/R/I inline
+  const _legParts=['<div style="display:flex;align-items:center;gap:4px;font-size:.69rem;"><span style="width:13px;height:8px;background:#22c55e;border-radius:2px;display:inline-block;"></span>S Sensible</div>','<div style="display:flex;align-items:center;gap:4px;font-size:.69rem;"><span style="width:13px;height:8px;background:#ef4444;border-radius:2px;display:inline-block;"></span>R Resistente</div>','<div style="display:flex;align-items:center;gap:4px;font-size:.69rem;"><span style="width:13px;height:8px;background:#f59e0b;border-radius:2px;display:inline-block;"></span>I Intermedio</div>'];
+  if(lbl1&&lbl2) _legParts.push(`<span style="color:#e2e8f0;margin:0 4px;">|</span><div style="display:flex;align-items:center;gap:4px;font-size:.69rem;"><span style="width:13px;height:8px;background:#22c55e;opacity:.5;border-radius:2px;display:inline-block;"></span>${lbl1}</div>`,`<div style="display:flex;align-items:center;gap:4px;font-size:.69rem;"><span style="width:13px;height:8px;background:#15803d;border-radius:2px;display:inline-block;"></span>${lbl2}</div>`);
+  el.insertAdjacentHTML('beforeend',`<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:7px 4px 2px;margin-top:2px;border-top:1px solid #f1f5f9;">${_legParts.join('')}</div>`);
 
   // Tooltip events
   const tip=getFixedTip();
@@ -1085,23 +1104,25 @@ function buildSRIMultiChart(datasets, cid){
       const d=(rows||[]).find(r=>r.a===meta.a);
       const x=xGroup+hi*(BW+GAP_BAR);
       const hc=HCOLORS[hi]||'#374151';
+      const abbr='H'+((label.match(/No\.\s*(\d+)/)||['','?'])[1]);
       if(!d||!d.t){
         h+=`<div style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;background:#f3f4f6;border-radius:2px;opacity:.4;"></div>`;
+        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+6}px;width:${BW}px;text-align:center;font-size:.58rem;color:#9ca3af;">${abbr}</div>`;
       }else{
         totalN+=d.t;
         let yB=PADTOP+CH;
         if(d.pS>0){const h2=Math.max(1,Math.round(d.pS*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#22c55e;"></div>`;}
         if(d.pR>0){const h2=Math.max(1,Math.round(d.pR*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#ef4444;"></div>`;}
         if(d.pI>0){const h2=Math.max(1,Math.round(d.pI*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#f59e0b;"></div>`;}
-        // Franja de color del hospital en la base
-        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH}px;width:${BW}px;height:4px;background:${hc};"></div>`;
-        // Zona de tooltip
+        // Franja + número de hospital
+        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH}px;width:${BW}px;height:5px;background:${hc};"></div>`;
+        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+6}px;width:${BW}px;text-align:center;font-size:.6rem;font-weight:800;color:${hc};">${abbr}</div>`;
         const tipData=JSON.stringify({abx:meta.a,hosp:label,S:d.S,R:d.R,I:d.I,T:d.t,pS:pct(d.pS),pR:pct(d.pR),pI:pct(d.pI)}).replace(/'/g,'&apos;');
         h+=`<div class="vbh" data-tip='${tipData}' data-multi="1" style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
       }
     });
-    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+6}px;width:${groupW}px;text-align:center;font-size:.6rem;color:#6b7280;">${totalN||''}</div>`;
-    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+20}px;width:${groupW}px;height:${XLABELH-20}px;display:flex;justify-content:center;overflow:hidden;">
+    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+18}px;width:${groupW}px;text-align:center;font-size:.58rem;color:#9ca3af;">${totalN||''}</div>`;
+    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+28}px;width:${groupW}px;height:${XLABELH-28}px;display:flex;justify-content:center;overflow:hidden;">
       <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</div>
     </div>`;
   });
@@ -1842,15 +1863,20 @@ function renderAll(){
   renderContextBar();
   if(activeSection==='avanzado') return;
   if(activeSection==='comparar'){renderComparar();return;}
+  if(activeSection==='aware') return;
   document.getElementById('hperiodo').textContent=getHospitalDisplayName(activeHospital)+' · IMSS · '+fmtP(p1)+(p2?' vs '+fmtP(p2):'');
   const legSri=document.getElementById('leg-sri');
-  if(legSri) legSri.style.display=activeSection==='frecuencias'?'none':'flex';
+  if(legSri) legSri.style.display='none'; // siempre oculto
   if(activeSection==='frecuencias'){renderFreq();return;}
   if(activeSection==='hospital') renderHospital();
   else renderSg(activeSection);
 }
 
 function setSection(sec,el){
+  // Guardar período de la pestaña actual
+  if(_DATA_TABS.has(activeSection)){
+    _TAB_PERIODS[activeSection]={p1,p2,setB:p2==='__adv_B__'?[...advSetB]:[]};
+  }
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -1867,7 +1893,15 @@ function setSection(sec,el){
   if(fb) fb.style.display=(isFreq||isAdv||isCmp||isAware)?'none':'flex';
   if(ctrl) ctrl.style.display=(isAdv||isCmp||isAware)?'none':'flex';
   if(cmp) cmp.style.display=(isFreq||isAdv||isCmp||isAware)?'none':'flex';
-  if(legSri) legSri.style.display=(isAdv||isFreq||isCmp||isAware)?'none':'flex';
+  if(legSri) legSri.style.display='none'; // siempre oculto — leyenda dentro de cada gráfica
+  // Restaurar período de la nueva pestaña
+  if(_DATA_TABS.has(sec)){
+    const st=_TAB_PERIODS[sec];
+    p1=st.p1; p2=st.p2;
+    advSetB=p2==='__adv_B__'?[...st.setB]:[];
+    buildMainPeriodOptions();
+    buildCmpChecks();
+  }
   if(isAdv){ buildAdvPills(); buildAdvAbxSelect(); buildAdvHospitalSelector(); }
   if(isAware){ initAwareTab(); }
   activeSection=sec;
@@ -3240,6 +3274,48 @@ function renderAwareList(){
   }).join('');
   const cnt=document.getElementById('aware-count');
   if(cnt) cnt.textContent=`Mostrando ${filtered.length} de ${AWARE_DATA.length} antibióticos · Fuente: WHO AWaRe List 2024`;
+}
+
+function downloadAwareExcel(){
+  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const cats=[
+    {id:'A',name:'ACCESS',title:'Antibióticos de ACCESO (ACCESS)',desc:'Recomendados como primera o segunda línea. Ampliamente disponibles, de bajo costo y eficaces.',hdrBg:'#1e5c38',hdrFg:'#FFFFFF',rowBg1:'#f0fdf4',rowBg2:'#dcfce7',accentBg:'#bbf7d0'},
+    {id:'W',name:'WATCH',title:'Antibióticos de OBSERVACIÓN (WATCH)',desc:'Mayor riesgo de resistencia. Usar solo cuando no hay alternativas del grupo Access.',hdrBg:'#78350f',hdrFg:'#FFFFFF',rowBg1:'#fffbeb',rowBg2:'#fef3c7',accentBg:'#fde68a'},
+    {id:'R',name:'RESERVE',title:'Antibióticos de RESERVA (RESERVE)',desc:'Último recurso. Solo para infecciones graves por organismos multirresistentes.',hdrBg:'#7f1d1d',hdrFg:'#FFFFFF',rowBg1:'#fff1f2',rowBg2:'#fee2e2',accentBg:'#fecaca'},
+    {id:'N',name:'NO RECOMENDADO',title:'Combinaciones NO RECOMENDADAS (OMS)',desc:'Combinaciones de dosis fija no recomendadas por la OMS. Evitar su uso clínico.',hdrBg:'#1f2937',hdrFg:'#FFFFFF',rowBg1:'#f9fafb',rowBg2:'#f3f4f6',accentBg:'#e5e7eb'},
+  ];
+  const mkStyle=(id,bg,fg,bold,sz,wrap,border)=>`<Style ss:ID="${id}"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="${wrap?'1':'0'}"/><Font ss:Bold="${bold?'1':'0'}" ss:Color="${fg}" ss:Size="${sz}" ss:Name="Calibri"/><Interior ss:Color="${bg}" ss:Pattern="Solid"/>${border?'<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E0"/></Borders>':''}</Style>`;
+  const mkCell=(style,type,val)=>`<Cell ss:StyleID="${style}"><Data ss:Type="${type}">${esc(val)}</Data></Cell>`;
+  let styles=`<Style ss:ID="def"><Alignment ss:Vertical="Center"/><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/></Style><Style ss:ID="foot"><Alignment ss:Vertical="Center"/><Font ss:Name="Calibri" ss:Size="9" ss:Italic="1" ss:Color="#64748b"/></Style>`;
+  cats.forEach(c=>{
+    styles+=mkStyle(`title_${c.id}`,c.hdrBg,c.hdrFg,true,15,false,false);
+    styles+=mkStyle(`sub_${c.id}`,c.accentBg,'#374151',false,10,true,false);
+    styles+=mkStyle(`hdr_${c.id}`,c.hdrBg,c.hdrFg,true,11,false,true);
+    styles+=mkStyle(`row1_${c.id}`,c.rowBg1,'#1e293b',false,10,false,true);
+    styles+=mkStyle(`row2_${c.id}`,c.rowBg2,'#1e293b',false,10,false,true);
+    styles+=mkStyle(`num_${c.id}`,c.hdrBg,c.hdrFg,true,10,false,true);
+  });
+  const mkSheet=cat=>{
+    const items=AWARE_DATA.filter(d=>d.c===cat.id);
+    const catLabel={A:'(A) Access',W:'(W) Watch',R:'(R) Reserve',N:'No Recomendado'}[cat.id];
+    let rows='';
+    rows+=`<Row ss:Height="40"><Cell ss:StyleID="title_${cat.id}" ss:MergeAcross="3"><Data ss:Type="String">${esc(cat.title)}</Data></Cell></Row>`;
+    rows+=`<Row ss:Height="30"><Cell ss:StyleID="sub_${cat.id}" ss:MergeAcross="3"><Data ss:Type="String">${esc(cat.desc)}</Data></Cell></Row>`;
+    rows+=`<Row ss:Height="6"><Cell ss:StyleID="def" ss:MergeAcross="3"><Data ss:Type="String"> </Data></Cell></Row>`;
+    rows+=`<Row ss:Height="22">${mkCell(`hdr_${cat.id}`,'String','#')}${mkCell(`hdr_${cat.id}`,'String','Nombre en Español')}${mkCell(`hdr_${cat.id}`,'String','Nombre en Inglés (WHO)')}${mkCell(`hdr_${cat.id}`,'String','Categoría AWaRe')}</Row>`;
+    items.forEach((d,i)=>{
+      const s=i%2===0?`row1_${cat.id}`:`row2_${cat.id}`;
+      rows+=`<Row ss:Height="18">${mkCell(`num_${cat.id}`,'Number',i+1)}${mkCell(s,'String',d.n)}${mkCell(s,'String',d.e)}${mkCell(s,'String',catLabel)}</Row>`;
+    });
+    rows+=`<Row ss:Height="6"><Cell ss:StyleID="def"><Data ss:Type="String"> </Data></Cell></Row>`;
+    rows+=`<Row ss:Height="16"><Cell ss:StyleID="foot" ss:MergeAcross="3"><Data ss:Type="String">Total: ${items.length} entradas · WHO AWaRe 2024 · aware.essentialmeds.org · C.I.A.E. Tlaxcala IMSS</Data></Cell></Row>`;
+    return `<Worksheet ss:Name="${esc(cat.name)}"><Table ss:DefaultRowHeight="18"><Column ss:Width="35"/><Column ss:Width="220"/><Column ss:Width="220"/><Column ss:Width="130"/>${rows}</Table><WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>4</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions></Worksheet>`;
+  };
+  const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel"><DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Title>Clasificación AWaRe OMS</Title><Author>C.I.A.E. Tlaxcala · IMSS</Author></DocumentProperties><Styles>${styles}</Styles>${cats.map(mkSheet).join('')}</Workbook>`;
+  const blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`ClasificacionAWaRe_OMS_${new Date().toISOString().slice(0,10)}.xls`;
+  a.click(); URL.revokeObjectURL(a.href);
 }
 
 initDashboard();
