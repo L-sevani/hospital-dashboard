@@ -1104,25 +1104,30 @@ function buildSRIMultiChart(datasets, cid){
       const d=(rows||[]).find(r=>r.a===meta.a);
       const x=xGroup+hi*(BW+GAP_BAR);
       const hc=HCOLORS[hi]||'#374151';
-      const abbr='H'+((label.match(/No\.\s*(\d+)/)||['','?'])[1]);
+      // Short label from hospital name
+      const shortLabel=label.replace(/HGSMF|HGZMF|HGZ/g,s=>s).replace(/No\.\s*/,'').replace(/\s*·.*$/,'').trim().substring(0,12);
       if(!d||!d.t){
         h+=`<div style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;background:#f3f4f6;border-radius:2px;opacity:.4;"></div>`;
-        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+6}px;width:${BW}px;text-align:center;font-size:.58rem;color:#9ca3af;">${abbr}</div>`;
+        // No-data label inside bar
+        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+4}px;width:${BW}px;height:${CH-8}px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+          <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.58rem;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${shortLabel}</div>
+        </div>`;
       }else{
         totalN+=d.t;
         let yB=PADTOP+CH;
         if(d.pS>0){const h2=Math.max(1,Math.round(d.pS*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#22c55e;"></div>`;}
         if(d.pR>0){const h2=Math.max(1,Math.round(d.pR*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#ef4444;"></div>`;}
         if(d.pI>0){const h2=Math.max(1,Math.round(d.pI*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#f59e0b;"></div>`;}
-        // Franja + número de hospital
-        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH}px;width:${BW}px;height:5px;background:${hc};"></div>`;
-        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+6}px;width:${BW}px;text-align:center;font-size:.6rem;font-weight:800;color:${hc};">${abbr}</div>`;
+        // Hospital name INSIDE the bar — vertical, white, centered
+        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+4}px;width:${BW}px;height:${CH-8}px;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none;">
+          <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.6rem;font-weight:700;color:rgba(255,255,255,0.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.3);">${shortLabel}</div>
+        </div>`;
         const tipData=JSON.stringify({abx:meta.a,hosp:label,S:d.S,R:d.R,I:d.I,T:d.t,pS:pct(d.pS),pR:pct(d.pR),pI:pct(d.pI)}).replace(/'/g,'&apos;');
         h+=`<div class="vbh" data-tip='${tipData}' data-multi="1" style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
       }
     });
-    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+18}px;width:${groupW}px;text-align:center;font-size:.58rem;color:#9ca3af;">${totalN||''}</div>`;
-    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+28}px;width:${groupW}px;height:${XLABELH-28}px;display:flex;justify-content:center;overflow:hidden;">
+    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+4}px;width:${groupW}px;text-align:center;font-size:.58rem;color:#9ca3af;">${totalN||''}</div>`;
+    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+16}px;width:${groupW}px;height:${XLABELH-16}px;display:flex;justify-content:center;overflow:hidden;">
       <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</div>
     </div>`;
   });
@@ -1130,11 +1135,19 @@ function buildSRIMultiChart(datasets, cid){
 
   // Leyenda de hospitales
   h+=`<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px;padding-top:6px;border-top:1px solid #f1f5f9;">`;
-  h+=`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#22c55e;border-radius:2px;display:inline-block;"></span>S</div>`;
-  h+=`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#ef4444;border-radius:2px;display:inline-block;"></span>R</div>`;
-  h+=`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#f59e0b;border-radius:2px;display:inline-block;"></span>I</div>`;
-  h+=`<span style="color:#e2e8f0;">|</span>`;
-  datasets.forEach(({label},hi)=>{h+=`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;"><span style="width:18px;height:4px;background:${HCOLORS[hi]||'#374151'};border-radius:2px;display:inline-block;"></span><strong style="color:${HCOLORS[hi]||'#374151'};">${label}</strong></div>`;});
+  h+=`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#22c55e;border-radius:2px;display:inline-block;"></span>S Sensible</div>`;
+  h+=`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#ef4444;border-radius:2px;display:inline-block;"></span>R Resistente</div>`;
+  h+=`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;"><span style="width:12px;height:8px;background:#f59e0b;border-radius:2px;display:inline-block;"></span>I Intermedio</div>`;
+  h+=`<span style="color:#e2e8f0;margin:0 2px;">|</span>`;
+  datasets.forEach(({label},hi)=>{
+    const c=HCOLORS[hi]||'#374151';
+    h+=`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;">
+      <span style="width:16px;height:16px;border-radius:3px;background:${c};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span style="font-size:.55rem;font-weight:900;color:#fff;">${hi+1}</span>
+      </span>
+      <span style="color:${c};font-weight:600;">${label.replace(/\s*·.*$/,'').trim()}</span>
+    </div>`;
+  });
   h+=`</div>`;
   el.innerHTML=h;
 
