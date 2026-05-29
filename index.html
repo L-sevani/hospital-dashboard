@@ -3277,45 +3277,90 @@ function renderAwareList(){
 }
 
 function downloadAwareExcel(){
-  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const cats=[
-    {id:'A',name:'ACCESS',title:'Antibióticos de ACCESO (ACCESS)',desc:'Recomendados como primera o segunda línea. Ampliamente disponibles, de bajo costo y eficaces.',hdrBg:'#1e5c38',hdrFg:'#FFFFFF',rowBg1:'#f0fdf4',rowBg2:'#dcfce7',accentBg:'#bbf7d0'},
-    {id:'W',name:'WATCH',title:'Antibióticos de OBSERVACIÓN (WATCH)',desc:'Mayor riesgo de resistencia. Usar solo cuando no hay alternativas del grupo Access.',hdrBg:'#78350f',hdrFg:'#FFFFFF',rowBg1:'#fffbeb',rowBg2:'#fef3c7',accentBg:'#fde68a'},
-    {id:'R',name:'RESERVE',title:'Antibióticos de RESERVA (RESERVE)',desc:'Último recurso. Solo para infecciones graves por organismos multirresistentes.',hdrBg:'#7f1d1d',hdrFg:'#FFFFFF',rowBg1:'#fff1f2',rowBg2:'#fee2e2',accentBg:'#fecaca'},
-    {id:'N',name:'NO RECOMENDADO',title:'Combinaciones NO RECOMENDADAS (OMS)',desc:'Combinaciones de dosis fija no recomendadas por la OMS. Evitar su uso clínico.',hdrBg:'#1f2937',hdrFg:'#FFFFFF',rowBg1:'#f9fafb',rowBg2:'#f3f4f6',accentBg:'#e5e7eb'},
-  ];
-  const mkStyle=(id,bg,fg,bold,sz,wrap,border)=>`<Style ss:ID="${id}"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="${wrap?'1':'0'}"/><Font ss:Bold="${bold?'1':'0'}" ss:Color="${fg}" ss:Size="${sz}" ss:Name="Calibri"/><Interior ss:Color="${bg}" ss:Pattern="Solid"/>${border?'<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E0"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E0"/></Borders>':''}</Style>`;
-  const mkCell=(style,type,val)=>`<Cell ss:StyleID="${style}"><Data ss:Type="${type}">${esc(val)}</Data></Cell>`;
-  let styles=`<Style ss:ID="def"><Alignment ss:Vertical="Center"/><Font ss:Name="Calibri" ss:Size="11" ss:Color="#1e293b"/></Style><Style ss:ID="foot"><Alignment ss:Vertical="Center"/><Font ss:Name="Calibri" ss:Size="9" ss:Italic="1" ss:Color="#64748b"/></Style>`;
-  cats.forEach(c=>{
-    styles+=mkStyle(`title_${c.id}`,c.hdrBg,c.hdrFg,true,15,false,false);
-    styles+=mkStyle(`sub_${c.id}`,c.accentBg,'#374151',false,10,true,false);
-    styles+=mkStyle(`hdr_${c.id}`,c.hdrBg,c.hdrFg,true,11,false,true);
-    styles+=mkStyle(`row1_${c.id}`,c.rowBg1,'#1e293b',false,10,false,true);
-    styles+=mkStyle(`row2_${c.id}`,c.rowBg2,'#1e293b',false,10,false,true);
-    styles+=mkStyle(`num_${c.id}`,c.hdrBg,c.hdrFg,true,10,false,true);
-  });
-  const mkSheet=cat=>{
-    const items=AWARE_DATA.filter(d=>d.c===cat.id);
-    const catLabel={A:'(A) Access',W:'(W) Watch',R:'(R) Reserve',N:'No Recomendado'}[cat.id];
-    let rows='';
-    rows+=`<Row ss:Height="40"><Cell ss:StyleID="title_${cat.id}" ss:MergeAcross="3"><Data ss:Type="String">${esc(cat.title)}</Data></Cell></Row>`;
-    rows+=`<Row ss:Height="30"><Cell ss:StyleID="sub_${cat.id}" ss:MergeAcross="3"><Data ss:Type="String">${esc(cat.desc)}</Data></Cell></Row>`;
-    rows+=`<Row ss:Height="6"><Cell ss:StyleID="def" ss:MergeAcross="3"><Data ss:Type="String"> </Data></Cell></Row>`;
-    rows+=`<Row ss:Height="22">${mkCell(`hdr_${cat.id}`,'String','#')}${mkCell(`hdr_${cat.id}`,'String','Nombre en Español')}${mkCell(`hdr_${cat.id}`,'String','Nombre en Inglés (WHO)')}${mkCell(`hdr_${cat.id}`,'String','Categoría AWaRe')}</Row>`;
-    items.forEach((d,i)=>{
-      const s=i%2===0?`row1_${cat.id}`:`row2_${cat.id}`;
-      rows+=`<Row ss:Height="18">${mkCell(`num_${cat.id}`,'Number',i+1)}${mkCell(s,'String',d.n)}${mkCell(s,'String',d.e)}${mkCell(s,'String',catLabel)}</Row>`;
+  const btn=event?.currentTarget;
+  if(btn){btn.textContent='⏳ Generando...';btn.disabled=true;}
+  const doDownload=()=>{
+    const XL=window.XLSX;
+    const cats=[
+      {id:'A',name:'ACCESS',hdrRgb:'1E5C38',hdrFg:'FFFFFF',r1Rgb:'F0FDF4',r2Rgb:'DCFCE7',numRgb:'1E5C38',desc:'Antibióticos recomendados como primera o segunda línea de tratamiento. Ampliamente disponibles, de bajo costo y eficaces.'},
+      {id:'W',name:'WATCH',hdrRgb:'78350F',hdrFg:'FFFFFF',r1Rgb:'FFFBEB',r2Rgb:'FEF3C7',numRgb:'78350F',desc:'Mayor riesgo de selección de resistencia. Usar solo cuando no hay alternativas del grupo Access.'},
+      {id:'R',name:'RESERVE',hdrRgb:'7F1D1D',hdrFg:'FFFFFF',r1Rgb:'FFF1F2',r2Rgb:'FEE2E2',numRgb:'7F1D1D',desc:'Último recurso terapéutico. Solo para infecciones graves por organismos multirresistentes.'},
+      {id:'N',name:'NO RECOM.',hdrRgb:'1F2937',hdrFg:'FFFFFF',r1Rgb:'F9FAFB',r2Rgb:'F3F4F6',numRgb:'1F2937',desc:'Combinaciones de dosis fija no recomendadas por la OMS. Evitar su uso clínico.'},
+    ];
+    const catLabel={A:'(A) Access',W:'(W) Watch',R:'(R) Reserve',N:'No Recomendado'};
+    const wb=XL.utils.book_new();
+
+    const mkFill=rgb=>({patternType:'solid',fgColor:{rgb}});
+    const mkFont=(rgb,bold,sz,italic)=>({color:{rgb},bold:!!bold,sz:sz||11,italic:!!italic,name:'Calibri'});
+    const mkBorder=()=>({top:{style:'thin',color:{rgb:'CBD5E0'}},bottom:{style:'thin',color:{rgb:'CBD5E0'}},left:{style:'thin',color:{rgb:'CBD5E0'}},right:{style:'thin',color:{rgb:'CBD5E0'}}});
+    const mkAlign=(h,wrap)=>({horizontal:h||'left',vertical:'center',wrapText:!!wrap});
+
+    cats.forEach(cat=>{
+      const items=AWARE_DATA.filter(d=>d.c===cat.id);
+      const ws={};
+      let R=0;
+
+      // Styles
+      const sTitle={fill:mkFill(cat.hdrRgb),font:mkFont(cat.hdrFg,true,14),alignment:mkAlign('left',false)};
+      const sDesc={fill:mkFill(cat.r2Rgb),font:mkFont('374151',false,10,true),alignment:mkAlign('left',true)};
+      const sHdr={fill:mkFill(cat.hdrRgb),font:mkFont(cat.hdrFg,true,11),alignment:mkAlign('center',false),border:mkBorder()};
+      const sNum={fill:mkFill(cat.numRgb),font:mkFont(cat.hdrFg,true,10),alignment:mkAlign('center',false),border:mkBorder()};
+      const sR1={fill:mkFill(cat.r1Rgb),font:mkFont('1E293B',false,10),alignment:mkAlign('left',false),border:mkBorder()};
+      const sR2={fill:mkFill(cat.r2Rgb),font:mkFont('1E293B',false,10),alignment:mkAlign('left',false),border:mkBorder()};
+      const sFoot={fill:mkFill('F8FAFC'),font:mkFont('94A3B8',false,9,true),alignment:mkAlign('left',false)};
+
+      const sc=(r,c,v,s,t)=>{ const ref=XL.utils.encode_cell({r,c}); ws[ref]={v,t:t||'s',s}; };
+
+      // Title row
+      sc(R,0,cat.name+' — Clasificación AWaRe OMS',sTitle); sc(R,1,'',sTitle); sc(R,2,'',sTitle); sc(R,3,'',sTitle);
+      ws['!merges']=[{s:{r:R,c:0},e:{r:R,c:3}}];
+      R++;
+      // Description
+      sc(R,0,cat.desc,sDesc); sc(R,1,'',sDesc); sc(R,2,'',sDesc); sc(R,3,'',sDesc);
+      ws['!merges'].push({s:{r:R,c:0},e:{r:R,c:3}});
+      R++;
+      // Empty row
+      sc(R,0,' ',{fill:mkFill('FFFFFF'),font:mkFont('FFFFFF',false,6)}); R++;
+      // Column headers
+      ['#','Nombre en Español','Nombre en Inglés (WHO)','Categoría AWaRe'].forEach((h,c)=>sc(R,c,h,sHdr));
+      R++;
+      // Data
+      items.forEach((d,i)=>{
+        const s=i%2===0?sR1:sR2;
+        sc(R,0,i+1,sNum,'n');
+        sc(R,1,d.n,s);
+        sc(R,2,d.e,s);
+        sc(R,3,catLabel[cat.id],s);
+        R++;
+      });
+      // Footer
+      sc(R,0,' ',{fill:mkFill('FFFFFF'),font:mkFont('FFFFFF',false,4)}); R++;
+      const footText=`Total: ${items.length} entradas · WHO AWaRe 2024 · aware.essentialmeds.org · C.I.A.E. Tlaxcala · IMSS · ${new Date().toLocaleDateString('es-MX')}`;
+      sc(R,0,footText,sFoot); sc(R,1,'',sFoot); sc(R,2,'',sFoot); sc(R,3,'',sFoot);
+      ws['!merges'].push({s:{r:R,c:0},e:{r:R,c:3}});
+
+      ws['!ref']=XL.utils.encode_range({s:{r:0,c:0},e:{r:R,c:3}});
+      ws['!cols']=[{wch:5},{wch:36},{wch:36},{wch:18}];
+      ws['!rows']=[{hpt:32},{hpt:40},{hpt:6},{hpt:20}];
+      ws['!views']=[{state:'frozen',ySplit:4,topLeftCell:'A5'}];
+      XL.utils.book_append_sheet(wb,ws,cat.name);
     });
-    rows+=`<Row ss:Height="6"><Cell ss:StyleID="def"><Data ss:Type="String"> </Data></Cell></Row>`;
-    rows+=`<Row ss:Height="16"><Cell ss:StyleID="foot" ss:MergeAcross="3"><Data ss:Type="String">Total: ${items.length} entradas · WHO AWaRe 2024 · aware.essentialmeds.org · C.I.A.E. Tlaxcala IMSS</Data></Cell></Row>`;
-    return `<Worksheet ss:Name="${esc(cat.name)}"><Table ss:DefaultRowHeight="18"><Column ss:Width="35"/><Column ss:Width="220"/><Column ss:Width="220"/><Column ss:Width="130"/>${rows}</Table><WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>4</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions></Worksheet>`;
+
+    XL.writeFile(wb,`ClasificacionAWaRe_OMS_${new Date().toISOString().slice(0,10)}.xlsx`,{cellStyles:true,bookSST:false});
+    if(btn){btn.textContent='📥 Descargar Excel';btn.disabled=false;}
   };
-  const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel"><DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Title>Clasificación AWaRe OMS</Title><Author>C.I.A.E. Tlaxcala · IMSS</Author></DocumentProperties><Styles>${styles}</Styles>${cats.map(mkSheet).join('')}</Workbook>`;
-  const blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download=`ClasificacionAWaRe_OMS_${new Date().toISOString().slice(0,10)}.xls`;
-  a.click(); URL.revokeObjectURL(a.href);
+
+  if(window.XLSX){ doDownload(); }
+  else{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=doDownload;
+    s.onerror=()=>{
+      if(btn){btn.textContent='📥 Descargar Excel';btn.disabled=false;}
+      alert('No se pudo cargar la librería. Verifica tu conexión a internet e intenta de nuevo.');
+    };
+    document.head.appendChild(s);
+  }
 }
 
 initDashboard();
