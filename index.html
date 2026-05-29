@@ -983,8 +983,8 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   const totalW=YW+n*SLOT+slotPad;
   const totalH=PADTOP+CH+XLABELH;
 
-  let h=`<div style="width:100%;overflow-x:auto;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;">`;
+  let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
+  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;">`;
 
   // Y gridlines
   [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].forEach(t=>{
@@ -1087,8 +1087,8 @@ function buildSRIMultiChart(datasets, cid){
   const totalH=PADTOP+CH+XLABELH;
   const HCOLORS=['#1d4ed8','#15803d','#b45309'];
 
-  let h=`<div style="width:100%;overflow-x:auto;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;">`;
+  let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
+  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;">`;
   [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].forEach(t=>{
     const y=PADTOP+Math.round((1-t)*CH);
     h+=`<div style="position:absolute;left:${YW}px;right:0;top:${y}px;border-top:1px solid ${t===0?'#9ca3af':'#e5e7eb'};"></div>`;
@@ -1172,8 +1172,8 @@ function buildSRICompactChart(data, cid){
   const totalH=PADTOP+CH+XLABELH;
   const pct=v=>v!=null?(v*100).toFixed(1)+'%':'–';
 
-  let h=`<div style="width:100%;overflow-x:auto;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.66rem;color:#374151;">`;
+  let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
+  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.66rem;color:#374151;overflow:hidden;">`;
 
   [0,.2,.4,.6,.8,1].forEach(t=>{
     const y=PADTOP+Math.round((1-t)*CH);
@@ -1246,8 +1246,8 @@ function buildFreqChart(data, cid){
   const totalW=YW+n*SLOT+slotPad;
   const totalH=PADTOP+CH+XLABELH;
 
-  let h=`<div style="width:100%;overflow-x:auto;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;">`;
+  let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
+  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;overflow:hidden;">`;
 
   ticks.forEach(t=>{
     const y=PADTOP+Math.round((1-t/niceMax)*CH);
