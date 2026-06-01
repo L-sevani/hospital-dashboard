@@ -52,7 +52,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .pp.act2{background:#7c3aed;color:#fff;border-color:#7c3aed;}
 
 .legrow{background:#fff;border-bottom:1px solid #e2e8f0;padding:7px 32px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
-.context-bar{position:sticky;top:74px;z-index:120;background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 32px;display:flex;gap:8px;flex-wrap:wrap;}
+.context-bar{position:sticky;top:74px;z-index:120;background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 32px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 .context-chip{font-size:.72rem;padding:4px 10px;border-radius:14px;border:1px solid #dbeafe;background:#eff6ff;color:#1e40af;font-weight:600;}
 .context-chip.muted{border-color:#e2e8f0;background:#fff;color:#475569;}
 .leg{display:flex;align-items:center;gap:5px;font-size:.76rem;color:#374151;font-weight:500;}
@@ -984,7 +984,7 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   const totalH=PADTOP+CH+XLABELH;
 
   let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;">`;
+  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
 
   // Y gridlines
   [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].forEach(t=>{
@@ -1088,7 +1088,7 @@ function buildSRIMultiChart(datasets, cid){
   const HCOLORS=['#1d4ed8','#15803d','#b45309'];
 
   let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;">`;
+  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
   [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].forEach(t=>{
     const y=PADTOP+Math.round((1-t)*CH);
     h+=`<div style="position:absolute;left:${YW}px;right:0;top:${y}px;border-top:1px solid ${t===0?'#9ca3af':'#e5e7eb'};"></div>`;
@@ -1115,9 +1115,11 @@ function buildSRIMultiChart(datasets, cid){
         if(d.pS>0){const h2=Math.max(1,Math.round(d.pS*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#22c55e;"></div>`;}
         if(d.pR>0){const h2=Math.max(1,Math.round(d.pR*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#ef4444;"></div>`;}
         if(d.pI>0){const h2=Math.max(1,Math.round(d.pI*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#f59e0b;"></div>`;}
-        // Nombre hospital dentro de la barra — negro, vertical, centrado
-        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+4}px;width:${BW}px;height:${CH-8}px;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none;">
-          <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.6rem;font-weight:700;color:rgba(0,0,0,0.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${shortLabel}</div>
+        // Nombre hospital dentro de la barra — clip estricto al área de barra
+        h+=`<div style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;overflow:hidden;clip-path:inset(0 0 0 0);pointer-events:none;">
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+            <span style="display:inline-block;writing-mode:vertical-lr;font-size:.6rem;font-weight:700;color:rgba(0,0,0,0.72);white-space:nowrap;max-height:${CH-4}px;overflow:hidden;text-overflow:ellipsis;">${shortLabel}</span>
+          </div>
         </div>`;
         const tipData=JSON.stringify({abx:meta.a,hosp:label,S:d.S,R:d.R,I:d.I,T:d.t,pS:pct(d.pS),pR:pct(d.pR),pI:pct(d.pI)}).replace(/'/g,'&apos;');
         h+=`<div class="vbh" data-tip='${tipData}' data-multi="1" style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
@@ -1173,7 +1175,7 @@ function buildSRICompactChart(data, cid){
   const pct=v=>v!=null?(v*100).toFixed(1)+'%':'–';
 
   let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.66rem;color:#374151;overflow:hidden;">`;
+  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.66rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
 
   [0,.2,.4,.6,.8,1].forEach(t=>{
     const y=PADTOP+Math.round((1-t)*CH);
@@ -1247,7 +1249,7 @@ function buildFreqChart(data, cid){
   const totalH=PADTOP+CH+XLABELH;
 
   let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;overflow:hidden;">`;
+  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;overflow:hidden;clip-path:inset(0);">`;
 
   ticks.forEach(t=>{
     const y=PADTOP+Math.round((1-t/niceMax)*CH);
@@ -1852,12 +1854,17 @@ function sectionLabel(sec){
 function renderContextBar(){
   const bar=document.getElementById('context-bar');
   if(!bar) return;
-  if(activeSection==='aware'){ bar.innerHTML=''; bar.style.display='none'; return; }
+  const sourceChip=`<a href="http://172.22.235.16/inoso/" target="_blank" style="font-size:.68rem;padding:3px 10px;border-radius:14px;border:1px solid #d1fae5;background:#ecfdf5;color:#065f46;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:auto;white-space:nowrap;">🗄️ Fuente: INOSO</a>`;
+  if(activeSection==='aware'){
+    bar.style.display='flex';
+    bar.innerHTML=sourceChip;
+    return;
+  }
   const compareLabel=p2?('Comparando: '+fmtP(p1)+' vs '+fmtP(p2)):('Período: '+fmtP(p1));
   const filterLabel=activeFilter==='cb'?'Cuadro básico':'Todos los antibióticos';
-  bar.innerHTML=`<span class="context-chip">🏥 ${getHospitalDisplayName(activeHospital)}</span><span class="context-chip muted">Sección: ${sectionLabel(activeSection)}</span><span class="context-chip muted">${compareLabel}</span><span class="context-chip muted">Filtro: ${filterLabel}</span>`;
   const hide=(activeSection==='avanzado'||activeSection==='comparar');
-  bar.style.display=hide?'none':'flex';
+  bar.style.display='flex';
+  bar.innerHTML=`<span class="context-chip">🏥 ${getHospitalDisplayName(activeHospital)}</span><span class="context-chip muted">Sección: ${sectionLabel(activeSection)}</span>${hide?'':`<span class="context-chip muted">${compareLabel}</span><span class="context-chip muted">Filtro: ${filterLabel}</span>`}${sourceChip}`;
 }
 
 function renderAll(){
