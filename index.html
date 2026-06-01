@@ -1856,8 +1856,8 @@ function renderContextBar(){
   if(!bar) return;
   const sourceChip=`<a href="http://172.22.235.16/inoso/" target="_blank" style="font-size:.68rem;padding:3px 10px;border-radius:14px;border:1px solid #d1fae5;background:#ecfdf5;color:#065f46;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:auto;white-space:nowrap;">🗄️ Fuente: INOSO</a>`;
   if(activeSection==='aware'){
-    bar.style.display='flex';
-    bar.innerHTML=sourceChip;
+    bar.style.display='none';
+    bar.innerHTML='';
     return;
   }
   const compareLabel=p2?('Comparando: '+fmtP(p1)+' vs '+fmtP(p2)):('Período: '+fmtP(p1));
