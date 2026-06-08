@@ -648,7 +648,7 @@ function _deriveFromHospitalV2(hd){
     const hospitalRows=[];
     const microAgg={};
 
-    // Servicios (base para hospital/micros + freq chart1/chart2)
+    // Servicios (base para hospital/micros + freq chart1)
     (svc.subgrupos||[]).forEach(sg=>{
       const mm=(svc.data||{})[sg]||{};
       hospitalRows.push(_abxRowsFromMicroMap(mm));
@@ -658,11 +658,9 @@ function _deriveFromHospitalV2(hd){
         microAgg[micro].push(obj);
         const tot=Number((obj&&obj.total)||0);
         addStack(freqByPer.chart1[per]||(freqByPer.chart1[per]=makeFreq()), micro, sg, tot);
-        addStack(freqByPer.chart2[per]||(freqByPer.chart2[per]=makeFreq()), sg, micro, tot);
+        // No más chart2 aquí — se construye abajo con cultivos
       });
     });
-
-    // Infecciones: no se mezclan en chart2 para mantener solo servicios por cultivo/micro en esta vista
 
     // Cultivos (chart3/chart4)
     (cul.subgrupos||[]).forEach(sg=>{
@@ -671,6 +669,25 @@ function _deriveFromHospitalV2(hd){
         const tot=Number((obj&&obj.total)||0);
         addStack(freqByPer.chart3[per]||(freqByPer.chart3[per]=makeFreq()), sg, micro, tot);
         addStack(freqByPer.chart4[per]||(freqByPer.chart4[per]=makeFreq()), micro, sg, tot);
+      });
+    });
+
+    // chart2: "Servicios por Cultivo" — x=cultivos, stacks=servicios
+    // Para cada cultivo, busca qué servicios aportaron los mismos microorganismos
+    const culMicroSet={};
+    (cul.subgrupos||[]).forEach(culSg=>{
+      culMicroSet[culSg]=new Set(Object.keys((cul.data||{})[culSg]||{}));
+    });
+    (svc.subgrupos||[]).forEach(svcSg=>{
+      const mm=(svc.data||{})[svcSg]||{};
+      Object.entries(mm).forEach(([micro,obj])=>{
+        const tot=Number((obj&&obj.total)||0);
+        if(!tot) return;
+        Object.keys(culMicroSet).forEach(culSg=>{
+          if(culMicroSet[culSg].has(micro)){
+            addStack(freqByPer.chart2[per]||(freqByPer.chart2[per]=makeFreq()), culSg, svcSg, tot);
+          }
+        });
       });
     });
 
@@ -1493,7 +1510,7 @@ function buildNarrativeHtml(rows, scopeLabel){
   return `<div style="display:flex;flex-direction:column;gap:8px;">
     <p><strong>Resumen rápido (${scope})</strong></p>
     <ul style="margin-left:18px;display:flex;flex-direction:column;gap:6px;">
-      <li><strong>N-${N}</strong> cultivos analizados.</li>
+      <li><strong>N-${N}</strong> antibiogramas procesados.</li>
       <li>Uso reportado: ${topUsedHtml}.</li>
       <li>Antimicrobianos con resistencia &gt;50%: ${topR}.</li>
       <li>Los antibióticos de observación <span class="atag tW">(W)</span> con resistencia menor al 50% son ${wLowRHtml}, por lo que se recomienda disminuir su consumo y uso en los servicios e infecciones que se presenten.</li>
