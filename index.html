@@ -685,7 +685,7 @@ function _deriveFromHospitalV2(hd){
         if(!tot) return;
         Object.keys(culMicroSet).forEach(culSg=>{
           if(culMicroSet[culSg].has(micro)){
-            addStack(freqByPer.chart2[per]||(freqByPer.chart2[per]=makeFreq()), culSg, svcSg, tot);
+            addStack(freqByPer.chart2[per]||(freqByPer.chart2[per]=makeFreq()), svcSg, culSg, tot);
           }
         });
       });
