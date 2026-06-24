@@ -323,8 +323,8 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 
 <div id="banner-noiaas" style="display:none;background:linear-gradient(90deg,#1e3a5f,#1e5f7f);color:#fff;padding:8px 32px;font-size:.78rem;font-weight:600;align-items:center;gap:10px;">
   <span style="background:#f59e0b;color:#1c1917;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:800;">NO IAAS</span>
-  <span>Infecciones No Asociadas a Atención en Salud — Nivel Delegacional · Tlaxcala</span>
-  <span style="margin-left:auto;font-weight:400;color:#93c5fd;font-size:.7rem;">Fuente: Sistema interno IMSS (INOSO) · Datos 2024–2026</span>
+  <span>Infecciones No Asociadas a Atención en Salud — Nivel Delegacional · Tlaxcala · 2024–2026</span>
+  <span style="margin-left:auto;font-weight:400;color:#93c5fd;font-size:.7rem;">Servicio, Cultivo e Infección disponibles · Fuente: Sistema interno IMSS (INOSO)</span>
 </div>
 <div id="context-bar" class="context-bar"></div>
 
@@ -1562,25 +1562,6 @@ function sgHasData(dataMap, period){
 
 function renderSg(section){
   const key=section==='servicio'?'servicios':section==='infeccion'?'infecciones':section==='cultivo'?'cultivos':'micros';
-
-  // Para DELEGACION NO IAAS: infecciones no tiene datos útiles
-  if(section==='infeccion' && HOSP_NO_IAAS.has(activeHospital)){
-    const bodyEl=document.getElementById('body-infeccion');
-    const sgsEl=document.getElementById('sgt-infeccion');
-    if(sgsEl) sgsEl.innerHTML='';
-    if(bodyEl) bodyEl.innerHTML=`
-      <div style="padding:40px;text-align:center;color:#64748b;background:#fff;border-radius:14px;border:1px dashed #e2e8f0;">
-        <div style="font-size:2.5rem;margin-bottom:10px;">📋</div>
-        <div style="font-weight:700;font-size:.95rem;color:#374151;margin-bottom:8px;">Dimensión no disponible para datos NO IAAS</div>
-        <div style="font-size:.8rem;max-width:420px;margin:0 auto;line-height:1.6;">
-          La fuente delegacional clasifica todos los registros como
-          <span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-weight:700;">NO IAAS</span>
-          sin subtipo de infección.<br>
-          Consulte <strong>Por Cultivo</strong> para análisis por origen de muestra.
-        </div>
-      </div>`;
-    return;
-  }
   const raw=getSRIObj(key);
   const selectedSgs=getActiveSubgroups(section, raw);
   const sgsEl=document.getElementById('sgt-'+section);
