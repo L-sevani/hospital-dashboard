@@ -1579,13 +1579,16 @@ function renderSg(section){
   const sgsEl=document.getElementById('sgt-'+section);
   if(sgsEl){
     const persistedQuery=(sgsEl.dataset.q||'').trim().toLowerCase();
-    sgsEl.innerHTML=`<div class="sgtools"><input class="sgsearch" id="sgsearch-${section}" type="search" placeholder="Buscar subgrupo..." value="${persistedQuery}"><span class="sgcount" id="sgcount-${section}"></span></div><div class="sgchiplist" id="sglist-${section}"></div>`;
+    const showSearch = section === 'micro';
+    sgsEl.innerHTML = showSearch
+      ? `<div class="sgtools"><input class="sgsearch" id="sgsearch-${section}" type="search" placeholder="Buscar subgrupo..." value="${persistedQuery}"><span class="sgcount" id="sgcount-${section}"></span></div><div class="sgchiplist" id="sglist-${section}"></div>`
+      : `<div class="sgchiplist" id="sglist-${section}"></div>`;
     const input=document.getElementById('sgsearch-'+section);
     const list=document.getElementById('sglist-'+section);
     const count=document.getElementById('sgcount-'+section);
     const paintTabs=()=>{
-      const q=(input.value||'').trim().toLowerCase();
-      sgsEl.dataset.q=q;
+      const q=input?(input.value||'').trim().toLowerCase():'';
+      if(input) sgsEl.dataset.q=q;
       const visibles=(raw.subgrupos||[]).filter(s=>{
         if(!sgName(s).toLowerCase().includes(q)) return false;
         return sgHasData((raw.data||{})[s], p1);
@@ -1607,12 +1610,12 @@ function renderSg(section){
         list.appendChild(t);
       });
       const visibleSuffix=q?` · ${visibles.length} visibles`:'';
-      count.textContent=`${selectedSgs.length} seleccionados${visibleSuffix}`;
-      if(!visibles.length){
+      if(count) count.textContent=`${selectedSgs.length} seleccionados${visibleSuffix}`;
+      if(!visibles.length && q){
         list.innerHTML='<div class="cmp-chip-muted">Sin coincidencias en la búsqueda.</div>';
       }
     };
-    input.oninput=paintTabs;
+    if(input) input.oninput=paintTabs;
     paintTabs();
   }
 
