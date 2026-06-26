@@ -812,6 +812,7 @@ function fmtP(p){
   if(!p||p==='TODOS') return 'Todo el período';
   if(p==='__adv_A__') return 'Grupo A ('+summarizeAdvPeriodsDetailed(advSetA||[])+')';
   if(p==='__adv_B__') return 'Grupo B ('+summarizeAdvPeriodsDetailed(advSetB||[])+')';
+  if(p==='__main_multi__') return mainPeriodSet.length===1?mainPeriodSet[0]:mainPeriodSet.length+' años seleccionados';
   if(p.length===4) return p;
   const [y,m]=p.split('-');
   return MONTHS[parseInt(m)]+' '+y;
@@ -880,6 +881,7 @@ function sriForPeriod(obj,period){
   if(!obj) return null;
   if(period==='__adv_A__') return sriMergedRaw(obj, advSetA||[]);
   if(period==='__adv_B__') return sriMergedRaw(obj, advSetB||[]);
+  if(period==='__main_multi__') return sriMergedRaw(obj, mainPeriodSet||[]);
   if(period==='TODOS') return calcPct(obj['TODOS']||null).sort((a,b)=>b.pS-a.pS || a.pR-b.pR || a.pI-b.pI);
   // If it's a year (4 chars) always expand to months
   const isYear=period.length===4;
@@ -1402,31 +1404,39 @@ document.addEventListener('click',e=>{
 function buildMainPeriodOptions(){
   const box=document.getElementById('main-period-checks'); if(!box) return;
   box.innerHTML='';
-  const opts=['TODOS',...getYears()];
-  opts.forEach(yy=>{
+
+  const mkLabel=(val,label,isActive)=>{
     const lb=document.createElement('label');
-    lb.className='adv-pcheck'+(p1===yy?' ckA':'');
-    lb.style.cssText='font-size:.72rem;padding:4px 10px;width:100%;box-sizing:border-box;border-radius:6px;';
-    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=yy; ck.checked=p1===yy; ck.style.marginRight='6px';
+    lb.className='adv-pcheck'+(isActive?' ckA':'');
+    lb.style.cssText='font-size:.72rem;padding:4px 10px;cursor:pointer;width:100%;box-sizing:border-box;border-radius:6px;';
+    const ck=document.createElement('input'); ck.type='checkbox'; ck.value=val; ck.checked=isActive; ck.style.marginRight='6px';
     ck.onchange=()=>{
-      if(!ck.checked){ ck.checked=true; return; }
-      p1=yy;
-      box.querySelectorAll('label').forEach(l=>l.classList.remove('ckA'));
-      box.querySelectorAll('input').forEach(c=>c.checked=c.value===yy);
-      lb.classList.add('ckA');
-      // update label
-      const lbl=document.getElementById('main-period-dd-label');
-      if(lbl) lbl.textContent=yy==='TODOS'?'Todo el período':yy;
+      if(val==='TODOS'){
+        p1='TODOS'; mainPeriodSet=[];
+      } else {
+        const set=new Set(p1==='__main_multi__'?mainPeriodSet:p1==='TODOS'?[]:[p1].filter(Boolean));
+        if(set.has(val)) set.delete(val); else set.add(val);
+        if(set.size===0){ p1='TODOS'; mainPeriodSet=[]; }
+        else if(set.size===1){ p1=[...set][0]; mainPeriodSet=[...set]; }
+        else { p1='__main_multi__'; mainPeriodSet=[...set].sort(); }
+      }
       if(p2===p1) p2=null;
-      if(p2==='__adv_B__') advSetB=(advSetB||[]).filter(v=>v!==p1);
-      buildCmpChecks(); renderAll();
+      buildMainPeriodOptions();
+      buildCmpChecks();
+      renderAll();
     };
-    lb.appendChild(ck); lb.appendChild(document.createTextNode(yy==='TODOS'?'Todo el período':yy));
+    lb.appendChild(ck); lb.appendChild(document.createTextNode(label));
     box.appendChild(lb);
+  };
+
+  mkLabel('TODOS','Todo el período', p1==='TODOS');
+  getYears().forEach(yy=>{
+    const isActive = p1==='__main_multi__' ? mainPeriodSet.includes(yy) : p1===yy;
+    mkLabel(yy, yy, isActive);
   });
-  // update button label
+
   const lbl=document.getElementById('main-period-dd-label');
-  if(lbl) lbl.textContent=p1==='TODOS'?'Todo el período':p1;
+  if(lbl) lbl.textContent=p1==='TODOS'?'Todo el período':p1==='__main_multi__'?mainPeriodSet.join(', '):p1;
 }
 
 function buildCmpChecks(){
@@ -1586,9 +1596,12 @@ function renderSg(section){
         t.className='sgtab'+(selectedSgs.includes(s)?' active':'');
         t.textContent=sgName(s);
         t.onclick=()=>{
-          const set=new Set(activeSg[section]||[]);
-          if(set.has(s)) set.delete(s); else set.add(s);
-          activeSg[section]=Array.from(set);
+          // Clic reemplaza la selección — solo muestra el subgrupo clicado
+          if((activeSg[section]||[]).includes(s) && (activeSg[section]||[]).length===1){
+            activeSg[section]=[];  // deseleccionar si ya era el único activo
+          } else {
+            activeSg[section]=[s]; // reemplazar con solo este
+          }
           renderSg(section);
         };
         list.appendChild(t);
@@ -1928,7 +1941,7 @@ function renderAll(){
 function setSection(sec,el){
   // Guardar período de la pestaña actual
   if(_DATA_TABS.has(activeSection)){
-    _TAB_PERIODS[activeSection]={p1,p2,setB:p2==='__adv_B__'?[...advSetB]:[]};
+    _TAB_PERIODS[activeSection]={p1,p2,setB:p2==='__adv_B__'?[...advSetB]:[],setMain:p1==='__main_multi__'?[...mainPeriodSet]:[]};
   }
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
@@ -1951,6 +1964,7 @@ function setSection(sec,el){
   if(_DATA_TABS.has(sec)){
     const st=_TAB_PERIODS[sec];
     p1=st.p1; p2=st.p2;
+    mainPeriodSet=p1==='__main_multi__'?[...(st.setMain||[])]:[];
     advSetB=p2==='__adv_B__'?[...st.setB]:[];
     buildMainPeriodOptions();
     buildCmpChecks();
@@ -1986,6 +2000,7 @@ function applyMobileUI(){
 
 // ── ADVANCED PANEL ──
 let advTab='multi', advSetA=[], advSetB=[], advMode=false;
+let mainPeriodSet=[]; // períodos seleccionados en Período Principal (multi-select)
 let advLabelA='', advLabelB='';
 
 
