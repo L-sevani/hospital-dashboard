@@ -1146,7 +1146,8 @@ function buildSRIMultiChart(datasets, cid){
       const x=xGroup+hi*(BW+GAP_BAR);
       const hc=HCOLORS[hi]||'#374151';
       // Short label from hospital name
-      const shortLabel=label.replace(/HGSMF|HGZMF|HGZ/g,s=>s).replace(/No\.\s*/,'').replace(/\s*·.*$/,'').trim().substring(0,12);
+      const rawLabel=label.replace(/[\u{1F000}-\u{1FFFF}]|[\u2600-\u27FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F]/gu,'').trim();
+      const shortLabel=rawLabel==='Ambulatorios · NO IAAS'?'Ambulatorio':rawLabel.replace(/No\.\s*/,'').replace(/\s*·.*$/,'').trim().substring(0,14);
       if(!d||!d.t){
         // Sin datos: barra gris, sin nombre
         h+=`<div style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;background:#f3f4f6;border-radius:2px;opacity:.4;"></div>`;
