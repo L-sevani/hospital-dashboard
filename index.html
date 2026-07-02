@@ -750,12 +750,13 @@ function normalizeLoadedRAW(input){
     norm.freq=norm.freq||{};
     norm._derivedByHospital={};
     Object.entries(norm.data||{}).forEach(([h,hd])=>{
+      const key=h==='DELEGACION TLAXCALA'?'AMBULATORIOS TLAXCALA':h;
       if(hd&&hd.hospital){
         hd.años=hd.años||[...new Set((hd.periodos||[]).map(p=>String(p).split('-')[0]))];
         hd.freq=hd.freq||{};
-        norm._derivedByHospital[h]=hd;
+        norm._derivedByHospital[key]=hd;
       }else{
-        norm._derivedByHospital[h]=_deriveFromHospitalV2(hd);
+        norm._derivedByHospital[key]=_deriveFromHospitalV2(hd);
       }
     });
     const first=(norm.hospitales&&norm.hospitales[0])||Object.keys(norm._derivedByHospital)[0];
@@ -1690,11 +1691,15 @@ const HOSPITALES_ORDEN = ['HGZ 1 TLAXCALA','HGZMF 2 APIZACO','HGSMF 8 TLAXCALA',
 const HOSP_NO_IAAS = new Set(['AMBULATORIOS TLAXCALA','DELEGACION TLAXCALA']);
 
 function getHospitalDisplayName(h){
-  // Mapear también la clave vieja del JSON mientras no se regenere
-  if(h==='DELEGACION TLAXCALA') return 'Ambulatorios · NO IAAS';
-  return HOSPITALES_NOMBRES[h] || h || 'HGZ No. 1 Tlaxcala';
+  const map={
+    'HGZ 1 TLAXCALA':        '🏥 HGZ No. 1 · Tlaxcala',
+    'HGZMF 2 APIZACO':       '🏥 HGZMF No. 2 · Apizaco',
+    'HGSMF 8 TLAXCALA':      '🏥 HGSMF No. 8 · Tlaxcala',
+    'AMBULATORIOS TLAXCALA': '📋 Ambulatorios · NO IAAS',
+    'DELEGACION TLAXCALA':   '📋 Ambulatorios · NO IAAS',
+  };
+  return map[h] || HOSPITALES_NOMBRES[h] || h || 'HGZ No. 1 Tlaxcala';
 }
-
 
 function cmpStatsFromRaw(raw){
   if(!raw||!raw.hospital) return null;
@@ -2900,20 +2905,17 @@ async function initDashboard(){
   }
 
   activeHospital = (RAW.hospitales && RAW.hospitales[0]) || activeHospital;
+  // Remap por si acaso la clave vieja llegó al array
+  if(activeHospital==='DELEGACION TLAXCALA') activeHospital='AMBULATORIOS TLAXCALA';
   const sel = document.getElementById('hosp-sel');
   if (sel && RAW.hospitales && RAW.hospitales.length) {
     sel.innerHTML = '';
-    const HOSP_LABELS = {
-      'HGZ 1 TLAXCALA':        '🏥 HGZ No. 1 · Tlaxcala',
-      'HGZMF 2 APIZACO':       '🏥 HGZMF No. 2 · Apizaco',
-      'HGSMF 8 TLAXCALA':      '🏥 HGSMF No. 8 · Tlaxcala',
-      'AMBULATORIOS TLAXCALA': '📋 Ambulatorios · NO IAAS',
-      'DELEGACION TLAXCALA':   '📋 Ambulatorios · NO IAAS',  // alias JSON viejo
-    };
     RAW.hospitales.forEach(h => {
+      // Normalizar clave vieja
+      const key = h==='DELEGACION TLAXCALA'?'AMBULATORIOS TLAXCALA':h;
       const opt = document.createElement('option');
-      opt.value = h;
-      opt.textContent = HOSP_LABELS[h] || h;
+      opt.value = key;
+      opt.textContent = getHospitalDisplayName(key);
       sel.appendChild(opt);
     });
     sel.value = activeHospital;
