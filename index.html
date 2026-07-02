@@ -324,7 +324,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 
 <div id="banner-noiaas" style="display:none;background:linear-gradient(90deg,#1e3a5f,#1e5f7f);color:#fff;padding:8px 32px;font-size:.78rem;font-weight:600;align-items:center;gap:10px;">
   <span style="background:#f59e0b;color:#1c1917;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:800;">NO IAAS</span>
-  <span>Infecciones No Asociadas a Atención en Salud — Nivel Delegacional · Tlaxcala · 2024–2026</span>
+  <span>Infecciones No Asociadas a Atención en Salud — Nivel Ambulatorio · Tlaxcala · 2024–2026</span>
 </div>
 <div id="context-bar" class="context-bar"></div>
 
@@ -1675,17 +1675,17 @@ const HOSPITALES_NOMBRES = {
   'HGZ 1 TLAXCALA':      'HGZ No. 1 · Tlaxcala',
   'HGZMF 2 APIZACO':     'HGZMF No. 2 · Apizaco',
   'HGSMF 8 TLAXCALA':    'HGSMF No. 8 · Tlaxcala',
-  'DELEGACION TLAXCALA': 'Delegación · NO IAAS'
+  'AMBULATORIOS TLAXCALA': 'Ambulatorios · NO IAAS'
 };
-const HOSPITALES_ORDEN = ['HGZ 1 TLAXCALA','HGZMF 2 APIZACO','HGSMF 8 TLAXCALA','DELEGACION TLAXCALA'];
-const HOSP_NO_IAAS = new Set(['DELEGACION TLAXCALA']);
+const HOSPITALES_ORDEN = ['HGZ 1 TLAXCALA','HGZMF 2 APIZACO','HGSMF 8 TLAXCALA','AMBULATORIOS TLAXCALA'];
+const HOSP_NO_IAAS = new Set(['AMBULATORIOS TLAXCALA']);
 
 function getHospitalDisplayName(h){
   const nombres = {
     'HGZ 1 TLAXCALA':'HGZ No. 1 · Tlaxcala',
     'HGZMF 2 APIZACO':'HGZMF No. 2 · Apizaco',
     'HGSMF 8 TLAXCALA':'HGSMF No. 8 · Tlaxcala',
-    'DELEGACION TLAXCALA':'Delegación Tlaxcala · NO IAAS',
+    'AMBULATORIOS TLAXCALA':'Ambulatorios Tlaxcala · NO IAAS',
   };
   return nombres[h] || h;
 }
@@ -1869,7 +1869,7 @@ function renderComparar(){
             <th style="${thStyle}border-left:2px solid ${colColors[0]}20;color:${colColors[0]};">HGZ 1 Tlaxcala</th>
             <th style="${thStyle}border-left:2px solid ${colColors[1]}20;color:${colColors[1]};">HGZMF 2 Apizaco</th>
             <th style="${thStyle}border-left:2px solid ${colColors[2]}20;color:${colColors[2]};">HGSMF 8 Tlaxcala</th>
-            <th style="${thStyle}border-left:2px solid ${colColors[3]}20;color:${colColors[3]};">Delegación · NO IAAS</th>
+            <th style="${thStyle}border-left:2px solid ${colColors[3]}20;color:${colColors[3]};">Ambulatorios · NO IAAS</th>
           </tr>
         </thead>
         <tbody>
@@ -1879,7 +1879,7 @@ function renderComparar(){
             const r1=byHospAbx['HGZ 1 TLAXCALA'][key]||null;
             const r2=byHospAbx['HGZMF 2 APIZACO'][key]||null;
             const r3=byHospAbx['HGSMF 8 TLAXCALA'][key]||null;
-            const r4=byHospAbx['DELEGACION TLAXCALA'][key]||null;
+            const r4=byHospAbx['AMBULATORIOS TLAXCALA'][key]||null;
             return `<tr style="${rowBg}">
               <td style="${tdStyle}text-align:left;font-weight:600;color:#374151;">${lblName(r.a)}</td>
               ${cellSRI(r1)}
@@ -1897,7 +1897,7 @@ function renderComparar(){
 
   body.innerHTML=`
     <div style="margin-bottom:20px;">
-      <h1 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin-bottom:4px;">⚖️ Comparación entre Hospitales · Delegación Tlaxcala</h1>
+      <h1 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin-bottom:4px;">⚖️ Comparación entre Hospitales · Ambulatorios Tlaxcala</h1>
       <p style="font-size:.78rem;color:#6b7280;">Resumen epidemiológico comparativo. Los hospitales sin datos se actualizarán automáticamente al subir el Excel correspondiente.</p>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;">
@@ -2905,7 +2905,7 @@ async function initDashboard(){
       'HGZ 1 TLAXCALA':     '🏥 HGZ No. 1 · Tlaxcala',
       'HGZMF 2 APIZACO':    '🏥 HGZMF No. 2 · Apizaco',
       'HGSMF 8 TLAXCALA':   '🏥 HGSMF No. 8 · Tlaxcala',
-      'DELEGACION TLAXCALA':'📋 Delegación · NO IAAS',
+      'AMBULATORIOS TLAXCALA':'📋 Ambulatorios · NO IAAS',
     };
     RAW.hospitales.forEach(h => {
       const opt = document.createElement('option');
