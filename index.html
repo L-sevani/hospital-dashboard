@@ -2386,23 +2386,39 @@ function applyDrillChart(){
         </div>`).join('')}
       </div>
       <div id="${cid}"></div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #f1f5f9;text-align:center;">
+        <button id="btn-ia-${iaId}" onclick="drillLaunchIA('${iaId}')"
+          style="background:linear-gradient(135deg,#154f39,#1a6347);color:#fff;border:none;border-radius:10px;padding:11px 28px;font-size:.84rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(21,79,57,.25);transition:opacity .15s;">
+          🤖 Generar esquemas de tratamiento con IA
+        </button>
+        <div style="font-size:.66rem;color:#9ca3af;margin-top:5px;">Groq · LLaMA · basado en los microorganismos más frecuentes y el antibiograma real</div>
+      </div>
     </div>
-    <!-- Recomendación IA -->
-    <div id="${iaId}" style="margin-top:16px;background:linear-gradient(135deg,#f0fdf4,#f8fafc);border-radius:14px;border:1.5px solid #bbf7d0;padding:20px 22px;box-shadow:0 2px 8px rgba(21,79,57,.07);">
+    <div id="${iaId}" style="margin-top:16px;display:none;background:linear-gradient(135deg,#f0fdf4,#f8fafc);border-radius:14px;border:1.5px solid #bbf7d0;padding:20px 22px;box-shadow:0 2px 8px rgba(21,79,57,.07);">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #d1fae5;">
         <span style="background:linear-gradient(135deg,#154f39,#1a6347);color:#fff;border-radius:10px;padding:5px 12px;font-size:.72rem;font-weight:700;">🤖 IA Epidemiológica</span>
-        <span style="font-size:.7rem;color:#6b7280;">Esquemas de tratamiento generados con Gemini · basados en los datos reales del antibiograma</span>
+        <span style="font-size:.7rem;color:#6b7280;">Esquemas de tratamiento · Groq LLaMA · datos reales del antibiograma local</span>
       </div>
-      <div id="${iaId}-body">
-        <div class="ia-thinking" style="padding:10px 0;">
-          <div class="ia-dot"></div><div class="ia-dot"></div><div class="ia-dot"></div>
-          <span style="margin-left:8px;font-size:.8rem;color:#374151;">Generando esquemas de tratamiento con base en el antibiograma local...</span>
-        </div>
-      </div>
+      <div id="${iaId}-body"></div>
     </div>`;
 
+  // Guardar contexto para el botón
+  window['_drillCtx_'+iaId]={datasets, topMicros:allTopMicros};
   buildSRIMultiChart(datasets, cid);
-  drillGenerateTreatment(datasets, iaId+'-body', allTopMicros);
+}
+
+function drillLaunchIA(iaId){
+  const btn=document.getElementById('btn-ia-'+iaId);
+  const wrap=document.getElementById(iaId);
+  const body=document.getElementById(iaId+'-body');
+  if(!wrap||!body) return;
+  const ctx=window['_drillCtx_'+iaId]||{};
+  wrap.style.display='block';
+  body.innerHTML='<div class="ia-thinking" style="padding:10px 0;"><div class="ia-dot"></div><div class="ia-dot"></div><div class="ia-dot"></div><span style="margin-left:8px;font-size:.8rem;color:#374151;">Analizando microorganismos y antibiograma local...</span></div>';
+  if(btn){ btn.disabled=true; btn.style.opacity='.6'; btn.textContent='⏳ Generando...'; }
+  drillGenerateTreatment(ctx.datasets||[], iaId+'-body', ctx.topMicros||[]).then(()=>{
+    if(btn){ btn.disabled=false; btn.style.opacity='1'; btn.innerHTML='🤖 Regenerar esquemas'; }
+  });
 }
 
 async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
@@ -2413,53 +2429,44 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
   const dimLabel=datasets[0]?.micro||'';
   const usedMicro=datasets.some(d=>d.dimKey==='micro');
 
-  // Sección de microorganismos para el prompt
-  const microsSection= usedMicro
-    ? `MICROORGANISMOS ANALIZADOS: ${datasets.map(d=>d.micro).join(', ')}`
-    : topMicros.length
-      ? `MICROORGANISMOS PRINCIPALES AISLADOS EN ESTA SELECCIÓN (usar como base para los esquemas):
-${topMicros.map((m,i)=>`  ${i+1}. ${m}`).join('\n')}
-Los esquemas deben cubrir tratamiento empírico dirigido a estos microorganismos.`
-      : '';
+  // Top 10 microorganismos — si se seleccionó micro directamente, usarlo; si no, usar los más frecuentes del filtro
+  const top10Micros = usedMicro
+    ? datasets.map(d=>d.micro.replace(/^[^\s]+\s/,'')).slice(0,10)
+    : topMicros.slice(0,10);
 
+  // Resumen del antibiograma real por hospital
   const abxSummary=datasets.map(d=>{
-    const sensibles=d.rows.filter(r=>(r.pS||0)>0.5).sort((a,b)=>(b.pS||0)-(a.pS||0))
-      .map(r=>`${r.a} (${lblHtml(r).replace(/<[^>]+>/g,'')} S:${Math.round((r.pS||0)*100)}% R:${Math.round((r.pR||0)*100)}%)`).join(', ');
-    const resistentes=d.rows.filter(r=>(r.pR||0)>0.5).sort((a,b)=>(b.pR||0)-(a.pR||0))
-      .map(r=>`${r.a} (R:${Math.round((r.pR||0)*100)}%)`).join(', ');
-    return `${d.label} — Sensibles >50%: ${sensibles||'ninguno'}. Resistentes >50%: ${resistentes||'ninguno'}.`;
+    const top=d.rows.filter(r=>r.t>=3).sort((a,b)=>(b.t||0)-(a.t||0)).slice(0,15)
+      .map(r=>`${r.a}[${ABX_META[r.a]?.c||CB_ABX_META[r.a]?.c||'?'}] S:${Math.round((r.pS||0)*100)}% R:${Math.round((r.pR||0)*100)}% I:${Math.round((r.pI||0)*100)}% n=${r.t}`).join(', ');
+    return `${d.label}: ${top}`;
   }).join('\n');
 
-  const allAbx=[...new Set(datasets.flatMap(d=>d.rows.map(r=>r.a)))];
-  const awareMap=allAbx.map(a=>{
-    const meta=ABX_META[a]||CB_ABX_META[a];
-    return `${a}: ${meta?meta.c:'Sin clasificar'}`;
-  }).join(', ');
-
-  const prompt=`Eres un médico infectólogo y epidemiólogo clínico experto en el sistema de salud mexicano (IMSS). Tienes acceso a los datos reales del antibiograma local de las unidades: ${hospNames}.
+  const prompt=`Eres un infectólogo y epidemiólogo clínico del IMSS México. Analiza estos datos REALES del antibiograma local de: ${hospNames}.
 
 DIMENSIÓN ANALIZADA: ${dimLabel}
-${microsSection}
 
-DATOS DEL ANTIBIOGRAMA LOCAL (sensibilidad/resistencia real):
+MICROORGANISMOS MÁS FRECUENTES (máximo 10, ordenados por frecuencia):
+${top10Micros.map((m,i)=>`${i+1}. ${m}`).join('\n')}
+
+ANTIBIOGRAMA LOCAL REAL (S=Sensible, R=Resistente, I=Intermedio, n=total cultivos):
 ${abxSummary}
 
-CLASIFICACIÓN AWaRe DE LOS ANTIBIÓTICOS:
-${awareMap}
+INSTRUCCIONES:
+- Usa ÚNICAMENTE los antibióticos que aparecen en el antibiograma con S>50%
+- Prefiere clasificación AWaRe: ACCESS (A) > WATCH (W) > RESERVE (R)
+- NO inventes datos, todo debe basarse en los S/R/I reales mostrados
+- Si un antibiótico tiene R>50% NO lo recomiendes como primera elección
 
-Con base en estos datos reales y las guías de práctica clínica (IDSA, ESCMID, SSA México), genera 3 esquemas de tratamiento en español. Usa SOLO antibióticos con sensibilidad >50% en el antibiograma local. Prefiere clasificación ACCESS (A) sobre WATCH (W) y RESERVE (R).${!usedMicro&&topMicros.length?` Los esquemas deben ser empíricos y cubrir los microorganismos principales listados.`:''}
+Genera UNA SOLA tabla HTML con el siguiente encabezado exacto y una fila por cada prioridad:
+Prioridad | Microorganismos que cubre | Antibiótico | Clasificación AWaRe | Dosis | Vía | Duración | Contraindicaciones | Interacciones medicamentosas | Ajuste renal (Sí/No)
 
-INSTRUCCIONES DE FORMATO: Para cada esquema genera una tabla HTML con columnas: Prioridad | Antibiótico | Clasificación AWaRe | Dosis | Vía | Duración | Ajuste renal (Sí/No) | Contraindicaciones | Interacciones. Filas: "Primera elección", "Alternativa 1", "Alternativa 2". Usa etiquetas <table><thead><tbody><tr><th><td>. Solo HTML, sin markdown.
+Las filas de Prioridad deben ser exactamente: "Primera elección", "Alternativa 1", "Alternativa 2"
 
-<h3>1. Esquema para pacientes AMBULATORIOS</h3>
-(tabla)
-<h3>2. Esquema para pacientes HOSPITALIZADOS</h3>
-(tabla)
-<h3>3. Esquema para INFECCIONES ASOCIADAS A LA ATENCIÓN EN SALUD (IAAS)</h3>
-Basado en datos cruzados de: ${hospNames}
-(tabla)
+La columna "Microorganismos que cubre" debe listar cuáles de los ${top10Micros.length} microorganismos frecuentes cubre ese antibiótico según el antibiograma.
 
-Termina con <div class="ia-nota"> con notas clínicas, interacciones relevantes y advertencias especiales.`;
+Usa solo HTML: <table><thead><tbody><tr><th><td>. Sin markdown, sin bloques de código, solo HTML puro.
+
+Después de la tabla agrega <div class="ia-nota"> con: interpretación clínica de los datos, alertas de resistencia importantes, y recomendaciones de política de antibióticos para la unidad.`;
 
   try{
     const res=await fetch(WORKER_URL,{
@@ -2467,7 +2474,7 @@ Termina con <div class="ia-nota"> con notas clínicas, interacciones relevantes 
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
-        generationConfig:{maxOutputTokens:3000,temperature:0.3}
+        generationConfig:{maxOutputTokens:3000,temperature:0.2}
       })
     });
     const data=await res.json();
@@ -2476,7 +2483,7 @@ Termina con <div class="ia-nota"> con notas clínicas, interacciones relevantes 
       html=html.replace(/```html?/gi,'').replace(/```/g,'');
       el.innerHTML=`<div class="drill-ia-content">${html}</div>`;
     }else if(data.error){
-      el.innerHTML=`<div style="color:#dc2626;font-size:.8rem;">⚠️ Error Gemini: ${data.error.message}</div>`;
+      el.innerHTML=`<div style="color:#dc2626;font-size:.8rem;">⚠️ Error: ${data.error.message||JSON.stringify(data.error)}</div>`;
     }else{
       el.innerHTML=`<div style="color:#9ca3af;font-size:.8rem;">⚠️ Sin respuesta. Intenta de nuevo.</div>`;
     }
