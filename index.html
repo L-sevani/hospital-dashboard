@@ -118,6 +118,23 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .adv-btn-apply:hover{background:#6d28d9;box-shadow:0 4px 12px rgba(124,58,237,.4);}
 .adv-btn-clear{padding:8px 16px;border-radius:8px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:.76rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
 .adv-btn-clear:hover{background:#e2e8f0;color:#374151;}
+.ia-chip{background:#f0fdf4;color:#154f39;border:1px solid #bbf7d0;border-radius:20px;padding:5px 13px;font-size:.72rem;cursor:pointer;font-weight:600;transition:all .15s;}
+.ia-chip:hover{background:#dcfce7;border-color:#86efac;}
+.drill-ia-content h3{font-size:.82rem;color:#154f39;font-weight:800;margin:18px 0 8px;padding:6px 12px;background:#f0fdf4;border-left:4px solid #154f39;border-radius:0 6px 6px 0;}
+.drill-ia-content h3:first-child{margin-top:0;}
+.drill-ia-content table{width:100%;border-collapse:collapse;font-size:.72rem;margin-bottom:14px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.drill-ia-content thead{background:linear-gradient(135deg,#154f39,#1a6347);color:#fff;}
+.drill-ia-content th{padding:8px 10px;text-align:left;font-weight:700;font-size:.68rem;letter-spacing:.03em;}
+.drill-ia-content td{padding:7px 10px;border-bottom:1px solid #f1f5f9;color:#374151;vertical-align:top;line-height:1.4;}
+.drill-ia-content tr:last-child td{border-bottom:none;}
+.drill-ia-content tr:nth-child(even) td{background:#f8fafc;}
+.drill-ia-content tr:hover td{background:#f0fdf4;}
+.drill-ia-content td:first-child{font-weight:700;color:#154f39;white-space:nowrap;}
+.ia-nota{margin-top:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;font-size:.72rem;color:#78350f;line-height:1.6;}
+.ia-thinking{display:flex;align-items:center;gap:8px;color:#6b7280;font-size:.8rem;padding:8px 0;}
+.ia-dot{width:7px;height:7px;border-radius:50%;background:#154f39;animation:iabounce .8s infinite alternate;}
+.ia-dot:nth-child(2){animation-delay:.2s;}.ia-dot:nth-child(3){animation-delay:.4s;}
+@keyframes iabounce{from{opacity:.3;transform:translateY(0)}to{opacity:1;transform:translateY(-5px)}}
 .adv-status{font-size:.72rem;color:#64748b;font-style:italic;}
 /* ── FILTER BAR ── */
 .filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 32px;background:#fff;border-bottom:1px solid #f1f5f9;}
@@ -2297,42 +2314,52 @@ function applyDrillChart(){
     const selInf=getChecked('inf');
     const selSvc=getChecked('svc');
 
-    let allRows=[], selLabel='', dimIcon='';
+    let allRows=[], selLabel='', dimIcon='', dimKey='', selItems=[], topMicrosForIA=[];
     if(selMicros.length){
       selMicros.forEach(m=>{
         const raw=sriMergedRaw(derived.micros?.data?.[m],periods);
         if(raw) allRows.push(...raw);
       });
       selLabel=selMicros.length===1?selMicros[0]:`${selMicros.length} microorganismos`;
-      dimIcon='🦠';
+      dimIcon='🦠'; dimKey='micro'; selItems=selMicros;
     } else if(selCul.length){
       selCul.forEach(sg=>{
         const raw=sriMergedRaw(derived.cultivos?.data?.[sg],periods);
         if(raw) allRows.push(...raw);
       });
       selLabel=selCul.length===1?selCul[0]:`${selCul.length} cultivos`;
-      dimIcon='🧫';
+      dimIcon='🧫'; dimKey='cul'; selItems=selCul;
+      // Top micros del cultivo seleccionado
+      selCul.forEach(sg=>{
+        (derived.micros?.subgrupos||[]).forEach(m=>{
+          const mrows=sriMergedRaw(derived.micros?.data?.[m],periods);
+          if(mrows&&mrows.length) topMicrosForIA.push(m);
+        });
+      });
+      topMicrosForIA=[...new Set(topMicrosForIA)].slice(0,6);
     } else if(selInf.length){
       selInf.forEach(sg=>{
         const raw=sriMergedRaw(derived.infecciones?.data?.[sg],periods);
         if(raw) allRows.push(...raw);
       });
       selLabel=selInf.length===1?selInf[0]:`${selInf.length} infecciones`;
-      dimIcon='🩺';
+      dimIcon='🩺'; dimKey='inf'; selItems=selInf;
+      topMicrosForIA=(derived.micros?.subgrupos||[]).slice(0,6);
     } else if(selSvc.length){
       selSvc.forEach(sg=>{
         const raw=sriMergedRaw(derived.servicios?.data?.[sg],periods);
         if(raw) allRows.push(...raw);
       });
       selLabel=selSvc.length===1?selSvc[0]:`${selSvc.length} servicios`;
-      dimIcon='🏥';
+      dimIcon='🏥'; dimKey='svc'; selItems=selSvc;
+      topMicrosForIA=(derived.micros?.subgrupos||[]).slice(0,6);
     }
 
     if(!allRows.length) return;
     const merged=calcPct(allRows);
     const rows=activeFilter==='cb'?filterRowsToCb(merged):merged;
     if(!rows.length) return;
-    datasets.push({label:getHospitalDisplayName(hid),micro:`${dimIcon} ${selLabel}`,rows,color:col.main});
+    datasets.push({label:getHospitalDisplayName(hid),micro:`${dimIcon} ${selLabel}`,rows,color:col.main,dimKey,topMicrosForIA});
   });
 
   if(!datasets.length){
@@ -2342,6 +2369,12 @@ function applyDrillChart(){
   if(status) status.textContent='';
 
   const cid='drill-multi-'+Math.random().toString(36).slice(2,6);
+  const iaId='drill-ia-'+Math.random().toString(36).slice(2,6);
+  // Recopilar top micros de todos los hospitales cuando no se seleccionó micro
+  const usedMicro=datasets.some(d=>d.dimKey==='micro');
+  const allTopMicros=usedMicro?[]:
+    [...new Set(datasets.flatMap(d=>d.topMicrosForIA||[]))].slice(0,8);
+
   result.innerHTML=`
     <div style="background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
       <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Resultado · ${periodLabel}</div>
@@ -2353,9 +2386,106 @@ function applyDrillChart(){
         </div>`).join('')}
       </div>
       <div id="${cid}"></div>
+    </div>
+    <!-- Recomendación IA -->
+    <div id="${iaId}" style="margin-top:16px;background:linear-gradient(135deg,#f0fdf4,#f8fafc);border-radius:14px;border:1.5px solid #bbf7d0;padding:20px 22px;box-shadow:0 2px 8px rgba(21,79,57,.07);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #d1fae5;">
+        <span style="background:linear-gradient(135deg,#154f39,#1a6347);color:#fff;border-radius:10px;padding:5px 12px;font-size:.72rem;font-weight:700;">🤖 IA Epidemiológica</span>
+        <span style="font-size:.7rem;color:#6b7280;">Esquemas de tratamiento generados con Gemini · basados en los datos reales del antibiograma</span>
+      </div>
+      <div id="${iaId}-body">
+        <div class="ia-thinking" style="padding:10px 0;">
+          <div class="ia-dot"></div><div class="ia-dot"></div><div class="ia-dot"></div>
+          <span style="margin-left:8px;font-size:.8rem;color:#374151;">Generando esquemas de tratamiento con base en el antibiograma local...</span>
+        </div>
+      </div>
     </div>`;
 
   buildSRIMultiChart(datasets, cid);
+  drillGenerateTreatment(datasets, iaId+'-body', allTopMicros);
+}
+
+async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
+  const GEMINI_KEY='AQ.Ab8RN6KyzKeHpsDVjNi1h13wnOeqrOLIOybwb8YROikstLga1g';
+  const el=document.getElementById(targetId); if(!el) return;
+
+  const hospNames=datasets.map(d=>d.label).join(', ');
+  const dimLabel=datasets[0]?.micro||'';
+  const usedMicro=datasets.some(d=>d.dimKey==='micro');
+
+  // Sección de microorganismos para el prompt
+  const microsSection= usedMicro
+    ? `MICROORGANISMOS ANALIZADOS: ${datasets.map(d=>d.micro).join(', ')}`
+    : topMicros.length
+      ? `MICROORGANISMOS PRINCIPALES AISLADOS EN ESTA SELECCIÓN (usar como base para los esquemas):
+${topMicros.map((m,i)=>`  ${i+1}. ${m}`).join('\n')}
+Los esquemas deben cubrir tratamiento empírico dirigido a estos microorganismos.`
+      : '';
+
+  const abxSummary=datasets.map(d=>{
+    const sensibles=d.rows.filter(r=>(r.pS||0)>0.5).sort((a,b)=>(b.pS||0)-(a.pS||0))
+      .map(r=>`${r.a} (${lblHtml(r).replace(/<[^>]+>/g,'')} S:${Math.round((r.pS||0)*100)}% R:${Math.round((r.pR||0)*100)}%)`).join(', ');
+    const resistentes=d.rows.filter(r=>(r.pR||0)>0.5).sort((a,b)=>(b.pR||0)-(a.pR||0))
+      .map(r=>`${r.a} (R:${Math.round((r.pR||0)*100)}%)`).join(', ');
+    return `${d.label} — Sensibles >50%: ${sensibles||'ninguno'}. Resistentes >50%: ${resistentes||'ninguno'}.`;
+  }).join('\n');
+
+  const allAbx=[...new Set(datasets.flatMap(d=>d.rows.map(r=>r.a)))];
+  const awareMap=allAbx.map(a=>{
+    const meta=ABX_META[a]||CB_ABX_META[a];
+    return `${a}: ${meta?meta.c:'Sin clasificar'}`;
+  }).join(', ');
+
+  const prompt=`Eres un médico infectólogo y epidemiólogo clínico experto en el sistema de salud mexicano (IMSS). Tienes acceso a los datos reales del antibiograma local de las unidades: ${hospNames}.
+
+DIMENSIÓN ANALIZADA: ${dimLabel}
+${microsSection}
+
+DATOS DEL ANTIBIOGRAMA LOCAL (sensibilidad/resistencia real):
+${abxSummary}
+
+CLASIFICACIÓN AWaRe DE LOS ANTIBIÓTICOS:
+${awareMap}
+
+Con base en estos datos reales y las guías de práctica clínica (IDSA, ESCMID, SSA México), genera 3 esquemas de tratamiento en español. Usa SOLO antibióticos con sensibilidad >50% en el antibiograma local. Prefiere clasificación ACCESS (A) sobre WATCH (W) y RESERVE (R).${!usedMicro&&topMicros.length?` Los esquemas deben ser empíricos y cubrir los microorganismos principales listados.`:''}
+
+INSTRUCCIONES DE FORMATO: Para cada esquema genera una tabla HTML con columnas: Prioridad | Antibiótico | Clasificación AWaRe | Dosis | Vía | Duración | Ajuste renal (Sí/No) | Contraindicaciones | Interacciones. Filas: "Primera elección", "Alternativa 1", "Alternativa 2". Usa etiquetas <table><thead><tbody><tr><th><td>. Solo HTML, sin markdown.
+
+<h3>1. Esquema para pacientes AMBULATORIOS</h3>
+(tabla)
+<h3>2. Esquema para pacientes HOSPITALIZADOS</h3>
+(tabla)
+<h3>3. Esquema para INFECCIONES ASOCIADAS A LA ATENCIÓN EN SALUD (IAAS)</h3>
+Basado en datos cruzados de: ${hospNames}
+(tabla)
+
+Termina con <div class="ia-nota"> con notas clínicas, interacciones relevantes y advertencias especiales.`;
+
+  try{
+    const res=await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          contents:[{parts:[{text:prompt}]}],
+          generationConfig:{maxOutputTokens:3000,temperature:0.3}
+        })
+      }
+    );
+    const data=await res.json();
+    if(data.candidates&&data.candidates[0]?.content?.parts[0]?.text){
+      let html=data.candidates[0].content.parts[0].text;
+      html=html.replace(/```html?/gi,'').replace(/```/g,'');
+      el.innerHTML=`<div class="drill-ia-content">${html}</div>`;
+    }else if(data.error){
+      el.innerHTML=`<div style="color:#dc2626;font-size:.8rem;">⚠️ Error Gemini: ${data.error.message}</div>`;
+    }else{
+      el.innerHTML=`<div style="color:#9ca3af;font-size:.8rem;">⚠️ Sin respuesta. Intenta de nuevo.</div>`;
+    }
+  }catch(e){
+    el.innerHTML=`<div style="color:#dc2626;font-size:.8rem;">⚠️ Error de conexión: ${e.message}</div>`;
+  }
 }
 
 function clearDrill(){
@@ -3369,6 +3499,8 @@ function downloadAwareExcel(){
   a.download=`ClasificacionAWaRe_OMS_${new Date().toISOString().slice(0,10)}.xlsx`;
   a.click(); URL.revokeObjectURL(a.href);
 }
+
+
 initDashboard();
 </script>
 
