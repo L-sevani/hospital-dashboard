@@ -2406,7 +2406,7 @@ function applyDrillChart(){
 }
 
 async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
-  const WORKER_URL='https://gemini-proxy.dubskarlet.workers.dev';
+  const WORKER_URL='https://groq-proxy.dubskarlet.workers.dev';
   const el=document.getElementById(targetId); if(!el) return;
 
   const hospNames=datasets.map(d=>d.label).join(', ');
