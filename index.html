@@ -2406,7 +2406,7 @@ function applyDrillChart(){
 }
 
 async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
-  const GEMINI_KEY='AQ.Ab8RN6KLu8qNvIhwHiu_xPnA8Cee3wgRf2o62O8dO-WATxMwWw';
+  const WORKER_URL='https://gemini-proxy.dubskarlet.workers.dev';
   const el=document.getElementById(targetId); if(!el) return;
 
   const hospNames=datasets.map(d=>d.label).join(', ');
@@ -2462,17 +2462,14 @@ Basado en datos cruzados de: ${hospNames}
 Termina con <div class="ia-nota"> con notas clínicas, interacciones relevantes y advertencias especiales.`;
 
   try{
-    const res=await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-      {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          contents:[{parts:[{text:prompt}]}],
-          generationConfig:{maxOutputTokens:3000,temperature:0.3}
-        })
-      }
-    );
+    const res=await fetch(WORKER_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{maxOutputTokens:3000,temperature:0.3}
+      })
+    });
     const data=await res.json();
     if(data.candidates&&data.candidates[0]?.content?.parts[0]?.text){
       let html=data.candidates[0].content.parts[0].text;
