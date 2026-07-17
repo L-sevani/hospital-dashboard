@@ -2434,39 +2434,24 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
     ? datasets.map(d=>d.micro.replace(/^[^\s]+\s/,'')).slice(0,10)
     : topMicros.slice(0,10);
 
-  // Resumen del antibiograma real por hospital
+  // Resumen compacto del antibiograma — solo los relevantes con S>40%, máx 12 por hospital
   const abxSummary=datasets.map(d=>{
-    const top=d.rows.filter(r=>r.t>=3).sort((a,b)=>(b.t||0)-(a.t||0)).slice(0,15)
-      .map(r=>`${r.a}[${ABX_META[r.a]?.c||CB_ABX_META[r.a]?.c||'?'}] S:${Math.round((r.pS||0)*100)}% R:${Math.round((r.pR||0)*100)}% I:${Math.round((r.pI||0)*100)}% n=${r.t}`).join(', ');
-    return `${d.label}: ${top}`;
+    const rows=d.rows.filter(r=>r.t>=3).sort((a,b)=>(b.pS||0)-(a.pS||0)).slice(0,12)
+      .map(r=>`${r.a}(${ABX_META[r.a]?.c||CB_ABX_META[r.a]?.c||'?'}) S:${Math.round((r.pS||0)*100)} R:${Math.round((r.pR||0)*100)}`).join('; ');
+    return `${d.label}: ${rows}`;
   }).join('\n');
 
-  const prompt=`Eres un infectólogo y epidemiólogo clínico del IMSS México. Analiza estos datos REALES del antibiograma local de: ${hospNames}.
+  const prompt=`Infectólogo IMSS México. Datos reales antibiograma de ${hospNames}.
+Dimensión: ${dimLabel}
+Top microorganismos (${top10Micros.length}): ${top10Micros.join(', ')}
+Antibiograma (S%/R% reales): ${abxSummary}
 
-DIMENSIÓN ANALIZADA: ${dimLabel}
-
-MICROORGANISMOS MÁS FRECUENTES (máximo 10, ordenados por frecuencia):
-${top10Micros.map((m,i)=>`${i+1}. ${m}`).join('\n')}
-
-ANTIBIOGRAMA LOCAL REAL (S=Sensible, R=Resistente, I=Intermedio, n=total cultivos):
-${abxSummary}
-
-INSTRUCCIONES:
-- Usa ÚNICAMENTE los antibióticos que aparecen en el antibiograma con S>50%
-- Prefiere clasificación AWaRe: ACCESS (A) > WATCH (W) > RESERVE (R)
-- NO inventes datos, todo debe basarse en los S/R/I reales mostrados
-- Si un antibiótico tiene R>50% NO lo recomiendes como primera elección
-
-Genera UNA SOLA tabla HTML con el siguiente encabezado exacto y una fila por cada prioridad:
-Prioridad | Microorganismos que cubre | Antibiótico | Clasificación AWaRe | Dosis | Vía | Duración | Contraindicaciones | Interacciones medicamentosas | Ajuste renal (Sí/No)
-
-Las filas de Prioridad deben ser exactamente: "Primera elección", "Alternativa 1", "Alternativa 2"
-
-La columna "Microorganismos que cubre" debe listar cuáles de los ${top10Micros.length} microorganismos frecuentes cubre ese antibiótico según el antibiograma.
-
-Usa solo HTML: <table><thead><tbody><tr><th><td>. Sin markdown, sin bloques de código, solo HTML puro.
-
-Después de la tabla agrega <div class="ia-nota"> con: interpretación clínica de los datos, alertas de resistencia importantes, y recomendaciones de política de antibióticos para la unidad.`;
+Genera tabla HTML UNA SOLA con columnas exactas:
+Prioridad|Microorganismos que cubre|Antibiótico|AWaRe|Dosis|Vía|Duración|Contraindicaciones|Interacciones|Ajuste renal
+Filas: Primera elección, Alternativa 1, Alternativa 2.
+Reglas: solo antibióticos con S>50%, prefiere ACCESS>WATCH>RESERVE, no inventes datos.
+Solo HTML puro (<table><thead><tbody><tr><th><td>), sin markdown.
+Al final: <div class="ia-nota"> con alertas de resistencia y recomendación clínica breve.`;
 
   try{
     const res=await fetch(WORKER_URL,{
@@ -2474,7 +2459,7 @@ Después de la tabla agrega <div class="ia-nota"> con: interpretación clínica 
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
-        generationConfig:{maxOutputTokens:3000,temperature:0.2}
+        generationConfig:{maxOutputTokens:1500,temperature:0.2}
       })
     });
     const data=await res.json();
