@@ -1958,7 +1958,7 @@ function renderAll(){
   if(activeSection==='avanzado') return;
   if(activeSection==='comparar'){renderComparar();return;}
   if(activeSection==='aware') return;
-  document.getElementById('hperiodo').textContent=getHospitalDisplayName(activeHospital)+' · IMSS · '+fmtP(p1)+(p2?' vs '+fmtP(p2):'');
+  document.getElementById('hperiodo').textContent='IMSS · '+fmtP(p1)+(p2?' vs '+fmtP(p2):'');
   const legSri=document.getElementById('leg-sri');
   if(legSri) legSri.style.display='none'; // siempre oculto
   if(activeSection==='frecuencias'){renderFreq();return;}
@@ -2441,14 +2441,14 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
     return `${d.label}: ${rows}`;
   }).join('\n');
 
-  const prompt=`Infectólogo IMSS México. Datos reales del antibiograma (${dimLabel}) de ${hospNames}.
-Antibiograma (S%/R%): ${abxSummary}
+  const prompt=`Eres infectólogo del IMSS México. Tienes estos datos REALES del antibiograma (${dimLabel}) de ${hospNames}:
+${abxSummary}
 
-Genera 3 tablas HTML basadas ÚNICAMENTE en estos datos. Cada tabla con <h3> y columnas: Prioridad|Antibiótico|AWaRe|Dosis|Vía|Duración|Contraindicaciones|Interacciones|Ajuste renal. Filas: Primera elección, Alternativa 1, Alternativa 2.
-<h3>1. Ambulatorio</h3>(tabla)
-<h3>2. Hospitalizado</h3>(tabla)
-<h3>3. IAAS</h3>(tabla)
-Reglas: S>50% obligatorio, ACCESS>WATCH>RESERVE, no inventes nada que no esté en el antibiograma. Solo HTML puro sin markdown. Al final <div class="ia-nota"> breve con alertas clave de resistencia.`;
+Genera 3 tablas HTML. OBLIGATORIO llenar TODOS los campos con información clínica real — PROHIBIDO usar "-" o dejar vacío. Cada tabla con <h3> y columnas: Prioridad|Antibiótico|AWaRe|Dosis|Vía|Duración|Contraindicaciones|Interacciones|Ajuste renal. Filas: Primera elección, Alternativa 1, Alternativa 2.
+<h3>1. Ambulatorio</h3>
+<h3>2. Hospitalizado</h3>
+<h3>3. IAAS</h3>
+Reglas estrictas: solo antibióticos con S>50% en el antibiograma, ACCESS>WATCH>RESERVE. Dosis reales (ej: 500mg c/8h), vía real (oral/IV/IM), duración real (ej: 7-10 días), contraindicaciones reales, interacciones reales, ajuste renal Sí/No con criterio. Solo HTML puro sin markdown. Al final <div class="ia-nota"> con alertas de resistencia del antibiograma.`;
 
   try{
     const res=await fetch(WORKER_URL,{
