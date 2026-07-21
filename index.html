@@ -2434,22 +2434,21 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
     ? datasets.map(d=>d.micro.replace(/^[^\s]+\s/,'')).slice(0,10)
     : topMicros.slice(0,10);
 
-  // Resumen compacto del antibiograma — solo los relevantes con S>40%, máx 12 por hospital
+  // Resumen compacto del antibiograma — solo lo que muestra la gráfica
   const abxSummary=datasets.map(d=>{
     const rows=d.rows.filter(r=>r.t>=3).sort((a,b)=>(b.pS||0)-(a.pS||0)).slice(0,12)
       .map(r=>`${r.a}(${ABX_META[r.a]?.c||CB_ABX_META[r.a]?.c||'?'}) S:${Math.round((r.pS||0)*100)} R:${Math.round((r.pR||0)*100)}`).join('; ');
     return `${d.label}: ${rows}`;
   }).join('\n');
 
-  const prompt=`Infectólogo IMSS México. Datos reales antibiograma de ${hospNames}.
-Top microorganismos: ${top10Micros.join(', ')}
+  const prompt=`Infectólogo IMSS México. Datos reales del antibiograma (${dimLabel}) de ${hospNames}.
 Antibiograma (S%/R%): ${abxSummary}
 
-Genera 3 tablas HTML, una por esquema. Cada tabla tiene encabezado <h3> y columnas: Prioridad|Microorg.que cubre|Antibiótico|AWaRe|Dosis|Vía|Duración|Contraindicaciones|Interacciones|Ajuste renal. Filas: Primera elección, Alternativa 1, Alternativa 2.
+Genera 3 tablas HTML basadas ÚNICAMENTE en estos datos. Cada tabla con <h3> y columnas: Prioridad|Antibiótico|AWaRe|Dosis|Vía|Duración|Contraindicaciones|Interacciones|Ajuste renal. Filas: Primera elección, Alternativa 1, Alternativa 2.
 <h3>1. Ambulatorio</h3>(tabla)
 <h3>2. Hospitalizado</h3>(tabla)
 <h3>3. IAAS</h3>(tabla)
-Reglas: S>50% obligatorio, ACCESS>WATCH>RESERVE, no inventes. Solo HTML puro sin markdown. Al final <div class="ia-nota"> breve con alertas clave.`;
+Reglas: S>50% obligatorio, ACCESS>WATCH>RESERVE, no inventes nada que no esté en el antibiograma. Solo HTML puro sin markdown. Al final <div class="ia-nota"> breve con alertas clave de resistencia.`;
 
   try{
     const res=await fetch(WORKER_URL,{
