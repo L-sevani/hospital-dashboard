@@ -2453,18 +2453,19 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
   const prompt=`Infectólogo IMSS México. Antibiograma REAL de ${hospNames} para ${dimLabel}:
 ${abxSummary}
 
-REGLAS ESTRICTAS — INCUMPLIRLAS ES UN ERROR GRAVE:
-1. SOLO recomienda antibióticos con S≥50% en el antibiograma. Si S<50% está PROHIBIDO recomendarlo.
-2. Prioridad AWaRe: ACCESS(A) primero, luego WATCH(W), RESERVE(R) solo como último recurso.
-3. Primera elección: el antibiótico ACCESS con mayor S%. Si no hay ACCESS con S≥50%, usa WATCH con mayor S%.
-4. Todos los campos OBLIGATORIOS con datos clínicos reales. PROHIBIDO usar "-" o dejar vacío.
-5. Solo HTML puro, sin markdown ni bloques de código.
+REGLAS ESTRICTAS:
+1. SOLO antibióticos con S≥50% en el antibiograma anterior. Si no aparece o S<50%: PROHIBIDO.
+2. AWaRe obligatorio: escribe "Access", "Watch" o "Reserve" (nunca abreviaturas).
+3. Orden ESTRICTO de preferencia: Access primero siempre. Watch solo si no hay Access con S≥50%. Reserve únicamente como último recurso en IAAS.
+4. Primera elección SIEMPRE debe ser el antibiótico Access con mayor S%. Si hay varios Access con S≥50% úsalos en las alternativas.
+5. Todos los campos con datos clínicos reales. PROHIBIDO "-" o vacío.
+6. Solo HTML puro, sin markdown.
 
-Genera exactamente 3 tablas con <h3> y columnas: Prioridad|Antibiótico|AWaRe|Dosis|Vía|Duración|Contraindicaciones|Interacciones|Ajuste renal(Sí/No). Filas: Primera elección, Alternativa 1, Alternativa 2.
+3 tablas con <h3> y columnas: Prioridad|Antibiótico|AWaRe|Dosis|Vía|Duración|Contraindicaciones|Interacciones|Ajuste renal(Sí/No). Filas: Primera elección, Alternativa 1, Alternativa 2.
 <h3>1. Ambulatorio</h3>
 <h3>2. Hospitalizado</h3>
 <h3>3. IAAS</h3>
-Al final <div class="ia-nota"> con los antibióticos del antibiograma que tienen R>50% como alerta de resistencia.`;
+Al final <div class="ia-nota"> listando antibióticos del antibiograma con R>50% como alerta, y cuáles Access tienen mejor sensibilidad.`;
 
   try{
     const res=await fetch(WORKER_URL,{
@@ -2479,6 +2480,10 @@ Al final <div class="ia-nota"> con los antibióticos del antibiograma que tienen
     if(data.candidates&&data.candidates[0]?.content?.parts[0]?.text){
       let html=data.candidates[0].content.parts[0].text;
       html=html.replace(/```html?/gi,'').replace(/```/g,'');
+      // Colorear Access/Watch/Reserve en las celdas
+      html=html.replace(/\bAccess\b/g,'<span style="background:#dcfce7;color:#166534;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Access</span>');
+      html=html.replace(/\bWatch\b/g,'<span style="background:#fef9c3;color:#854d0e;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Watch</span>');
+      html=html.replace(/\bReserve\b/g,'<span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Reserve</span>');
       el.innerHTML=`<div class="drill-ia-content">${html}</div>`;
     }else if(data.error){
       el.innerHTML=`<div style="color:#dc2626;font-size:.8rem;">⚠️ Error: ${data.error.message||JSON.stringify(data.error)}</div>`;
