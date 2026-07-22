@@ -2443,21 +2443,26 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
     ? datasets.map(d=>d.micro.replace(/^[^\s]+\s/,'')).slice(0,10)
     : topMicros.slice(0,10);
 
-  // Resumen compacto del antibiograma — solo lo que muestra la gráfica
+  // Resumen compacto — incluye clasificación AWaRe REAL del dashboard
+  const getAware=(name)=>{
+    const meta=ABX_META[name]||CB_ABX_META[name];
+    if(!meta||!meta.c||meta.c==='Sin clasificar') return 'Sin clasificar';
+    return meta.c==='A'?'Access':meta.c==='W'?'Watch':meta.c==='R'?'Reserve':'Sin clasificar';
+  };
   const abxSummary=datasets.map(d=>{
     const rows=d.rows.filter(r=>r.t>=3).sort((a,b)=>(b.pS||0)-(a.pS||0)).slice(0,12)
-      .map(r=>`${r.a}(${ABX_META[r.a]?.c||CB_ABX_META[r.a]?.c||'?'}) S:${Math.round((r.pS||0)*100)} R:${Math.round((r.pR||0)*100)}`).join('; ');
+      .map(r=>`${r.a}[AWaRe:${getAware(r.a)}] S:${Math.round((r.pS||0)*100)}% R:${Math.round((r.pR||0)*100)}%`).join('; ');
     return `${d.label}: ${rows}`;
   }).join('\n');
 
   const prompt=`Infectólogo IMSS México. Antibiograma REAL de ${hospNames} para ${dimLabel}:
 ${abxSummary}
 
-REGLAS ESTRICTAS:
-1. SOLO antibióticos con S≥50% en el antibiograma anterior. Si no aparece o S<50%: PROHIBIDO.
-2. AWaRe obligatorio: escribe "Access", "Watch" o "Reserve" (nunca abreviaturas).
-3. Orden ESTRICTO de preferencia: Access primero siempre. Watch solo si no hay Access con S≥50%. Reserve únicamente como último recurso en IAAS.
-4. Primera elección SIEMPRE debe ser el antibiótico Access con mayor S%. Si hay varios Access con S≥50% úsalos en las alternativas.
+REGLAS ESTRICTAS — CADA ANTIBIÓTICO YA TIENE SU CLASIFICACIÓN AWaRe ENTRE CORCHETES, ÚSALA TAL CUAL:
+1. La clasificación AWaRe de cada antibiótico está indicada como [AWaRe:Access], [AWaRe:Watch] o [AWaRe:Reserve]. USA EXACTAMENTE ESA, no la cambies.
+2. SOLO antibióticos con S≥50%. Si S<50%: PROHIBIDO recomendarlo.
+3. Orden de preferencia: Access primero, Watch si no hay Access con S≥50%, Reserve solo en IAAS como último recurso.
+4. Primera elección: el Access con mayor S%. Si hay varios Access con S≥50% úsalos en alternativas.
 5. Todos los campos con datos clínicos reales. PROHIBIDO "-" o vacío.
 6. Solo HTML puro, sin markdown.
 
@@ -2465,7 +2470,7 @@ REGLAS ESTRICTAS:
 <h3>1. Ambulatorio</h3>
 <h3>2. Hospitalizado</h3>
 <h3>3. IAAS</h3>
-Al final <div class="ia-nota"> listando antibióticos del antibiograma con R>50% como alerta, y cuáles Access tienen mejor sensibilidad.`;
+Al final <div class="ia-nota"> con antibióticos del antibiograma que tienen R>50% y los Access con mejor sensibilidad.`;
 
   try{
     const res=await fetch(WORKER_URL,{
