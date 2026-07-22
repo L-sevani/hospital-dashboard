@@ -120,16 +120,25 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .adv-btn-clear:hover{background:#e2e8f0;color:#374151;}
 .ia-chip{background:#f0fdf4;color:#154f39;border:1px solid #bbf7d0;border-radius:20px;padding:5px 13px;font-size:.72rem;cursor:pointer;font-weight:600;transition:all .15s;}
 .ia-chip:hover{background:#dcfce7;border-color:#86efac;}
-.drill-ia-content h3{font-size:.82rem;color:#154f39;font-weight:800;margin:18px 0 8px;padding:6px 12px;background:#f0fdf4;border-left:4px solid #154f39;border-radius:0 6px 6px 0;}
+.drill-ia-content h3{font-size:.82rem;color:#154f39;font-weight:800;margin:18px 0 0;padding:6px 12px;background:#f0fdf4;border-left:4px solid #154f39;border-radius:0 6px 6px 0;}
 .drill-ia-content h3:first-child{margin-top:0;}
-.drill-ia-content table{width:100%;border-collapse:collapse;font-size:.72rem;margin-bottom:14px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.drill-ia-content table{width:100%;border-collapse:collapse;font-size:.72rem;margin:8px 0 14px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);table-layout:fixed;}
 .drill-ia-content thead{background:linear-gradient(135deg,#154f39,#1a6347);color:#fff;}
-.drill-ia-content th{padding:8px 10px;text-align:left;font-weight:700;font-size:.68rem;letter-spacing:.03em;}
-.drill-ia-content td{padding:7px 10px;border-bottom:1px solid #f1f5f9;color:#374151;vertical-align:top;line-height:1.4;}
+.drill-ia-content th{padding:8px 8px;text-align:left;font-weight:700;font-size:.67rem;letter-spacing:.02em;overflow:hidden;word-wrap:break-word;}
+.drill-ia-content th:nth-child(1){width:11%;}
+.drill-ia-content th:nth-child(2){width:11%;}
+.drill-ia-content th:nth-child(3){width:7%;}
+.drill-ia-content th:nth-child(4){width:10%;}
+.drill-ia-content th:nth-child(5){width:6%;}
+.drill-ia-content th:nth-child(6){width:8%;}
+.drill-ia-content th:nth-child(7){width:20%;}
+.drill-ia-content th:nth-child(8){width:20%;}
+.drill-ia-content th:nth-child(9){width:7%;}
+.drill-ia-content td{padding:7px 8px;border-bottom:1px solid #f1f5f9;color:#374151;vertical-align:top;line-height:1.4;word-wrap:break-word;overflow-wrap:break-word;}
 .drill-ia-content tr:last-child td{border-bottom:none;}
 .drill-ia-content tr:nth-child(even) td{background:#f8fafc;}
 .drill-ia-content tr:hover td{background:#f0fdf4;}
-.drill-ia-content td:first-child{font-weight:700;color:#154f39;white-space:nowrap;}
+.drill-ia-content td:first-child{font-weight:700;color:#154f39;}
 .ia-nota{margin-top:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;font-size:.72rem;color:#78350f;line-height:1.6;}
 .ia-thinking{display:flex;align-items:center;gap:8px;color:#6b7280;font-size:.8rem;padding:8px 0;}
 .ia-dot{width:7px;height:7px;border-radius:50%;background:#154f39;animation:iabounce .8s infinite alternate;}
@@ -2441,14 +2450,21 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
     return `${d.label}: ${rows}`;
   }).join('\n');
 
-  const prompt=`Eres infectólogo del IMSS México. Tienes estos datos REALES del antibiograma (${dimLabel}) de ${hospNames}:
+  const prompt=`Infectólogo IMSS México. Antibiograma REAL de ${hospNames} para ${dimLabel}:
 ${abxSummary}
 
-Genera 3 tablas HTML. OBLIGATORIO llenar TODOS los campos con información clínica real — PROHIBIDO usar "-" o dejar vacío. Cada tabla con <h3> y columnas: Prioridad|Antibiótico|AWaRe|Dosis|Vía|Duración|Contraindicaciones|Interacciones|Ajuste renal. Filas: Primera elección, Alternativa 1, Alternativa 2.
+REGLAS ESTRICTAS — INCUMPLIRLAS ES UN ERROR GRAVE:
+1. SOLO recomienda antibióticos con S≥50% en el antibiograma. Si S<50% está PROHIBIDO recomendarlo.
+2. Prioridad AWaRe: ACCESS(A) primero, luego WATCH(W), RESERVE(R) solo como último recurso.
+3. Primera elección: el antibiótico ACCESS con mayor S%. Si no hay ACCESS con S≥50%, usa WATCH con mayor S%.
+4. Todos los campos OBLIGATORIOS con datos clínicos reales. PROHIBIDO usar "-" o dejar vacío.
+5. Solo HTML puro, sin markdown ni bloques de código.
+
+Genera exactamente 3 tablas con <h3> y columnas: Prioridad|Antibiótico|AWaRe|Dosis|Vía|Duración|Contraindicaciones|Interacciones|Ajuste renal(Sí/No). Filas: Primera elección, Alternativa 1, Alternativa 2.
 <h3>1. Ambulatorio</h3>
 <h3>2. Hospitalizado</h3>
 <h3>3. IAAS</h3>
-Reglas estrictas: solo antibióticos con S>50% en el antibiograma, ACCESS>WATCH>RESERVE. Dosis reales (ej: 500mg c/8h), vía real (oral/IV/IM), duración real (ej: 7-10 días), contraindicaciones reales, interacciones reales, ajuste renal Sí/No con criterio. Solo HTML puro sin markdown. Al final <div class="ia-nota"> con alertas de resistencia del antibiograma.`;
+Al final <div class="ia-nota"> con los antibióticos del antibiograma que tienen R>50% como alerta de resistencia.`;
 
   try{
     const res=await fetch(WORKER_URL,{
