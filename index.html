@@ -756,13 +756,18 @@ function _deriveFromHospitalV2(hd){
 }
 
 function normalizeLoadedRAW(input){
-  // Remap clave vieja por si acaso queda algún JSON anterior
+  // Remap claves del JSON al nombre canónico AMBULATORIOS TLAXCALA
+  const remapKey=h=>(h==='DELEGACION TLAXCALA'||h==='AMBULATORIOS')?'AMBULATORIOS TLAXCALA':h;
   if(input&&input.hospitales){
-    input.hospitales=input.hospitales.map(h=>h==='DELEGACION TLAXCALA'?'AMBULATORIOS TLAXCALA':h);
+    input.hospitales=input.hospitales.map(remapKey);
   }
-  if(input&&input.data&&input.data['DELEGACION TLAXCALA']){
-    input.data['AMBULATORIOS TLAXCALA']=input.data['DELEGACION TLAXCALA'];
-    delete input.data['DELEGACION TLAXCALA'];
+  if(input&&input.data){
+    ['DELEGACION TLAXCALA','AMBULATORIOS'].forEach(old=>{
+      if(input.data[old]){
+        input.data['AMBULATORIOS TLAXCALA']=input.data[old];
+        delete input.data[old];
+      }
+    });
   }
   if(input&&input.hospital){
     input.años=input.años||[...new Set((input.periodos||[]).map(p=>String(p).split('-')[0]))];
@@ -776,7 +781,7 @@ function normalizeLoadedRAW(input){
     norm.freq=norm.freq||{};
     norm._derivedByHospital={};
     Object.entries(norm.data||{}).forEach(([h,hd])=>{
-      const key=h==='DELEGACION TLAXCALA'?'AMBULATORIOS TLAXCALA':h;
+      const key=(h==='DELEGACION TLAXCALA'||h==='AMBULATORIOS')?'AMBULATORIOS TLAXCALA':h;
       if(hd&&hd.hospital){
         hd.años=hd.años||[...new Set((hd.periodos||[]).map(p=>String(p).split('-')[0]))];
         hd.freq=hd.freq||{};
@@ -1725,6 +1730,7 @@ function getHospitalDisplayName(h){
     'HGSMF 8 TLAXCALA':      '🏥 HGSMF No. 8 · Tlaxcala',
     'AMBULATORIOS TLAXCALA': '📋 Ambulatorios · NO IAAS',
     'DELEGACION TLAXCALA':   '📋 Ambulatorios · NO IAAS',
+    'AMBULATORIOS':          '📋 Ambulatorios · NO IAAS',
   };
   return map[h] || HOSPITALES_NOMBRES[h] || h || 'HGZ No. 1 Tlaxcala';
 }
@@ -3057,13 +3063,13 @@ async function initDashboard(){
 
   activeHospital = (RAW.hospitales && RAW.hospitales[0]) || activeHospital;
   // Remap por si acaso la clave vieja llegó al array
-  if(activeHospital==='DELEGACION TLAXCALA') activeHospital='AMBULATORIOS TLAXCALA';
+  if(activeHospital==='DELEGACION TLAXCALA'||activeHospital==='AMBULATORIOS') activeHospital='AMBULATORIOS TLAXCALA';
   const sel = document.getElementById('hosp-sel');
   if (sel && RAW.hospitales && RAW.hospitales.length) {
     sel.innerHTML = '';
     RAW.hospitales.forEach(h => {
       // Normalizar clave vieja
-      const key = h==='DELEGACION TLAXCALA'?'AMBULATORIOS TLAXCALA':h;
+      const key=(h==='DELEGACION TLAXCALA'||h==='AMBULATORIOS')?'AMBULATORIOS TLAXCALA':h;
       const opt = document.createElement('option');
       opt.value = key;
       opt.textContent = getHospitalDisplayName(key);
