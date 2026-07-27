@@ -756,7 +756,7 @@ function _deriveFromHospitalV2(hd){
 }
 
 function normalizeLoadedRAW(input){
-  // Remapear clave vieja del JSON a nueva
+  // Remap clave vieja por si acaso queda algún JSON anterior
   if(input&&input.hospitales){
     input.hospitales=input.hospitales.map(h=>h==='DELEGACION TLAXCALA'?'AMBULATORIOS TLAXCALA':h);
   }
