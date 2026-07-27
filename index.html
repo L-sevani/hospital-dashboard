@@ -357,7 +357,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 <div class="sections">
   <div class="section active" id="sec-hospital">
     <div class="ccard">
-      <h2>Antimicrobianos de todo el hospital</h2>
+      <h2>Perfil de sensibilidad y resistencia en todo el hospital</h2>
       <div id="chart-hospital"></div>
     </div>
     <div class="ccard" id="hospital-text-box" style="font-size:.82rem;line-height:1.75;color:#374151;border-left:4px solid #2563eb;padding-left:18px;"></div>
@@ -1661,7 +1661,8 @@ function renderSg(section){
     return;
   }
 
-  bodyEl.innerHTML=selectedSgs.map((sg,idx)=>`<div class="ccard"><h2>${sgName(sg)}</h2><div id="csg-${section}-${idx}"></div><div id="tsg-${section}-${idx}" style="margin-top:14px;font-size:.82rem;line-height:1.75;color:#374151;border-left:4px solid #2563eb;padding-left:18px;"></div></div>`).join('');
+  const sectionLabel={servicio:'servicio',infeccion:'tipo de infección',cultivo:'cultivo',micro:'microorganismo'}[section]||section;
+  bodyEl.innerHTML=selectedSgs.map((sg,idx)=>`<div class="ccard"><h2>Perfil de sensibilidad y resistencia en ${sectionLabel}: ${sgName(sg)}</h2><div id="csg-${section}-${idx}"></div><div id="tsg-${section}-${idx}" style="margin-top:14px;font-size:.82rem;line-height:1.75;color:#374151;border-left:4px solid #2563eb;padding-left:18px;"></div></div>`).join('');
   selectedSgs.forEach((sg,idx)=>{
     const cid=`csg-${section}-${idx}`;
     const tid=`tsg-${section}-${idx}`;
@@ -2305,8 +2306,14 @@ function applyDrillChart(){
   const status=document.getElementById('drill-status');
   if(!result) return;
   const hospIds=getAdvHospitals();
+  const selectedYears=(()=>{
+    const box=document.getElementById('drill-year-checks'); if(!box) return ['Todo el período'];
+    const checked=[...box.querySelectorAll('input:checked')].map(i=>i.value);
+    if(!checked.length||checked.includes('TODOS')) return ['Todo el período'];
+    return checked;
+  })();
+  const periodLabel=selectedYears.join(', ');
   const periods=getDrillMainPeriods();
-  const periodLabel=periods.includes('TODOS')?'Todo el período':periods.join(', ');
 
   const datasets=[];
   hospIds.forEach((hid,i)=>{
@@ -2386,7 +2393,8 @@ function applyDrillChart(){
 
   result.innerHTML=`
     <div style="background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
-      <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Resultado · ${periodLabel}</div>
+      <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Resultado · ${periodLabel}</div>
+      <h2 style="font-family:'DM Serif Display',serif;font-size:1rem;color:#1a1a2e;margin:0 0 12px;">Perfil de sensibilidad y resistencia en microorganismos asociados a IAAS y Ambulatorios</h2>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
         ${datasets.map(d=>`<div style="display:flex;align-items:center;gap:6px;font-size:.72rem;background:#f8fafc;border-radius:8px;padding:4px 10px;border:1px solid #e2e8f0;">
           <span style="width:10px;height:10px;border-radius:50%;background:${d.color};display:inline-block;flex-shrink:0;"></span>
@@ -2406,7 +2414,7 @@ function applyDrillChart(){
     <div id="${iaId}" style="margin-top:16px;display:none;background:linear-gradient(135deg,#f0fdf4,#f8fafc);border-radius:14px;border:1.5px solid #bbf7d0;padding:20px 22px;box-shadow:0 2px 8px rgba(21,79,57,.07);">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #d1fae5;">
         <span style="background:linear-gradient(135deg,#154f39,#1a6347);color:#fff;border-radius:10px;padding:5px 12px;font-size:.72rem;font-weight:700;">🤖 IA Epidemiológica</span>
-        <span style="font-size:.7rem;color:#6b7280;">Esquemas de tratamiento · Groq LLaMA · datos reales del antibiograma local</span>
+        <span style="font-size:.7rem;color:#374151;line-height:1.5;">Los esquemas anteriores generados son creados con base a los filtros seleccionados del hospital, ${datasets.map(d=>`${d.micro}`).join(' / ')} — la utilización del antibiótico y dosis queda bajo la responsabilidad del médico que lo indica.</span>
       </div>
       <div id="${iaId}-body"></div>
     </div>`;
@@ -2443,7 +2451,7 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
     ? datasets.map(d=>d.micro.replace(/^[^\s]+\s/,'')).slice(0,10)
     : topMicros.slice(0,10);
 
-  // Resumen compacto — incluye clasificación AWaRe REAL del dashboard
+  // Resumen compacto — incluye clasificación AWaRe REAL y n (antibiogramas procesados)
   const getAware=(name)=>{
     const meta=ABX_META[name]||CB_ABX_META[name];
     if(!meta||!meta.c||meta.c==='Sin clasificar') return 'Sin clasificar';
@@ -2451,18 +2459,18 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
   };
   const abxSummary=datasets.map(d=>{
     const rows=d.rows.filter(r=>r.t>=3).sort((a,b)=>(b.pS||0)-(a.pS||0)).slice(0,12)
-      .map(r=>`${r.a}[AWaRe:${getAware(r.a)}] S:${Math.round((r.pS||0)*100)}% R:${Math.round((r.pR||0)*100)}%`).join('; ');
+      .map(r=>`${r.a}[AWaRe:${getAware(r.a)},n=${r.t}] S:${Math.round((r.pS||0)*100)}% R:${Math.round((r.pR||0)*100)}%`).join('; ');
     return `${d.label}: ${rows}`;
   }).join('\n');
 
   const prompt=`Infectólogo IMSS México. Antibiograma REAL de ${hospNames} para ${dimLabel}:
 ${abxSummary}
 
-REGLAS ESTRICTAS — CADA ANTIBIÓTICO YA TIENE SU CLASIFICACIÓN AWaRe ENTRE CORCHETES, ÚSALA TAL CUAL:
-1. La clasificación AWaRe de cada antibiótico está indicada como [AWaRe:Access], [AWaRe:Watch] o [AWaRe:Reserve]. USA EXACTAMENTE ESA, no la cambies.
-2. SOLO antibióticos con S≥50%. Si S<50%: PROHIBIDO recomendarlo.
-3. Orden de preferencia: Access primero, Watch si no hay Access con S≥50%, Reserve solo en IAAS como último recurso.
-4. Primera elección: el Access con mayor S%. Si hay varios Access con S≥50% úsalos en alternativas.
+REGLAS ESTRICTAS — LA CLASIFICACIÓN AWaRe ESTÁ EN [AWaRe:X], ÚSALA TAL CUAL, NO LA CAMBIES:
+1. n= total de antibiogramas procesados. Mayor n = mayor confiabilidad estadística. Un antibiótico con S:100% y n=1 es EMPÍRICO y NO confiable — no lo uses como primera elección.
+2. SOLO antibióticos con S≥50% Y n≥5. Si n<5: dato empírico, usar solo si no hay alternativa.
+3. Prioriza: mayor S% Y mayor n combinados. Access primero, Watch si no hay Access confiable, Reserve solo en IAAS.
+4. Primera elección: Access con mejor combinación de S% alto y n alto.
 5. Todos los campos con datos clínicos reales. PROHIBIDO "-" o vacío.
 6. Solo HTML puro, sin markdown.
 
@@ -2470,7 +2478,7 @@ REGLAS ESTRICTAS — CADA ANTIBIÓTICO YA TIENE SU CLASIFICACIÓN AWaRe ENTRE CO
 <h3>1. Ambulatorio</h3>
 <h3>2. Hospitalizado</h3>
 <h3>3. IAAS</h3>
-Al final <div class="ia-nota"> con antibióticos del antibiograma que tienen R>50% y los Access con mejor sensibilidad.`;
+Al final <div class="ia-nota"> mencionando: antibióticos con R>50%, los descartados por n<5 (bajo volumen), y los Access más confiables por n alto.`;
 
   try{
     const res=await fetch(WORKER_URL,{
