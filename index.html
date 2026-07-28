@@ -756,14 +756,13 @@ function _deriveFromHospitalV2(hd){
 }
 
 function normalizeLoadedRAW(input){
-  // Remap claves del JSON al nombre canónico AMBULATORIOS TLAXCALA
-  const remapKey=h=>(h==='DELEGACION TLAXCALA'||h==='AMBULATORIOS')?'AMBULATORIOS TLAXCALA':h;
+  const remapH=h=>(['DELEGACION TLAXCALA','AMBULATORIOS TLAXCALA','AMBULATORIOS'].includes(h)?'AMBULATORIOS TLAXCALA':h);
   if(input&&input.hospitales){
-    input.hospitales=input.hospitales.map(remapKey);
+    input.hospitales=input.hospitales.map(remapH);
   }
   if(input&&input.data){
     ['DELEGACION TLAXCALA','AMBULATORIOS'].forEach(old=>{
-      if(input.data[old]){
+      if(input.data[old]&&!input.data['AMBULATORIOS TLAXCALA']){
         input.data['AMBULATORIOS TLAXCALA']=input.data[old];
         delete input.data[old];
       }
@@ -781,7 +780,7 @@ function normalizeLoadedRAW(input){
     norm.freq=norm.freq||{};
     norm._derivedByHospital={};
     Object.entries(norm.data||{}).forEach(([h,hd])=>{
-      const key=(h==='DELEGACION TLAXCALA'||h==='AMBULATORIOS')?'AMBULATORIOS TLAXCALA':h;
+      const key=(['DELEGACION TLAXCALA','AMBULATORIOS TLAXCALA','AMBULATORIOS'].includes(h))?'AMBULATORIOS TLAXCALA':h;
       if(hd&&hd.hospital){
         hd.años=hd.años||[...new Set((hd.periodos||[]).map(p=>String(p).split('-')[0]))];
         hd.freq=hd.freq||{};
@@ -1035,6 +1034,19 @@ function lblHtml(r){const c=r&&r.c&&(r.c==='A'||r.c==='W'||r.c==='R')?r.c:'';ret
 function lblName(name){const n=normalizeAbxName(name||'');const meta=ABX_META[n];const c=meta?meta.c:'';return(c==='A'||c==='W'||c==='R')?`<span class="atag t${c}">(${c})</span>${n||name}`:(n||name);}
 const SG_NAMES={'ITS':'INFECCIÓN DEL TRACTO SANGUÍNEO','IVU':'INFECCIÓN DE VÍAS URINARIAS'};
 function sgName(s){return SG_NAMES[s]||s;}
+function getPrecio(abxName){
+  if(!RAW||!RAW.precios) return null;
+  const precios=RAW.precios;
+  if(precios[abxName]) return precios[abxName].toFixed(2);
+  const clean=abxName.replace(/^(G\+|G-|Hongo)\s*/i,'').trim();
+  const found=Object.keys(precios).find(k=>
+    k.toLowerCase()===clean.toLowerCase()||
+    clean.toLowerCase().startsWith(k.toLowerCase())||
+    k.toLowerCase().startsWith(clean.toLowerCase())
+  );
+  return found?precios[found].toFixed(2):null;
+}
+
 function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   const el=document.getElementById(cid); if(!el) return;
   if(!data1||!data1.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
@@ -1089,11 +1101,13 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
     }).replace(/'/g,'&apos;');
     h+=`<div class="vbh" data-tip='${tipData}' style="position:absolute;left:${x}px;top:${PADTOP}px;width:${zoneW}px;height:${CH}px;cursor:default;"></div>`;
 
-    // Total + x label
+    // Total + x label + precio
     const tot=hasCmp&&d2?`${d.t}/${d2.t}`:d.t;
+    const precio=getPrecio(name);
     h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${zoneW}px;text-align:center;font-size:.6rem;color:#6b7280;">${tot}</div>`;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${zoneW}px;height:${XLABELH-18}px;display:flex;justify-content:center;overflow:hidden;">
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${zoneW}px;height:${XLABELH-18}px;display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden;">
       <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</div>
+      ${precio?`<div style="font-size:.58rem;color:#7c3aed;font-weight:600;margin-top:2px;">PROM $${precio}</div>`:''}
     </div>`;
   });
 
@@ -1199,8 +1213,10 @@ function buildSRIMultiChart(datasets, cid){
       }
     });
     h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+4}px;width:${groupW}px;text-align:center;font-size:.58rem;color:#9ca3af;">${totalN||''}</div>`;
-    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+16}px;width:${groupW}px;height:${XLABELH-16}px;display:flex;justify-content:center;overflow:hidden;">
+    const precio=getPrecio(name);
+    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+16}px;width:${groupW}px;height:${XLABELH-16}px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;">
       <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</div>
+      ${precio?`<div style="font-size:.58rem;color:#7c3aed;font-weight:600;margin-top:2px;">PROM $${precio}</div>`:''}
     </div>`;
   });
   h+=`</div></div>`;
@@ -1263,7 +1279,8 @@ function buildSRICompactChart(data, cid){
     if(d.pR>0){const h2=Math.max(1,Math.round(d.pR*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#ef4444;"></div>`;}
     if(d.pI>0){const h2=Math.max(1,Math.round(d.pI*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#f59e0b;"></div>`;}
     h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${BW}px;text-align:center;font-size:.62rem;color:#6b7280;">${d.t||0}</div>`;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;text-align:center;font-size:.64rem;color:#334155;white-space:normal;line-height:1.2;">${d.a}</div>`;
+    const precio=getPrecio(d.a);
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;text-align:center;font-size:.64rem;color:#334155;white-space:normal;line-height:1.2;">${d.a}${precio?`<br><span style="font-size:.58rem;color:#7c3aed;font-weight:600;">PROM $${precio}</span>`:''}</div>`;
     // Tooltip zone
     const tipData=JSON.stringify({a:d.a,S:d.S,R:d.R,I:d.I,t:d.t,pS:pct(d.pS),pR:pct(d.pR),pI:pct(d.pI)}).replace(/'/g,'&apos;');
     h+=`<div class="vbh" data-tip='${tipData}' data-compact="1" style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
@@ -1718,10 +1735,11 @@ const HOSPITALES_NOMBRES = {
   'HGZMF 2 APIZACO':       'HGZMF No. 2 · Apizaco',
   'HGSMF 8 TLAXCALA':      'HGSMF No. 8 · Tlaxcala',
   'AMBULATORIOS TLAXCALA': 'Ambulatorios · NO IAAS',
-  'DELEGACION TLAXCALA':   'Ambulatorios · NO IAAS',   // alias JSON viejo
+  'DELEGACION TLAXCALA':   'Ambulatorios · NO IAAS',
+  'AMBULATORIOS':          'Ambulatorios · NO IAAS',
 };
 const HOSPITALES_ORDEN = ['HGZ 1 TLAXCALA','HGZMF 2 APIZACO','HGSMF 8 TLAXCALA','AMBULATORIOS TLAXCALA'];
-const HOSP_NO_IAAS = new Set(['AMBULATORIOS TLAXCALA','DELEGACION TLAXCALA']);
+const HOSP_NO_IAAS = new Set(['AMBULATORIOS TLAXCALA','DELEGACION TLAXCALA','AMBULATORIOS']);
 
 function getHospitalDisplayName(h){
   const map={
@@ -2294,11 +2312,15 @@ function initDrillPanel(){
       </div>
       <div class="adv-group-body" style="padding:10px 12px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          ${[['svc','Servicio'],['inf','Infección'],['cul','Cultivo'],['micro','Microorganismo ⭐']].map(([key,label])=>`
+          ${[['svc','Servicio'],['inf','Infección'],['cul','Cultivo'],['micro','Microorganismo ⭐']].map(([key,label])=>{
+            const isNoIaas=HOSP_NO_IAAS.has(hid);
+            if(key==='inf'&&isNoIaas) return ''; // Ambulatorios no tiene infecciones IAAS
+            return `
           <div>
             <div style="font-size:.66rem;font-weight:700;color:${key==='micro'?col.main:'#475569'};text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">${label}</div>
             <div id="drill-${key}-checks-${i}" style="max-height:140px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px;padding:4px;background:${key==='micro'?'#faf5ff':'#f8fafc'};"></div>
-          </div>`).join('')}
+          </div>`;
+          }).join('')}
         </div>
       </div>
     </div>`;
@@ -2457,34 +2479,106 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
     ? datasets.map(d=>d.micro.replace(/^[^\s]+\s/,'')).slice(0,10)
     : topMicros.slice(0,10);
 
-  // Resumen compacto — incluye clasificación AWaRe REAL y n (antibiogramas procesados)
+  // Datos de la gráfica formateados con detalle por hospital
   const getAware=(name)=>{
     const meta=ABX_META[name]||CB_ABX_META[name];
     if(!meta||!meta.c||meta.c==='Sin clasificar') return 'Sin clasificar';
     return meta.c==='A'?'Access':meta.c==='W'?'Watch':meta.c==='R'?'Reserve':'Sin clasificar';
   };
-  const abxSummary=datasets.map(d=>{
-    const rows=d.rows.filter(r=>r.t>=3).sort((a,b)=>(b.pS||0)-(a.pS||0)).slice(0,12)
-      .map(r=>`${r.a}[AWaRe:${getAware(r.a)},n=${r.t}] S:${Math.round((r.pS||0)*100)}% R:${Math.round((r.pR||0)*100)}%`).join('; ');
-    return `${d.label}: ${rows}`;
-  }).join('\n');
 
-  const prompt=`Infectólogo IMSS México. Antibiograma REAL de ${hospNames} para ${dimLabel}:
-${abxSummary}
+  // Construir datos de gráfica por antibiótico y hospital
+  const allAbxNames=[...new Set(datasets.flatMap(d=>d.rows.map(r=>r.a)))];
+  const datosGrafica=allAbxNames.map(abx=>{
+    const aware=getAware(abx);
+    const totalN=datasets.reduce((s,d)=>{const r=d.rows.find(x=>x.a===abx);return s+(r?r.t:0);},0);
+    const lines=datasets.map(d=>{
+      const r=d.rows.find(x=>x.a===abx);
+      if(!r||r.t<1) return null;
+      return `  ${d.label}:\n  Sensibilidad: ${Math.round((r.pS||0)*100)}%\n  Resistencia: ${Math.round((r.pR||0)*100)}%`;
+    }).filter(Boolean).join('\n');
+    return `${abx}\nAWaRe: ${aware}\n${lines}\n  n = ${totalN} antibiogramas`;
+  }).join('\n\n');
 
-REGLAS ESTRICTAS — LA CLASIFICACIÓN AWaRe ESTÁ EN [AWaRe:X], ÚSALA TAL CUAL, NO LA CAMBIES:
-1. n= total de antibiogramas procesados. Mayor n = mayor confiabilidad estadística. Un antibiótico con S:100% y n=1 es EMPÍRICO y NO confiable — no lo uses como primera elección.
-2. SOLO antibióticos con S≥50% Y n≥5. Si n<5: dato empírico, usar solo si no hay alternativa.
-3. Prioriza: mayor S% Y mayor n combinados. Access primero, Watch si no hay Access confiable, Reserve solo en IAAS.
-4. Primera elección: Access con mejor combinación de S% alto y n alto.
-5. Todos los campos con datos clínicos reales. PROHIBIDO "-" o vacío.
-6. Solo HTML puro, sin markdown.
+  // Extraer filtros activos
+  const tipoUnidad=datasets.some(d=>HOSP_NO_IAAS.has(d.hospId||''))?'Mixto (IAAS + Ambulatorio)':'IAAS';
+  const serviciosActivos=[...new Set(datasets.flatMap(d=>{
+    const box=document.getElementById(`drill-svc-checks-${datasets.indexOf(d)}`);
+    return box?[...box.querySelectorAll('input:checked')].map(c=>c.value):[];
+  }))].join(', ')||'Todos';
+  const infeccionesActivas=[...new Set(datasets.flatMap(d=>{
+    const box=document.getElementById(`drill-inf-checks-${datasets.indexOf(d)}`);
+    return box?[...box.querySelectorAll('input:checked')].map(c=>c.value):[];
+  }))].join(', ')||'Todas';
+  const cultivosActivos=[...new Set(datasets.flatMap(d=>{
+    const box=document.getElementById(`drill-cul-checks-${datasets.indexOf(d)}`);
+    return box?[...box.querySelectorAll('input:checked')].map(c=>c.value):[];
+  }))].join(', ')||'Todos';
+  const microsActivos=top10Micros.length?top10Micros.join(', '):(usedMicro?datasets.map(d=>d.micro.replace(/^[^\s]+\s/,'')).join(', '):'No especificado');
+  const periodoActual=selectedYears&&selectedYears.length?selectedYears.join(', '):(p1==='TODOS'?'Todo el período':p1);
 
-3 tablas con <h3> y columnas: Prioridad|Antibiótico|AWaRe|Dosis|Vía|Duración|Contraindicaciones|Interacciones|Ajuste renal(Sí/No). Filas: Primera elección, Alternativa 1, Alternativa 2.
-<h3>1. Ambulatorio</h3>
-<h3>2. Hospitalizado</h3>
-<h3>3. IAAS</h3>
-Al final <div class="ia-nota"> mencionando: antibióticos con R>50%, los descartados por n<5 (bajo volumen), y los Access más confiables por n alto.`;
+  const prompt=`Eres un médico infectólogo, epidemiólogo hospitalario y especialista en programas PROA (Programa de Optimización de Antimicrobianos) del IMSS México.
+
+Tu función es analizar la gráfica de sensibilidad y resistencia antimicrobiana y elaborar recomendaciones terapéuticas basadas EXCLUSIVAMENTE en los datos proporcionados.
+
+REGLAS ABSOLUTAS:
+- No inventes información ni supongas datos que no aparezcan.
+- La clasificación AWaRe de cada antibiótico está indicada — ÚSALA TAL CUAL, no la cambies.
+- n = total antibiogramas. Mayor n = mayor confiabilidad. S:100% con n<5 es EMPÍRICO — no usar como primera elección.
+- SOLO antibióticos con S≥50% Y n≥5. Access primero, Watch si no hay Access confiable, Reserve solo en IAAS sin alternativa.
+
+---------------------------------------------------------
+FILTROS SELECCIONADOS
+---------------------------------------------------------
+Hospitales: ${hospNames}
+Tipo de unidad: ${tipoUnidad}
+Servicios: ${serviciosActivos}
+Tipo de cultivo: ${cultivosActivos}
+Diagnóstico/Infección: ${infeccionesActivas}
+Periodo: ${periodoActual}
+Microorganismos: ${microsActivos}
+
+---------------------------------------------------------
+DATOS DE LA GRÁFICA
+---------------------------------------------------------
+${datosGrafica}
+
+---------------------------------------------------------
+FORMATO DE RESPUESTA — USA EXACTAMENTE ESTE ORDEN
+---------------------------------------------------------
+
+## 1. Resumen ejecutivo
+Descripción breve de los hallazgos principales.
+
+## 2. Interpretación clínica
+• Microorganismos predominantes
+• Comportamiento general de sensibilidad
+• Antibióticos con mejor actividad
+• Antibióticos con pérdida de sensibilidad
+• Diferencias entre hospitales
+• Impacto clínico
+
+## 3. Esquema Ambulatorio
+Tabla Markdown con columnas: Prioridad | Microorganismos frecuentes | Antibiótico | AWaRe | Dosis | Vía | Duración | Contraindicaciones | Interacciones | Ajuste renal (Sí/No)
+Filas: Primera elección, Alternativa 1, Alternativa 2
+
+## 4. Esquema Hospitalizado
+Misma tabla. Mayor gravedad, terapia IV cuando corresponda.
+
+## 5. Esquema IAAS
+Misma tabla. Mayor resistencia, uso prudente AWaRe.
+
+## 6. Notas adicionales por esquema
+• Observaciones clínicas
+• Cuándo cambiar tratamiento
+• Cuándo solicitar cultivo de control
+• Cuándo referir al especialista
+• Precauciones en embarazo
+• Precauciones en pediatría
+• Ajustes en insuficiencia renal
+• Consideraciones en alérgicos
+
+## 7. Recomendaciones finales PROA
+Recomendaciones de política de antibióticos para la unidad basadas en estos datos.`;
 
   try{
     const res=await fetch(WORKER_URL,{
@@ -2492,18 +2586,42 @@ Al final <div class="ia-nota"> mencionando: antibióticos con R>50%, los descart
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
-        generationConfig:{maxOutputTokens:1500,temperature:0.2}
+        generationConfig:{maxOutputTokens:3000,temperature:0.2}
       })
     });
     const data=await res.json();
     if(data.candidates&&data.candidates[0]?.content?.parts[0]?.text){
-      let html=data.candidates[0].content.parts[0].text;
-      html=html.replace(/```html?/gi,'').replace(/```/g,'');
-      // Colorear Access/Watch/Reserve en las celdas
-      html=html.replace(/\bAccess\b/g,'<span style="background:#dcfce7;color:#166534;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Access</span>');
-      html=html.replace(/\bWatch\b/g,'<span style="background:#fef9c3;color:#854d0e;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Watch</span>');
-      html=html.replace(/\bReserve\b/g,'<span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Reserve</span>');
-      el.innerHTML=`<div class="drill-ia-content">${html}</div>`;
+      let md=data.candidates[0].content.parts[0].text;
+      // Convertir Markdown a HTML
+      md=md.replace(/```[a-z]*\n?/gi,'').replace(/```/g,'');
+      // Encabezados
+      md=md.replace(/^## (.+)$/gm,'<h3>$1</h3>');
+      md=md.replace(/^### (.+)$/gm,'<h4>$1</h4>');
+      // Tablas Markdown → HTML
+      md=md.replace(/^\|(.+)\|$/gm,(line)=>{
+        const cells=line.split('|').slice(1,-1).map(c=>c.trim());
+        return `<tr>${cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
+      });
+      md=md.replace(/(<tr>.*?<\/tr>\n?)+/gs,(block)=>{
+        const rows=block.trim().split('\n').filter(r=>r.includes('<tr>'));
+        // Primera fila como thead si tiene separador siguiente
+        const head=rows[0].replace(/<td>/g,'<th>').replace(/<\/td>/g,'</th>');
+        const body=rows.slice(2).join(''); // skip separator row
+        return `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+      });
+      // Listas y bullets
+      md=md.replace(/^[•\-\*] (.+)$/gm,'<li>$1</li>');
+      md=md.replace(/(<li>.*<\/li>\n?)+/gs,block=>`<ul>${block}</ul>`);
+      // Negrita
+      md=md.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+      // Párrafos
+      md=md.replace(/\n{2,}/g,'</p><p>');
+      md=`<p>${md}</p>`;
+      // Colorear Access/Watch/Reserve
+      md=md.replace(/\bAccess\b/g,'<span style="background:#dcfce7;color:#166534;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Access</span>');
+      md=md.replace(/\bWatch\b/g,'<span style="background:#fef9c3;color:#854d0e;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Watch</span>');
+      md=md.replace(/\bReserve\b/g,'<span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Reserve</span>');
+      el.innerHTML=`<div class="drill-ia-content">${md}</div>`;
     }else if(data.error){
       el.innerHTML=`<div style="color:#dc2626;font-size:.8rem;">⚠️ Error: ${data.error.message||JSON.stringify(data.error)}</div>`;
     }else{
@@ -3069,7 +3187,7 @@ async function initDashboard(){
     sel.innerHTML = '';
     RAW.hospitales.forEach(h => {
       // Normalizar clave vieja
-      const key=(h==='DELEGACION TLAXCALA'||h==='AMBULATORIOS')?'AMBULATORIOS TLAXCALA':h;
+      const key=(['DELEGACION TLAXCALA','AMBULATORIOS TLAXCALA','AMBULATORIOS'].includes(h))?'AMBULATORIOS TLAXCALA':h;
       const opt = document.createElement('option');
       opt.value = key;
       opt.textContent = getHospitalDisplayName(key);
