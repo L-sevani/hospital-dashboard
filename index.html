@@ -1823,7 +1823,7 @@ function renderComparar(){
       </div>`).join('');
     return `<div style="background:#fff;border-radius:12px;border-top:4px solid ${color};box-shadow:0 2px 10px rgba(0,0,0,.07);padding:16px 14px;display:flex;flex-direction:column;gap:10px;min-width:0;">
       <div style="font-weight:800;font-size:.78rem;color:${color};border-bottom:1px solid #f3f4f6;padding-bottom:10px;">${nombre}</div>
-      <!-- KPIs -->
+      
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
         <div style="background:#f8fafc;border-radius:7px;padding:7px 4px;text-align:center;">
           <div style="font-size:1.2rem;font-weight:800;color:${color};">${st.totalT}</div>
@@ -1835,7 +1835,7 @@ function renderComparar(){
         </div>
         ${topUsedHtml}
       </div>
-      <!-- Resistencia S/I/R -->
+      
       <div>
         <div style="font-size:.66rem;font-weight:700;color:#374151;margin-bottom:4px;">PERFIL S-I-R GLOBAL</div>
         <div style="font-size:.68rem;color:#6b7280;margin-bottom:3px;">Sensible</div>
@@ -1845,7 +1845,7 @@ function renderComparar(){
         <div style="font-size:.68rem;color:#6b7280;margin:5px 0 3px;">Intermedio</div>
         ${cmpBar(st.totalT>0?Math.round(st.totalI/st.totalT*100):0,'#d97706')}
       </div>
-      <!-- Top Microorganismos -->
+      
       <div>
         <div style="font-size:.66rem;font-weight:700;color:#374151;margin-bottom:4px;">TOP MICROORGANISMOS</div>
         ${st.topMicros.map((m,i)=>{
@@ -1858,7 +1858,7 @@ function renderComparar(){
         }).join('')}
         ${sharedMicros.size>0?`<div style="font-size:.62rem;color:#94a3b8;margin-top:4px;">↔ Presente en otros hospitales</div>`:''}
       </div>
-      <!-- Más resistentes -->
+      
       <div>
         <div style="font-size:.72rem;font-weight:700;color:#374151;margin-bottom:6px;">🔴 MÁS RESISTENTES</div>
         ${st.topRes.slice(0,4).map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
@@ -1866,7 +1866,7 @@ function renderComparar(){
           <span style="font-size:.7rem;font-weight:700;color:#dc2626;">${r.pct}%R</span>
         </div>`).join('')}
       </div>
-      <!-- Periodos -->
+      
       <div style="font-size:.68rem;color:#9ca3af;margin-top:4px;border-top:1px solid #f3f4f6;padding-top:8px;">
         📅 ${st.periodos.length} período(s) · ${st.servicios.length} servicios · ${st.infecciones.length} tipos infección
       </div>
@@ -1986,22 +1986,16 @@ function renderContextBar(){
 }
 
 function renderAll(){
-  try{
-    renderContextBar();
-    if(activeSection==='avanzado') return;
-    if(activeSection==='comparar'){renderComparar();return;}
-    if(activeSection==='aware') return;
-    document.getElementById('hperiodo').textContent='IMSS · '+fmtP(p1)+(p2?' vs '+fmtP(p2):'');
-    const legSri=document.getElementById('leg-sri');
-    if(legSri) legSri.style.display='none';
-    if(activeSection==='frecuencias'){renderFreq();return;}
-    if(activeSection==='hospital') renderHospital();
-    else renderSg(activeSection);
-  }catch(err){
-    console.error('renderAll error:',err);
-    const hp=document.getElementById('hperiodo');
-    if(hp) hp.textContent='IMSS · Error: '+err.message;
-  }
+  renderContextBar();
+  if(activeSection==='avanzado') return;
+  if(activeSection==='comparar'){renderComparar();return;}
+  if(activeSection==='aware') return;
+  document.getElementById('hperiodo').textContent='IMSS · '+fmtP(p1)+(p2?' vs '+fmtP(p2):'');
+  const legSri=document.getElementById('leg-sri');
+  if(legSri) legSri.style.display='none';
+  if(activeSection==='frecuencias'){renderFreq();return;}
+  if(activeSection==='hospital') renderHospital();
+  else renderSg(activeSection);
 }
 
 function setSection(sec,el){
