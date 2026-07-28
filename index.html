@@ -1105,9 +1105,8 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
     const tot=hasCmp&&d2?`${d.t}/${d2.t}`:d.t;
     const precio=getPrecio(name);
     h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${zoneW}px;text-align:center;font-size:.6rem;color:#6b7280;">${tot}</div>`;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${zoneW}px;height:${XLABELH-18}px;display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden;">
-      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</div>
-      ${precio?`<div style="font-size:.58rem;color:#7c3aed;font-weight:600;margin-top:2px;">PROM $${precio}</div>`:''}
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${zoneW}px;height:${XLABELH-18}px;display:flex;justify-content:center;overflow:hidden;">
+      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}${precio?` · $${precio}`:''}  </div>
     </div>`;
   });
 
@@ -1214,9 +1213,8 @@ function buildSRIMultiChart(datasets, cid){
     });
     h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+4}px;width:${groupW}px;text-align:center;font-size:.58rem;color:#9ca3af;">${totalN||''}</div>`;
     const precio=getPrecio(name);
-    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+16}px;width:${groupW}px;height:${XLABELH-16}px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;">
-      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</div>
-      ${precio?`<div style="font-size:.58rem;color:#7c3aed;font-weight:600;margin-top:2px;">PROM $${precio}</div>`:''}
+    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+16}px;width:${groupW}px;height:${XLABELH-16}px;display:flex;justify-content:center;overflow:hidden;">
+      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}${precio?` · $${precio}`:''}  </div>
     </div>`;
   });
   h+=`</div></div>`;
@@ -1280,7 +1278,7 @@ function buildSRICompactChart(data, cid){
     if(d.pI>0){const h2=Math.max(1,Math.round(d.pI*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#f59e0b;"></div>`;}
     h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${BW}px;text-align:center;font-size:.62rem;color:#6b7280;">${d.t||0}</div>`;
     const precio=getPrecio(d.a);
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;text-align:center;font-size:.64rem;color:#334155;white-space:normal;line-height:1.2;">${d.a}${precio?`<br><span style="font-size:.58rem;color:#7c3aed;font-weight:600;">PROM $${precio}</span>`:''}</div>`;
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;text-align:center;font-size:.64rem;color:#334155;white-space:normal;line-height:1.2;">${d.a}${precio?`<br><span style="font-size:.57rem;color:#374151;">$${precio}</span>`:''}</div>`;
     // Tooltip zone
     const tipData=JSON.stringify({a:d.a,S:d.S,R:d.R,I:d.I,t:d.t,pS:pct(d.pS),pR:pct(d.pR),pI:pct(d.pI)}).replace(/'/g,'&apos;');
     h+=`<div class="vbh" data-tip='${tipData}' data-compact="1" style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
