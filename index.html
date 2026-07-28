@@ -1986,16 +1986,22 @@ function renderContextBar(){
 }
 
 function renderAll(){
-  renderContextBar();
-  if(activeSection==='avanzado') return;
-  if(activeSection==='comparar'){renderComparar();return;}
-  if(activeSection==='aware') return;
-  document.getElementById('hperiodo').textContent='IMSS · '+fmtP(p1)+(p2?' vs '+fmtP(p2):'');
-  const legSri=document.getElementById('leg-sri');
-  if(legSri) legSri.style.display='none'; // siempre oculto
-  if(activeSection==='frecuencias'){renderFreq();return;}
-  if(activeSection==='hospital') renderHospital();
-  else renderSg(activeSection);
+  try{
+    renderContextBar();
+    if(activeSection==='avanzado') return;
+    if(activeSection==='comparar'){renderComparar();return;}
+    if(activeSection==='aware') return;
+    document.getElementById('hperiodo').textContent='IMSS · '+fmtP(p1)+(p2?' vs '+fmtP(p2):'');
+    const legSri=document.getElementById('leg-sri');
+    if(legSri) legSri.style.display='none';
+    if(activeSection==='frecuencias'){renderFreq();return;}
+    if(activeSection==='hospital') renderHospital();
+    else renderSg(activeSection);
+  }catch(err){
+    console.error('renderAll error:',err);
+    const hp=document.getElementById('hperiodo');
+    if(hp) hp.textContent='IMSS · Error: '+err.message;
+  }
 }
 
 function setSection(sec,el){
