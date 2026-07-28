@@ -2514,6 +2514,51 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
   const periodo=p1==='TODOS'?'Todo el período':p1;
   const tipoUnidad=datasets.some(d=>HOSP_NO_IAAS.has(d.hospId||'AMBULATORIOS'))?'Mixto IAAS + Ambulatorio':'Hospitalario IAAS';
 
+  const prompt='Infectólogo IMSS México. Antibiograma REAL de '+hospNames+' para '+dimLabel+'.\n'
+    +'Tipo de unidad: '+tipoUnidad+'\n'
+    +'Servicios: '+servicios+'\n'
+    +'Cultivos: '+cultivos+'\n'
+    +'Infecciones: '+infecciones+'\n'
+    +'Periodo: '+periodo+'\n'
+    +'Microorganismos: '+micros+'\n\n'
+    +'ANTIBIOGRAMA (AWaRe, S%, R%, n):\n'+datosGrafica+'\n\n'
+    +'REGLAS: Solo ABX con S>=50% y n>=5. Access primero, Watch si no hay Access viable, Reserve solo en IAAS.\n'
+    +'Mayor n = mayor confiabilidad. n<5 = empírico, no usar como primera elección.\n\n'
+    +'Genera 3 tablas HTML con columnas: Prioridad|Antibiótico|AWaRe|Dosis|Via|Duracion|Contraindicaciones|Interacciones|Ajuste renal(Si/No). Filas: Primera eleccion, Alternativa 1, Alternativa 2.\n'
+    +'Escribe "Access", "Watch" o "Reserve" tal cual en la columna AWaRe, sin cambiarlos.\n'
+    +'Solo HTML puro, sin markdown.\n'
+    +'<h3>1. Ambulatorio</h3>\n'
+    +'<h3>2. Hospitalizado</h3>\n'
+    +'<h3>3. IAAS</h3>\n'
+    +'Al final: <div class="ia-nota"> con alertas de resistencia, antibioticos descartados por n bajo, y los Access mas confiables.';
+
+  try{
+    const res=await fetch(WORKER_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{maxOutputTokens:2500,temperature:0.2}
+      })
+    });
+    const data=await res.json();
+    if(data.candidates&&data.candidates[0]?.content?.parts[0]?.text){
+      let html=data.candidates[0].content.parts[0].text;
+      html=html.replace(/```html?/gi,'').replace(/```/g,'');
+      html=html.replace(/\bAccess\b/g,'<span style="background:#dcfce7;color:#166534;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Access</span>');
+      html=html.replace(/\bWatch\b/g,'<span style="background:#fef9c3;color:#854d0e;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Watch</span>');
+      html=html.replace(/\bReserve\b/g,'<span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Reserve</span>');
+      el.innerHTML='<div class="drill-ia-content">'+html+'</div>';
+    }else if(data.error){
+      el.innerHTML='<div style="color:#dc2626;font-size:.8rem;">Error: '+data.error.message+'</div>';
+    }else{
+      el.innerHTML='<div style="color:#9ca3af;font-size:.8rem;">Sin respuesta. Intenta de nuevo.</div>';
+    }
+  }catch(e){
+    el.innerHTML='<div style="color:#dc2626;font-size:.8rem;">Error de conexion: '+e.message+'</div>';
+  }
+}
+
 function clearDrill(){
   const box=document.getElementById('drill-year-checks');
   if(box) box.querySelectorAll('input').forEach(c=>{c.checked=c.value==='TODOS'; c.closest('label')?.classList.toggle('ckA',c.value==='TODOS');});
