@@ -48905,6 +48905,57 @@
           "STAPHYLOCOCCUS LUGDUNENSIS": 1
         }
       },
+      "svc_cul": {
+        "CIRUGÍA": {
+          "HEMOCULTIVOS": 25,
+          "NEUMO": 29,
+          "OTROS": 42,
+          "PERITONEAL": 10,
+          "UROCULTIVOS": 17
+        },
+        "GINECOLOGÍA": {
+          "HEMOCULTIVOS": 13,
+          "NEUMO": 14,
+          "OTROS": 15,
+          "PERITONEAL": 7,
+          "UROCULTIVOS": 10
+        },
+        "MEDICINA INTERNA": {
+          "HEMOCULTIVOS": 31,
+          "NEUMO": 35,
+          "OTROS": 46,
+          "PERITONEAL": 13,
+          "UROCULTIVOS": 17
+        },
+        "PEDIATRÍA": {
+          "HEMOCULTIVOS": 14,
+          "NEUMO": 17,
+          "OTROS": 17,
+          "PERITONEAL": 9,
+          "UROCULTIVOS": 11
+        },
+        "UCI": {
+          "HEMOCULTIVOS": 6,
+          "NEUMO": 7,
+          "OTROS": 6,
+          "PERITONEAL": 4,
+          "UROCULTIVOS": 5
+        },
+        "UCI ADULTOS": {
+          "HEMOCULTIVOS": 10,
+          "NEUMO": 10,
+          "OTROS": 11,
+          "PERITONEAL": 6,
+          "UROCULTIVOS": 8
+        },
+        "URGENCIAS": {
+          "HEMOCULTIVOS": 5,
+          "NEUMO": 4,
+          "OTROS": 4,
+          "PERITONEAL": 2,
+          "UROCULTIVOS": 1
+        }
+      },
       "periodos": [
         "2018",
         "2019",
@@ -90234,6 +90285,42 @@
           "ACHROMOBACTER XYLOSOXIDANS": 1
         }
       },
+      "svc_cul": {
+        "CIRUGÍA": {
+          "HEMOCULTIVOS": 17,
+          "NEUMO": 24,
+          "OTROS": 34,
+          "PERITONEAL": 6,
+          "UROCULTIVOS": 11
+        },
+        "GINECOLOGÍA": {
+          "HEMOCULTIVOS": 11,
+          "NEUMO": 12,
+          "OTROS": 12,
+          "PERITONEAL": 3,
+          "UROCULTIVOS": 6
+        },
+        "MEDICINA INTERNA": {
+          "HEMOCULTIVOS": 15,
+          "NEUMO": 23,
+          "OTROS": 21,
+          "PERITONEAL": 4,
+          "UROCULTIVOS": 10
+        },
+        "PEDIATRÍA": {
+          "HEMOCULTIVOS": 18,
+          "NEUMO": 17,
+          "OTROS": 26,
+          "PERITONEAL": 4,
+          "UROCULTIVOS": 10
+        },
+        "URGENCIAS": {
+          "HEMOCULTIVOS": 1,
+          "NEUMO": 1,
+          "OTROS": 1,
+          "PERITONEAL": 1
+        }
+      },
       "periodos": [
         "2018",
         "2019",
@@ -116003,6 +116090,39 @@
           "ENTEROBACTER CLOACAE": 1
         }
       },
+      "svc_cul": {
+        "CIRUGÍA": {
+          "HEMOCULTIVOS": 6,
+          "NEUMO": 4,
+          "OTROS": 23,
+          "PERITONEAL": 2,
+          "UROCULTIVOS": 2
+        },
+        "GINECOLOGÍA": {
+          "HEMOCULTIVOS": 3,
+          "NEUMO": 2,
+          "OTROS": 11,
+          "PERITONEAL": 2,
+          "UROCULTIVOS": 1
+        },
+        "MEDICINA INTERNA": {
+          "HEMOCULTIVOS": 3,
+          "NEUMO": 3,
+          "OTROS": 9,
+          "PERITONEAL": 1,
+          "UROCULTIVOS": 3
+        },
+        "PEDIATRÍA": {
+          "HEMOCULTIVOS": 7,
+          "NEUMO": 5,
+          "OTROS": 13,
+          "PERITONEAL": 2,
+          "UROCULTIVOS": 2
+        },
+        "URGENCIAS": {
+          "HEMOCULTIVOS": 1
+        }
+      },
       "periodos": [
         "2018",
         "2019",
@@ -138530,6 +138650,62 @@
         }
       },
       "micros_inf": {},
+      "svc_cul": {
+        "CIRUGÍA": {
+          "HEMOCULTIVOS": 9,
+          "HERIDA QUIRURGICA": 10,
+          "NEUMO": 13,
+          "NO HERIDA QUIRURGICA": 15,
+          "OTROS": 17,
+          "PERITONEAL": 11,
+          "UROCULTIVOS": 20
+        },
+        "GINECOLOGÍA": {
+          "HEMOCULTIVOS": 6,
+          "HERIDA QUIRURGICA": 6,
+          "NEUMO": 8,
+          "NO HERIDA QUIRURGICA": 9,
+          "OTROS": 11,
+          "PERITONEAL": 5,
+          "UROCULTIVOS": 11
+        },
+        "MEDICINA INTERNA": {
+          "HEMOCULTIVOS": 7,
+          "HERIDA QUIRURGICA": 7,
+          "NEUMO": 8,
+          "NO HERIDA QUIRURGICA": 10,
+          "OTROS": 10,
+          "PERITONEAL": 8,
+          "UROCULTIVOS": 10
+        },
+        "NO IAAS": {
+          "HEMOCULTIVOS": 21,
+          "HERIDA QUIRURGICA": 19,
+          "NEUMO": 24,
+          "NO HERIDA QUIRURGICA": 27,
+          "OTROS": 40,
+          "PERITONEAL": 21,
+          "UROCULTIVOS": 31
+        },
+        "PEDIATRÍA": {
+          "HEMOCULTIVOS": 9,
+          "HERIDA QUIRURGICA": 9,
+          "NEUMO": 15,
+          "NO HERIDA QUIRURGICA": 9,
+          "OTROS": 14,
+          "PERITONEAL": 10,
+          "UROCULTIVOS": 12
+        },
+        "URGENCIAS": {
+          "HEMOCULTIVOS": 9,
+          "HERIDA QUIRURGICA": 14,
+          "NEUMO": 13,
+          "NO HERIDA QUIRURGICA": 13,
+          "OTROS": 15,
+          "PERITONEAL": 13,
+          "UROCULTIVOS": 12
+        }
+      },
       "periodos": [
         "2024",
         "2025",

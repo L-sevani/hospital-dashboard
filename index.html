@@ -646,18 +646,20 @@ function buildFreqFromNewFormat(hd){
   Object.entries(hd.micros_svc||{}).forEach(([sg,micros])=>{
     Object.entries(micros).forEach(([micro,count])=>addStack(freq.chart1['TODOS'],micro,sg,count));
   });
+
+  // chart2: Servicios por Cultivo — row=servicio, col=cultivo
+  Object.entries(hd.svc_cul||{}).forEach(([svc,culs])=>{
+    Object.entries(culs).forEach(([cul,count])=>addStack(freq.chart2['TODOS'],svc,cul,count));
+  });
+
+  // chart3: Cultivos por Microorg. — row=cultivo, col=micro (reverse of micros_cul)
+  Object.entries(hd.micros_cul||{}).forEach(([sg,micros])=>{
+    Object.entries(micros).forEach(([micro,count])=>addStack(freq.chart3['TODOS'],sg,micro,count));
+  });
+
   // chart4: Microorg. en Cultivos — row=micro, col=cultivo
   Object.entries(hd.micros_cul||{}).forEach(([sg,micros])=>{
     Object.entries(micros).forEach(([micro,count])=>addStack(freq.chart4['TODOS'],micro,sg,count));
-  });
-  // chart2: Infecciones por origen
-  Object.entries(hd.micros_inf||{}).forEach(([inf,micros])=>{
-    Object.entries(micros).forEach(([micro,count])=>addStack(freq.chart2['TODOS'],inf,micro,count));
-  });
-  // chart3: Cultivos por total
-  Object.entries(hd.cultivos?.data||{}).forEach(([sg,perData])=>{
-    const tot=(perData['TODOS']||[]).reduce((s,r)=>s+(r.t||0),0);
-    if(tot>0) addStack(freq.chart3['TODOS'],sg,'Total',tot);
   });
 
   Object.values(freq).forEach(k=>Object.values(k).forEach(f=>{if(f&&f.totals)finishFreq(f);}));
