@@ -2415,7 +2415,7 @@ function applyDrillChart(){
   });
 
   if(!datasets.length){
-    result.innerHTML='<div class="empty">Selecciona al menos un Servicio, Infección, Cultivo o Microorganismo en algún hospital.</div>';
+    result.innerHTML='<div class="empty" style="padding:20px;color:#dc2626;">Selecciona al menos un Servicio, Infección, Cultivo o Microorganismo en algún hospital.<br><small style="color:#6b7280;">hospIds: '+hospIds.join(', ')+'</small></div>';
     return;
   }
   if(status) status.textContent='';
