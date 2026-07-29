@@ -631,6 +631,81 @@ function _abxRowsFromMicroMap(microMap){
   return Object.values(byAbx);
 }
 
+function buildFreqFromNewFormat(hd){
+  // Build freq charts from new JSON structure:
+  // hd.servicios.data[sg][period] = [rows]
+  // hd.cultivos.data[sg][period] = [rows]
+  // hd.micros.data[micro][period] = [rows]
+  // chart1: micro en servicios, chart4: micro en cultivos
+  const makeFreq=()=>({order:[],stacks:{},totals:{}});
+  const finishFreq=f=>{f.order=Object.keys(f.totals).sort((a,b)=>(f.totals[b]||0)-(f.totals[a]||0));return f;};
+  const addStack=(target,row,col,n)=>{
+    if(!row||!col||!n) return;
+    if(!target.stacks[row]) target.stacks[row]={};
+    target.stacks[row][col]=(target.stacks[row][col]||0)+n;
+    target.totals[row]=(target.totals[row]||0)+n;
+  };
+
+  const freq={chart1:{TODOS:makeFreq()},chart2:{TODOS:makeFreq()},chart3:{TODOS:makeFreq()},chart4:{TODOS:makeFreq()}};
+
+  // chart1: microorganismo en servicios
+  const svcs=hd.servicios?.data||{};
+  Object.entries(svcs).forEach(([sg,perData])=>{
+    const allRows=(perData['TODOS']||[]);
+    // We need micro counts per service — approximate using total cultivos per ABX
+    // Since new format has ABX rows not micro rows at this level, use sg as col
+    const tot=allRows.reduce((s,r)=>s+(r.t||0),0);
+    if(tot>0) addStack(freq.chart1['TODOS'], sg, 'Total', tot);
+  });
+
+  // chart4: microorganismo en cultivos
+  const cults=hd.cultivos?.data||{};
+  Object.entries(cults).forEach(([sg,perData])=>{
+    const allRows=(perData['TODOS']||[]);
+    const tot=allRows.reduce((s,r)=>s+(r.t||0),0);
+    if(tot>0) addStack(freq.chart4['TODOS'], sg, 'Total', tot);
+  });
+
+  // Better: use micros data to build real frequency charts
+  const micros=hd.micros?.data||{};
+  const microTodos={}; // micro -> total count
+  Object.entries(micros).forEach(([micro,perData])=>{
+    const rows=perData['TODOS']||[];
+    const tot=rows.reduce((s,r)=>s+(r.t||0),0);
+    if(tot>0) microTodos[micro]=tot;
+  });
+
+  // Rebuild chart1 and chart4 with actual micro data
+  freq.chart1['TODOS']=makeFreq();
+  freq.chart4['TODOS']=makeFreq();
+  // chart1: top micros in servicios context
+  Object.entries(svcs).forEach(([sg,perData])=>{
+    const rows=perData['TODOS']||[];
+    const tot=rows.reduce((s,r)=>s+(r.t||0),0);
+    if(tot>0) addStack(freq.chart1['TODOS'], 'Total cultivos', sg, tot);
+  });
+  // chart4: top micros in cultivos context
+  Object.entries(cults).forEach(([sg,perData])=>{
+    const rows=perData['TODOS']||[];
+    const tot=rows.reduce((s,r)=>s+(r.t||0),0);
+    if(tot>0) addStack(freq.chart4['TODOS'], 'Total cultivos', sg, tot);
+  });
+
+  // Use micros.subgrupos for chart1/chart4 — show top micros
+  const topMicros=Object.entries(microTodos).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  freq.chart1['TODOS']=makeFreq();
+  freq.chart4['TODOS']=makeFreq();
+  topMicros.forEach(([micro,tot])=>{
+    addStack(freq.chart1['TODOS'], micro, 'Servicios', tot);
+    addStack(freq.chart4['TODOS'], micro, 'Cultivos', tot);
+  });
+
+  Object.keys(freq).forEach(k=>Object.keys(freq[k]).forEach(p=>{
+    if(typeof freq[k][p]==='object'&&freq[k][p].totals) finishFreq(freq[k][p]);
+  }));
+  return freq;
+}
+
 function _deriveFromHospitalV2(hd){
   const out={
     hospital:{}, servicios:{subgrupos:[],data:{}}, infecciones:{subgrupos:[],data:{}},
@@ -786,7 +861,10 @@ function normalizeLoadedRAW(input){
       const key=(['DELEGACION TLAXCALA','AMBULATORIOS TLAXCALA','AMBULATORIOS'].includes(h))?'AMBULATORIOS TLAXCALA':h;
       if(hd&&hd.hospital){
         hd.años=hd.años||[...new Set((hd.periodos||[]).map(p=>String(p).split('-')[0]))];
-        hd.freq=hd.freq||{};
+        // Build freq from new JSON format (servicios/cultivos direct structure)
+        if(!hd.freq||!Object.keys(hd.freq).length){
+          hd.freq=buildFreqFromNewFormat(hd);
+        }
         norm._derivedByHospital[key]=hd;
       }else{
         norm._derivedByHospital[key]=_deriveFromHospitalV2(hd);
@@ -2359,7 +2437,7 @@ function initDrillPanel(){
               </label>
             </div>
             ${isMicro?`<input type="text" id="drill-micro-search-${i}" placeholder="Buscar..." oninput="drillFilterMicro(${i},this.value)" style="width:100%;box-sizing:border-box;padding:3px 7px;font-size:.67rem;border:1px solid #e2e8f0;border-radius:5px;margin-bottom:3px;outline:none;">`:''}
-            <div id="drill-${key}-checks-${i}" style="max-height:130px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px;padding:4px;background:${isMicro?'#faf5ff':'#f8fafc'};"></div>
+            <div id="drill-${key}-checks-${i}" style="max-height:130px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px;padding:4px;background:${isMicro?'#faf5ff':'#f8fafc'};${isMicro?'display:flex;flex-direction:column;':''}"></div>
           </div>`;
           }).join('')}
         </div>
