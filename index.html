@@ -2341,7 +2341,7 @@ function applyDrillChart(){
   try{
   const result=document.getElementById('drill-result');
   const status=document.getElementById('drill-status');
-  if(!result){ alert('ERROR: drill-result no existe'); return; }
+  if(!result) return;
   const hospIds=getAdvHospitals();
   const selectedYears=(()=>{
     const box=document.getElementById('drill-year-checks'); if(!box) return ['Todo el período'];
@@ -2416,7 +2416,7 @@ function applyDrillChart(){
   });
 
   if(!datasets.length){
-    result.innerHTML='<div class="empty" style="padding:20px;color:#dc2626;">Selecciona al menos un Servicio, Infección, Cultivo o Microorganismo en algún hospital.<br><small style="color:#6b7280;">hospIds: '+hospIds.join(', ')+'</small></div>';
+    result.innerHTML='<div class="empty" style="padding:20px;">Selecciona al menos un Servicio, Infección, Cultivo o Microorganismo en algún hospital.</div>';
     return;
   }
   if(status) status.textContent='';
@@ -2540,16 +2540,20 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
     +'Infecciones: '+infecciones+'\n'
     +'Periodo: '+periodo+'\n'
     +'Microorganismos: '+micros+'\n\n'
-    +'ANTIBIOGRAMA (AWaRe, S%, R%, n):\n'+datosGrafica+'\n\n'
-    +'REGLAS: Solo ABX con S>=50% y n>=5. Access primero, Watch si no hay Access viable, Reserve solo en IAAS.\n'
-    +'Mayor n = mayor confiabilidad. n<5 = empírico, no usar como primera elección.\n\n'
-    +'Genera 3 tablas HTML con columnas: Prioridad|Antibiótico|AWaRe|Dosis|Via|Duracion|Contraindicaciones|Interacciones|Ajuste renal(Si/No). Filas: Primera eleccion, Alternativa 1, Alternativa 2.\n'
-    +'Escribe "Access", "Watch" o "Reserve" tal cual en la columna AWaRe, sin cambiarlos.\n'
-    +'Solo HTML puro, sin markdown.\n'
+    +'ANTIBIOGRAMA REAL (clasificacion AWaRe asignada por el sistema, S%, R%, n cultivos):\n'+datosGrafica+'\n\n'
+    +'REGLAS ABSOLUTAS:\n'
+    +'1. SOLO recomienda antibioticos que aparecen en el antibiograma de arriba con S>=50% y n>=5.\n'
+    +'2. La columna AWaRe DEBE ser exactamente la clasificacion indicada entre corchetes [AWaRe:X] para cada antibiotico. NO cambies ni inventes clasificaciones.\n'
+    +'3. Si la clasificacion es "Sin clasificar", escribe "Sin clasificar" en la tabla.\n'
+    +'4. Si no hay antibioticos con S>=50% y n>=5, indica que no hay datos suficientes.\n'
+    +'5. NO menciones ni recomiendes antibioticos que no esten en la lista de arriba.\n\n'
+    +'Genera 3 tablas HTML. Columnas exactas: Prioridad | Antibiotico | AWaRe | Dosis | Via | Duracion | Contraindicaciones | Interacciones | Ajuste renal (Si/No).\n'
+    +'Filas: Primera eleccion, Alternativa 1, Alternativa 2.\n'
+    +'Solo HTML puro sin markdown.\n'
     +'<h3>1. Ambulatorio</h3>\n'
     +'<h3>2. Hospitalizado</h3>\n'
     +'<h3>3. IAAS</h3>\n'
-    +'Al final: <div class="ia-nota"> con alertas de resistencia, antibioticos descartados por n bajo, y los Access mas confiables.';
+    +'Al final: <div class="ia-nota"> indicando que antibioticos del antibiograma tienen R>50% y cuales fueron descartados por n bajo.';
 
   try{
     const res=await fetch(WORKER_URL,{
