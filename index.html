@@ -1043,7 +1043,7 @@ function getFixedTip(kind='default'){
     t=document.createElement('div'); t.id=id;
     t.style.cssText=kind==='freq'
       ?'display:none;position:fixed;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font-size:.68rem;z-index:9999;box-shadow:0 4px 16px rgba(15,23,42,.22);pointer-events:auto;width:220px;max-height:260px;overflow:auto;white-space:normal;font-family:DM Sans,sans-serif;line-height:1.45;'
-      :'display:none;position:fixed;background:#1e293b;color:#f1f5f9;border-radius:9px;padding:10px 14px;font-size:.72rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);pointer-events:none;min-width:180px;max-width:260px;white-space:normal;font-family:DM Sans,sans-serif;line-height:1.75;';
+      :'display:none;position:fixed;background:#1e293b;color:#f1f5f9;border-radius:9px;padding:10px 14px;font-size:.72rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);pointer-events:none;min-width:180px;max-width:260px;white-space:normal;font-family:DM Sans,sans-serif;line-height:1.75;transition:opacity .08s;';
     document.body.appendChild(t);
   }
   return t;
@@ -1060,7 +1060,22 @@ function placeTip(e){
   if(top<8) top=8; if(top+th>vh-8) top=vh-th-8;
   t.style.left=left+'px'; t.style.top=top+'px';
 }
-function hideTip(){ ['_ftip','_ftip_freq'].forEach(id=>{ const t=document.getElementById(id); if(t) t.style.display='none'; }); }
+let _hideTipTimer=null;
+function hideTip(delay=80){
+  clearTimeout(_hideTipTimer);
+  _hideTipTimer=setTimeout(()=>{
+    ['_ftip','_ftip_freq'].forEach(id=>{
+      const t=document.getElementById(id);
+      if(t&&t.dataset.locked!=='1') t.style.display='none';
+    });
+  }, delay);
+}
+function showTip(tipEl, html, e){
+  clearTimeout(_hideTipTimer);
+  tipEl.innerHTML=html;
+  tipEl.style.display='block';
+  placeTip(e);
+}
 
 // ── VERTICAL STACKED CHART (S/R/I) ──
 function awareTag(label){
@@ -1177,11 +1192,11 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
           inn+=`<div style="color:#fbbf24;">I: ${d.d2.I} (${d.d2.pI})</div>`;
           inn+=`<div style="color:#94a3b8;border-top:1px solid #334155;margin-top:3px;padding-top:3px;">Total: ${d.d2.T}</div>`;
         }
-        tip.innerHTML=inn; tip.style.display='block'; placeTip(e);
+        showTip(tip,inn,e);
       }catch(ex){}
     });
     bar.addEventListener('mousemove',e=>placeTip(e));
-    bar.addEventListener('mouseleave',hideTip);
+    bar.addEventListener('mouseleave',()=>hideTip(80));
   });
 }
 
@@ -1281,11 +1296,11 @@ function buildSRIMultiChart(datasets, cid){
         inn+=`<div style="color:#f87171;">R: ${d.R} (${d.pR})</div>`;
         inn+=`<div style="color:#fbbf24;">I: ${d.I} (${d.pI})</div>`;
         inn+=`<div style="color:#94a3b8;border-top:1px solid #334155;margin-top:3px;padding-top:3px;">Total: ${d.T}</div>`;
-        tip.innerHTML=inn; tip.style.display='block'; placeTip(e);
+        showTip(tip,inn,e);
       }catch(ex){}
     });
     bar.addEventListener('mousemove',e=>placeTip(e));
-    bar.addEventListener('mouseleave',hideTip);
+    bar.addEventListener('mouseleave',()=>hideTip(80));
   });
 }
 
@@ -1338,11 +1353,11 @@ function buildSRICompactChart(data, cid){
         inn+=`<div style="color:#f87171;">R: ${d.R} (${d.pR})</div>`;
         inn+=`<div style="color:#fbbf24;">I: ${d.I} (${d.pI})</div>`;
         inn+=`<div style="color:#94a3b8;border-top:1px solid #334155;margin-top:3px;padding-top:3px;">Total: ${d.t}</div>`;
-        tip.innerHTML=inn; tip.style.display='block'; placeTip(e);
+        showTip(tip,inn,e);
       }catch(ex){}
     });
     bar.addEventListener('mousemove',e=>placeTip(e));
-    bar.addEventListener('mouseleave',hideTip);
+    bar.addEventListener('mouseleave',()=>hideTip(80));
   });
 }
 
@@ -1447,7 +1462,7 @@ function buildFreqChart(data, cid){
     bar.addEventListener('mouseleave',e=>{
       const to=e.relatedTarget;
       if(to===tip || (to&&tip.contains(to))) return;
-      setTimeout(()=>{ if(tip.dataset.locked!=='1') hideTip(); },120);
+      hideTip(120);
     });
   });
 }
