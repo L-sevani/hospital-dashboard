@@ -2421,6 +2421,9 @@ function applyDrillChart(){
   }
   if(status) status.textContent='';
 
+  // dimLabel: descripción de la dimensión seleccionada (para AVISO y título)
+  const dimLabel=datasets[0]?.micro||'';
+
   const cid='drill-multi-'+Math.random().toString(36).slice(2,6);
   const iaId='drill-ia-'+Math.random().toString(36).slice(2,6);
   // Recopilar top micros de todos los hospitales cuando no se seleccionó micro
