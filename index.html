@@ -2276,18 +2276,38 @@ function rebuildAllDrillCascades(){
 function fillDrillChecks(boxId, items, prevSet){
   const box=document.getElementById(boxId); if(!box) return;
   box.innerHTML='';
-  // Forzar columna única para que no se desordene al filtrar
-  box.style.cssText=box.style.cssText+';display:flex;flex-direction:column;';
   [...items].sort().forEach(v=>{
     const lb=document.createElement('label');
-    lb.style.cssText='display:flex;align-items:center;gap:5px;padding:3px 5px;border-radius:4px;cursor:pointer;font-size:.68rem;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;';
+    lb.style.cssText='display:flex;align-items:center;gap:5px;padding:3px 5px;border-radius:4px;cursor:pointer;font-size:.68rem;line-height:1.3;';
     lb.onmouseenter=()=>lb.style.background='#f1f5f9';
     lb.onmouseleave=()=>lb.style.background='';
     const ck=document.createElement('input'); ck.type='checkbox'; ck.value=v; ck.checked=prevSet.has(v);
     ck.style.cssText='flex-shrink:0;accent-color:#7c3aed;';
-    const sp=document.createElement('span'); sp.textContent=v; sp.style.cssText='overflow:hidden;text-overflow:ellipsis;';
+    const sp=document.createElement('span'); sp.textContent=v;
     lb.appendChild(ck); lb.appendChild(sp); box.appendChild(lb);
   });
+}
+
+function drillFilterMicro(i, query){
+  const box=document.getElementById(`drill-micro-checks-${i}`);
+  if(!box) return;
+  const q=query.trim().toLowerCase();
+  // Usar visibility+height para no reordenar el layout
+  box.querySelectorAll('label').forEach(lb=>{
+    const match=!q||lb.textContent.toLowerCase().includes(q);
+    lb.style.visibility=match?'':'hidden';
+    lb.style.height=match?'':'0';
+    lb.style.padding=match?'':'0';
+    lb.style.margin=match?'':'0';
+    lb.style.overflow=match?'':'hidden';
+  });
+  const allCk=document.getElementById(`drill-micro-all-${i}`);
+  if(allCk){
+    const visible=box.querySelectorAll('label[style*="visibility: visible"], label:not([style*="hidden"])');
+    const checked=box.querySelectorAll('input:checked');
+    allCk.indeterminate=checked.length>0&&checked.length<visible.length;
+    allCk.checked=visible.length>0&&checked.length===visible.length;
+  }
 }
 
 function rebuildDrillCascadeForHosp(i,hospId){
