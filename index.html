@@ -2189,7 +2189,12 @@ function expandDrillPeriods(periods){
   if(!periods||!periods.length||periods.includes('TODOS')) return (RAW.periodos||[]);
   const out=[];
   periods.forEach(p=>{
-    if(/^\d{4}$/.test(p)) (RAW.periodos||[]).filter(m=>m.startsWith(p+'-')).forEach(m=>out.push(m));
+    if(/^\d{4}$/.test(p)){
+      // New JSON stores years directly; old JSON stored months
+      const months=(RAW.periodos||[]).filter(m=>m.startsWith(p+'-'));
+      if(months.length) months.forEach(m=>out.push(m));
+      else out.push(p); // year-only format
+    }
     else if(/^\d{4}-\d{2}$/.test(p)) out.push(p);
   });
   return [...new Set(out)];
@@ -2289,8 +2294,13 @@ function rebuildDrillCascadeForHosp(i,hospId){
     const prev=box?new Set([...box.querySelectorAll('input:checked')].map(c=>c.value)):new Set();
     fillDrillChecks(`drill-${key}-checks-${i}`, Object.keys(map), prev);
   });
+  // Microorganismos: usar micros.subgrupos del hospital directamente
+  const derived=getRawSliceForHospital(hospId)||RAW;
   const allMicros=new Set();
+  // First try from maps (old JSON format)
   [m.svcMap,m.infMap,m.culMap].forEach(map=>Object.values(map).forEach(s=>s.forEach(v=>v!=='*'&&allMicros.add(v))));
+  // If empty (new JSON format), use micros.subgrupos
+  if(!allMicros.size) (derived.micros?.subgrupos||[]).forEach(v=>allMicros.add(v));
   const mBox=document.getElementById(`drill-micro-checks-${i}`);
   const prevM=mBox?new Set([...mBox.querySelectorAll('input:checked')].map(c=>c.value)):new Set();
   fillDrillChecks(`drill-micro-checks-${i}`, allMicros, prevM);
