@@ -120,26 +120,39 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .adv-btn-clear:hover{background:#e2e8f0;color:#374151;}
 .ia-chip{background:#f0fdf4;color:#154f39;border:1px solid #bbf7d0;border-radius:20px;padding:5px 13px;font-size:.72rem;cursor:pointer;font-weight:600;transition:all .15s;}
 .ia-chip:hover{background:#dcfce7;border-color:#86efac;}
+.drill-ia-content{font-size:.78rem;color:#1e293b;line-height:1.6;}
+.drill-ia-content h2{font-size:.9rem;color:#0f4c2a;font-weight:800;margin:22px 0 6px;padding:8px 14px;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border-left:4px solid #154f39;border-radius:0 8px 8px 0;}
+.drill-ia-content h2:first-child{margin-top:0;}
 .drill-ia-content h3{font-size:.82rem;color:#154f39;font-weight:800;margin:18px 0 0;padding:6px 12px;background:#f0fdf4;border-left:4px solid #154f39;border-radius:0 6px 6px 0;}
 .drill-ia-content h3:first-child{margin-top:0;}
-.drill-ia-content table{width:100%;border-collapse:collapse;font-size:.72rem;margin:8px 0 14px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);table-layout:fixed;}
+.drill-ia-content h4{font-size:.76rem;color:#374151;font-weight:700;margin:10px 0 4px;padding:4px 0;}
+.drill-ia-content table{width:100%;border-collapse:collapse;font-size:.72rem;margin:8px 0 14px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.08);table-layout:fixed;}
 .drill-ia-content thead{background:linear-gradient(135deg,#154f39,#1a6347);color:#fff;}
-.drill-ia-content th{padding:8px 8px;text-align:left;font-weight:700;font-size:.67rem;letter-spacing:.02em;overflow:hidden;word-wrap:break-word;}
-.drill-ia-content th:nth-child(1){width:11%;}
-.drill-ia-content th:nth-child(2){width:11%;}
-.drill-ia-content th:nth-child(3){width:7%;}
-.drill-ia-content th:nth-child(4){width:10%;}
+.drill-ia-content th{padding:9px 8px;text-align:left;font-weight:700;font-size:.67rem;letter-spacing:.02em;overflow:hidden;word-wrap:break-word;}
+.drill-ia-content th:nth-child(1){width:9%;}
+.drill-ia-content th:nth-child(2){width:10%;}
+.drill-ia-content th:nth-child(3){width:8%;}
+.drill-ia-content th:nth-child(4){width:9%;}
 .drill-ia-content th:nth-child(5){width:6%;}
-.drill-ia-content th:nth-child(6){width:8%;}
-.drill-ia-content th:nth-child(7){width:20%;}
-.drill-ia-content th:nth-child(8){width:20%;}
+.drill-ia-content th:nth-child(6){width:7%;}
+.drill-ia-content th:nth-child(7){width:17%;}
+.drill-ia-content th:nth-child(8){width:17%;}
 .drill-ia-content th:nth-child(9){width:7%;}
-.drill-ia-content td{padding:7px 8px;border-bottom:1px solid #f1f5f9;color:#374151;vertical-align:top;line-height:1.4;word-wrap:break-word;overflow-wrap:break-word;}
+.drill-ia-content td{padding:7px 8px;border-bottom:1px solid #f1f5f9;color:#374151;vertical-align:top;line-height:1.4;word-wrap:break-word;}
 .drill-ia-content tr:last-child td{border-bottom:none;}
-.drill-ia-content tr:nth-child(even) td{background:#f8fafc;}
+.drill-ia-content tr:nth-child(even) td{background:#f8fffe;}
 .drill-ia-content tr:hover td{background:#f0fdf4;}
 .drill-ia-content td:first-child{font-weight:700;color:#154f39;}
+.drill-ia-content ul{margin:6px 0 10px 18px;padding:0;}
+.drill-ia-content li{margin-bottom:3px;color:#374151;}
+.drill-ia-content p{margin:4px 0 8px;}
+.drill-ia-content strong{color:#0f4c2a;}
 .ia-nota{margin-top:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;font-size:.72rem;color:#78350f;line-height:1.6;}
+.ia-aviso{margin-top:16px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:14px 18px;font-size:.72rem;color:#374151;line-height:1.7;}
+.ia-aviso strong{color:#1e293b;font-size:.74rem;display:block;margin-bottom:6px;}
+.ia-seccion{margin-bottom:16px;}
+.ia-seccion-titulo{font-size:.74rem;font-weight:800;color:#0f4c2a;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #d1fae5;padding-bottom:4px;margin-bottom:8px;}
+.ia-notas-adicionales{background:#f0fdf4;border-radius:8px;padding:10px 14px;margin:8px 0 14px;font-size:.71rem;color:#374151;border-left:3px solid #86efac;}
 .ia-thinking{display:flex;align-items:center;gap:8px;color:#6b7280;font-size:.8rem;padding:8px 0;}
 .ia-dot{width:7px;height:7px;border-radius:50%;background:#154f39;animation:iabounce .8s infinite alternate;}
 .ia-dot:nth-child(2){animation-delay:.2s;}.ia-dot:nth-child(3){animation-delay:.4s;}
@@ -2482,6 +2495,73 @@ function applyDrillChart(){
   }
 }
 
+// ── MARKDOWN/HTML PARSER PARA RESPUESTA IA ──
+function mdToHtml(md){
+  const lines=md.split('\n');
+  let html='',inTable=false,tableRows=[],inUl=false,inNota=false;
+
+  const flushTable=()=>{
+    if(!tableRows.length){inTable=false;return;}
+    const dataRows=tableRows.filter(r=>!r.every(c=>/^[-:\s]+$/.test(c)));
+    if(!dataRows.length){tableRows=[];inTable=false;return;}
+    const head=dataRows[0].map(c=>'<th>'+fmtIA(c)+'</th>').join('');
+    const body=dataRows.slice(1).map(r=>'<tr>'+r.map(c=>'<td>'+fmtIA(c)+'</td>').join('')+'</tr>').join('');
+    html+='<table><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';
+    tableRows=[];inTable=false;
+  };
+  const flushUl=()=>{if(inUl){html+='</ul>';inUl=false;}};
+
+  for(const raw of lines){
+    const line=raw.trimEnd();
+    if(line.startsWith('|')){
+      flushUl();
+      tableRows.push(line.split('|').slice(1,-1).map(c=>c.trim()));
+      inTable=true;continue;
+    }
+    if(inTable) flushTable();
+    if(line.includes('class="ia-nota"')||line.includes('class=\'ia-nota\'')||line.includes('</div>')){
+      flushUl();html+=line;inNota=false;continue;
+    }
+    if(/^##\s/.test(line)){
+      flushUl();
+      html+='<div class="ia-seccion-titulo">'+escIA(line.replace(/^##\s+/,''))+'</div>';continue;
+    }
+    if(/^###\s/.test(line)||(line.startsWith('**')&&line.endsWith('**')&&line.length<80)){
+      flushUl();
+      html+='<h3>'+escIA(line.replace(/^###\s+/,'').replace(/^\*\*|\*\*$/g,''))+'</h3>';continue;
+    }
+    if(/^####\s/.test(line)){flushUl();html+='<h4>'+fmtIA(line.replace(/^####\s+/,''))+'</h4>';continue;}
+    if(/^[•\-\*]\s/.test(line)){
+      if(!inUl){html+='<ul>';inUl=true;}
+      html+='<li>'+fmtIA(line.replace(/^[•\-\*]\s/,''))+'</li>';continue;
+    }
+    if(/^\d+\.\s/.test(line)&&line.length<200){
+      if(!inUl){html+='<ul style="list-style:decimal;">';inUl=true;}
+      html+='<li>'+fmtIA(line.replace(/^\d+\.\s/,''))+'</li>';continue;
+    }
+    if(!line.trim()){flushUl();continue;}
+    flushUl();
+    html+='<p>'+fmtIA(line)+'</p>';
+  }
+  if(inTable) flushTable();
+  if(inUl) html+='</ul>';
+
+  // Wrap AVISO
+  html=html.replace(/(Los esquemas terap[eé]uticos presentados)/,'<div class="ia-aviso"><strong>⚠️ AVISO</strong><br>$1');
+  if(html.includes('ia-aviso')&&!html.endsWith('</div>')) html+='</div>';
+
+  // AWaRe badges
+  const badge=(t,bg,c)=>'<span style="background:'+bg+';color:'+c+';border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">'+t+'</span>';
+  html=html.replace(/\bAccess\s*(?:\(A\))?/g, badge('Access','#dcfce7','#166534'));
+  html=html.replace(/\bWatch\s*(?:\(W\))?/g,  badge('Watch','#fef9c3','#854d0e'));
+  html=html.replace(/\bReserve\s*(?:\(R\))?/g, badge('Reserve','#fee2e2','#991b1b'));
+  return html;
+}
+function escIA(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtIA(s){
+  return s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');
+}
+
 function drillLaunchIA(iaId){
   const btn=document.getElementById('btn-ia-'+iaId);
   const wrap=document.getElementById(iaId);
@@ -2508,7 +2588,7 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
   const getAware=(name)=>{
     const meta=ABX_META[name]||CB_ABX_META[name];
     if(!meta||!meta.c||meta.c==='Sin clasificar') return 'Sin clasificar';
-    return meta.c==='A'?'Access (A)':meta.c==='W'?'Watch (W)':meta.c==='R'?'Reserve (R)':'Sin clasificar';
+    return meta.c==='A'?'Access':meta.c==='W'?'Watch':meta.c==='R'?'Reserve':'Sin clasificar';
   };
 
   // Datos de gráfica: solo ABX con n≥3, ordenados por S desc, max 15
@@ -2589,17 +2669,13 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
-        generationConfig:{maxOutputTokens:2500,temperature:0.2}
+        generationConfig:{maxOutputTokens:3500,temperature:0.2}
       })
     });
     const data=await res.json();
     if(data.candidates&&data.candidates[0]?.content?.parts[0]?.text){
-      let html=data.candidates[0].content.parts[0].text;
-      html=html.replace(/```html?/gi,'').replace(/```/g,'');
-      html=html.replace(/\bAccess\b/g,'<span style="background:#dcfce7;color:#166534;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Access</span>');
-      html=html.replace(/\bWatch\b/g,'<span style="background:#fef9c3;color:#854d0e;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Watch</span>');
-      html=html.replace(/\bReserve\b/g,'<span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Reserve</span>');
-      el.innerHTML='<div class="drill-ia-content">'+html+'</div>';
+      const mdRaw=data.candidates[0].content.parts[0].text.replace(/```html?/gi,'').replace(/```/g,'');
+      el.innerHTML='<div class="drill-ia-content">'+mdToHtml(mdRaw)+'</div>';
     }else if(data.error){
       el.innerHTML='<div style="color:#dc2626;font-size:.8rem;">Error: '+data.error.message+'</div>';
     }else{
