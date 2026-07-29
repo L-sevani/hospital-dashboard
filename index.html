@@ -2325,11 +2325,19 @@ function initDrillPanel(){
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
           ${[['svc','Servicio'],['inf','Infección'],['cul','Cultivo'],['micro','Microorganismo ⭐']].map(([key,label])=>{
             const isNoIaas=HOSP_NO_IAAS.has(hid);
-            if(key==='inf'&&isNoIaas) return ''; // Ambulatorios no tiene infecciones IAAS
+            if(key==='inf'&&isNoIaas) return '';
+            const isMicro=key==='micro';
             return `
           <div>
-            <div style="font-size:.66rem;font-weight:700;color:${key==='micro'?col.main:'#475569'};text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">${label}</div>
-            <div id="drill-${key}-checks-${i}" style="max-height:140px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px;padding:4px;background:${key==='micro'?'#faf5ff':'#f8fafc'};"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+              <span style="font-size:.66rem;font-weight:700;color:${isMicro?col.main:'#475569'};text-transform:uppercase;letter-spacing:.04em;">${label}</span>
+              <label style="display:flex;align-items:center;gap:3px;font-size:.6rem;color:#64748b;cursor:pointer;white-space:nowrap;">
+                <input type="checkbox" id="drill-${key}-all-${i}" onchange="drillToggleAll('${key}',${i},this.checked)" style="width:11px;height:11px;accent-color:${col.main};">
+                <span>Todo</span>
+              </label>
+            </div>
+            ${isMicro?`<input type="text" id="drill-micro-search-${i}" placeholder="Buscar..." oninput="drillFilterMicro(${i},this.value)" style="width:100%;box-sizing:border-box;padding:3px 7px;font-size:.67rem;border:1px solid #e2e8f0;border-radius:5px;margin-bottom:3px;outline:none;">`:''}
+            <div id="drill-${key}-checks-${i}" style="max-height:130px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px;padding:4px;background:${isMicro?'#faf5ff':'#f8fafc'};"></div>
           </div>`;
           }).join('')}
         </div>
@@ -2338,6 +2346,31 @@ function initDrillPanel(){
   }).join('');
   _drillMapsArr=new Array(hospIds.length).fill(null);
   rebuildAllDrillCascades();
+}
+
+function drillToggleAll(key, i, checked){
+  const box=document.getElementById(`drill-${key}-checks-${i}`);
+  if(!box) return;
+  // Only toggle visible items (respects search filter)
+  box.querySelectorAll('label:not([style*="display:none"]) input').forEach(c=>c.checked=checked);
+}
+
+function drillFilterMicro(i, query){
+  const box=document.getElementById(`drill-micro-checks-${i}`);
+  if(!box) return;
+  const q=query.trim().toLowerCase();
+  box.querySelectorAll('label').forEach(lb=>{
+    const text=lb.textContent.toLowerCase();
+    lb.style.display=(!q||text.includes(q))?'':'none';
+  });
+  // Update "Todo" checkbox state
+  const allCk=document.getElementById(`drill-micro-all-${i}`);
+  if(allCk){
+    const visible=box.querySelectorAll('label:not([style*="display:none"]) input');
+    const checked=box.querySelectorAll('label:not([style*="display:none"]) input:checked');
+    allCk.checked=visible.length>0&&visible.length===checked.length;
+    allCk.indeterminate=checked.length>0&&checked.length<visible.length;
+  }
 }
 
 function applyDrillChart(){
