@@ -2338,9 +2338,10 @@ function initDrillPanel(){
 }
 
 function applyDrillChart(){
+  try{
   const result=document.getElementById('drill-result');
   const status=document.getElementById('drill-status');
-  if(!result) return;
+  if(!result){ alert('ERROR: drill-result no existe'); return; }
   const hospIds=getAdvHospitals();
   const selectedYears=(()=>{
     const box=document.getElementById('drill-year-checks'); if(!box) return ['Todo el período'];
@@ -2471,6 +2472,11 @@ function applyDrillChart(){
   // Guardar contexto para el botón
   window['_drillCtx_'+iaId]={datasets, topMicros:allTopMicros};
   buildSRIMultiChart(datasets, cid);
+  }catch(err){
+    const result=document.getElementById('drill-result');
+    if(result) result.innerHTML='<div style="color:#dc2626;padding:12px;background:#fee2e2;border-radius:8px;font-size:.8rem;"><strong>Error en applyDrillChart:</strong> '+err.message+'<br><small>'+err.stack+'</small></div>';
+    else alert('Error: '+err.message);
+  }
 }
 
 function drillLaunchIA(iaId){
