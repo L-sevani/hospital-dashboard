@@ -29922,7 +29922,7 @@
         "subgrupos": [
           "HEMOCULTIVOS",
           "UROCULTIVOS",
-          "NEUMO",
+          "VÍAS RESPIRATORIAS",
           "PERITONEAL",
           "OTROS"
         ],
@@ -34115,7 +34115,7 @@
               }
             ]
           },
-          "NEUMO": {
+          "VÍAS RESPIRATORIAS": {
             "TODOS": [
               {
                 "a": "Hongo Anfotericina B",
@@ -48575,44 +48575,6 @@
           "RAOULTELLA PLANTICOLA": 1,
           "SERRATIA LIQUEFACIENS": 1
         },
-        "NEUMO": {
-          "STAPHYLOCOCCUS AUREUS": 38,
-          "ESCHERICHIA COLI": 38,
-          "STAPHYLOCOCCUS HAEMOLYTICUS": 28,
-          "STAPHYLOCOCCUS EPIDERMIDIS": 27,
-          "PSEUDOMONAS AERUGINOSA": 22,
-          "CANDIDA ALBICANS": 22,
-          "ENTEROCOCCUS FAECALIS": 15,
-          "KLEBSIELLA PNEUMONIAE": 15,
-          "ENTEROBACTER CLOACAE": 13,
-          "KLEBSIELLA PNEUMONIAE SUBS. PNEUMONIAE": 12,
-          "STENOTROPHOMONAS MALTOPHILIA": 11,
-          "ACINETOBACTER BAUMANNI": 10,
-          "ENTEROCOCCUS FAECIUM": 7,
-          "ACINETOBACTER BAUMANNII COMPLEX (A. BAUMANNII, A. CALCOACETICUS, A. NOSOCOMIALIS, A. PITTII)": 7,
-          "KLEBSIELLA OXITOCA": 5,
-          "CANDIDA TROPICALES": 4,
-          "STAPHYLOCOCCUS  LENTUS": 3,
-          "CANDIDA GLABRATA": 3,
-          "NEGATIVO": 3,
-          "SERRATIA MARCESCENS": 3,
-          "CITROBACTER FREUNDII": 2,
-          "KLEBSIELLA SPP. (OTROS)": 2,
-          "ACINETOBACTER IWOFFII": 2,
-          "KLEBSIELLA AEROGENES": 2,
-          "MORGANELLA MORGANII": 1,
-          "PROTEUS VULGARIS": 1,
-          "COMAMONAS TESTOSTERONI": 1,
-          "CORYNEBACTERIUM SPP. (OTROS)": 1,
-          "CANDIDA KRUSEI": 1,
-          "BULKHOLDERIA CEPACIA": 1,
-          "STAPHYLOCOCCUS HOMINNIS": 1,
-          "CITROBACTER KOSERI": 1,
-          "ACINETOBACTER HAEMOLYTICUS": 1,
-          "AEROMONAS HYDROPHILA": 1,
-          "BURKHOLDERIA CEPACIA COMPLEX": 1,
-          "HAEMOPHILUS INFLUENZAE": 1
-        },
         "OTROS": {
           "ESCHERICHIA COLI": 105,
           "STAPHYLOCOCCUS AUREUS": 74,
@@ -48709,6 +48671,44 @@
           "NEGATIVO": 1,
           "PROTEUS MIRABILIS": 1,
           "KLEBSIELLA AEROGENES": 1
+        },
+        "VÍAS RESPIRATORIAS": {
+          "STAPHYLOCOCCUS AUREUS": 38,
+          "ESCHERICHIA COLI": 38,
+          "STAPHYLOCOCCUS HAEMOLYTICUS": 28,
+          "STAPHYLOCOCCUS EPIDERMIDIS": 27,
+          "PSEUDOMONAS AERUGINOSA": 22,
+          "CANDIDA ALBICANS": 22,
+          "ENTEROCOCCUS FAECALIS": 15,
+          "KLEBSIELLA PNEUMONIAE": 15,
+          "ENTEROBACTER CLOACAE": 13,
+          "KLEBSIELLA PNEUMONIAE SUBS. PNEUMONIAE": 12,
+          "STENOTROPHOMONAS MALTOPHILIA": 11,
+          "ACINETOBACTER BAUMANNI": 10,
+          "ENTEROCOCCUS FAECIUM": 7,
+          "ACINETOBACTER BAUMANNII COMPLEX (A. BAUMANNII, A. CALCOACETICUS, A. NOSOCOMIALIS, A. PITTII)": 7,
+          "KLEBSIELLA OXITOCA": 5,
+          "CANDIDA TROPICALES": 4,
+          "STAPHYLOCOCCUS  LENTUS": 3,
+          "CANDIDA GLABRATA": 3,
+          "NEGATIVO": 3,
+          "SERRATIA MARCESCENS": 3,
+          "CITROBACTER FREUNDII": 2,
+          "KLEBSIELLA SPP. (OTROS)": 2,
+          "ACINETOBACTER IWOFFII": 2,
+          "KLEBSIELLA AEROGENES": 2,
+          "MORGANELLA MORGANII": 1,
+          "PROTEUS VULGARIS": 1,
+          "COMAMONAS TESTOSTERONI": 1,
+          "CORYNEBACTERIUM SPP. (OTROS)": 1,
+          "CANDIDA KRUSEI": 1,
+          "BULKHOLDERIA CEPACIA": 1,
+          "STAPHYLOCOCCUS HOMINNIS": 1,
+          "CITROBACTER KOSERI": 1,
+          "ACINETOBACTER HAEMOLYTICUS": 1,
+          "AEROMONAS HYDROPHILA": 1,
+          "BURKHOLDERIA CEPACIA COMPLEX": 1,
+          "HAEMOPHILUS INFLUENZAE": 1
         }
       },
       "micros_inf": {
@@ -48908,52 +48908,52 @@
       "svc_cul": {
         "CIRUGÍA": {
           "HEMOCULTIVOS": 25,
-          "NEUMO": 29,
           "OTROS": 42,
           "PERITONEAL": 10,
-          "UROCULTIVOS": 17
+          "UROCULTIVOS": 17,
+          "VÍAS RESPIRATORIAS": 29
         },
         "GINECOLOGÍA": {
           "HEMOCULTIVOS": 13,
-          "NEUMO": 14,
           "OTROS": 15,
           "PERITONEAL": 7,
-          "UROCULTIVOS": 10
+          "UROCULTIVOS": 10,
+          "VÍAS RESPIRATORIAS": 14
         },
         "MEDICINA INTERNA": {
           "HEMOCULTIVOS": 31,
-          "NEUMO": 35,
           "OTROS": 46,
           "PERITONEAL": 13,
-          "UROCULTIVOS": 17
+          "UROCULTIVOS": 17,
+          "VÍAS RESPIRATORIAS": 35
         },
         "PEDIATRÍA": {
           "HEMOCULTIVOS": 14,
-          "NEUMO": 17,
           "OTROS": 17,
           "PERITONEAL": 9,
-          "UROCULTIVOS": 11
+          "UROCULTIVOS": 11,
+          "VÍAS RESPIRATORIAS": 17
         },
         "UCI": {
           "HEMOCULTIVOS": 6,
-          "NEUMO": 7,
           "OTROS": 6,
           "PERITONEAL": 4,
-          "UROCULTIVOS": 5
+          "UROCULTIVOS": 5,
+          "VÍAS RESPIRATORIAS": 7
         },
         "UCI ADULTOS": {
           "HEMOCULTIVOS": 10,
-          "NEUMO": 10,
           "OTROS": 11,
           "PERITONEAL": 6,
-          "UROCULTIVOS": 8
+          "UROCULTIVOS": 8,
+          "VÍAS RESPIRATORIAS": 10
         },
         "URGENCIAS": {
           "HEMOCULTIVOS": 5,
-          "NEUMO": 4,
           "OTROS": 4,
           "PERITONEAL": 2,
-          "UROCULTIVOS": 1
+          "UROCULTIVOS": 1,
+          "VÍAS RESPIRATORIAS": 4
         }
       },
       "periodos": [
@@ -74757,7 +74757,7 @@
         "subgrupos": [
           "HEMOCULTIVOS",
           "UROCULTIVOS",
-          "NEUMO",
+          "VÍAS RESPIRATORIAS",
           "PERITONEAL",
           "OTROS"
         ],
@@ -78857,7 +78857,7 @@
               }
             ]
           },
-          "NEUMO": {
+          "VÍAS RESPIRATORIAS": {
             "TODOS": [
               {
                 "a": "Hongo Anfotericina B",
@@ -90043,39 +90043,6 @@
           "AEROMONAS HYDROPHILA": 1,
           "CITROBACTER FREUNDII": 1
         },
-        "NEUMO": {
-          "STAPHYLOCOCCUS EPIDERMIDIS": 26,
-          "ESCHERICHIA COLI": 24,
-          "STAPHYLOCOCCUS HAEMOLYTICUS": 14,
-          "STAPHYLOCOCCUS AUREUS": 12,
-          "PSEUDOMONAS AERUGINOSA": 11,
-          "ENTEROCOCCUS FAECALIS": 9,
-          "CANDIDA ALBICANS": 4,
-          "CITROBACTER FREUNDII": 4,
-          "KLEBSIELLA PNEUMONIAE": 4,
-          "ACINETOBACTER BAUMANNI": 3,
-          "STAPHYLOCOCCUS LUGDUNENSIS": 2,
-          "RAOULTELLA PLANTICOLA": 2,
-          "ENTEROCOCCUS FAECIUM": 2,
-          "CANDIDA TROPICALES": 2,
-          "KLEBSIELLA OXITOCA": 2,
-          "STAPHYLOCOCCUS HOMINNIS": 2,
-          "KLEBSIELLA PNEUMONIAE SUBS. PNEUMONIAE": 2,
-          "ACINETOBACTER BAUMANNII COMPLEX (A. BAUMANNII, A. CALCOACETICUS, A. NOSOCOMIALIS, A. PITTII)": 2,
-          "ACINETOBACTER URSINGUII": 2,
-          "CANDIDA SPP. (OTROS)": 1,
-          "STREPTOCOCCUS ANGINOSUS": 1,
-          "STREPTOCOCCUS SANGUINIS": 1,
-          "BACILLUS CEREUS": 1,
-          "ENTEROBACTER CLOACAE": 1,
-          "STAPHYLOCOCCUS SCIURI": 1,
-          "STENOTROPHOMONAS MALTOPHILIA": 1,
-          "ENTEROBACTER AEROGENES": 1,
-          "AEROMONAS HYDROPHILA": 1,
-          "ACHROMOBACTER XYLOSOXIDANS": 1,
-          "PROTEUS MIRABILIS": 1,
-          "BURKHOLDERIA CEPACIA COMPLEX": 1
-        },
         "OTROS": {
           "ESCHERICHIA COLI": 109,
           "STAPHYLOCOCCUS EPIDERMIDIS": 65,
@@ -90141,6 +90108,39 @@
           "KLEBSIELLA OXITOCA": 1,
           "NEGATIVO": 1,
           "ENTEROBACTER CLOACAE": 1
+        },
+        "VÍAS RESPIRATORIAS": {
+          "STAPHYLOCOCCUS EPIDERMIDIS": 26,
+          "ESCHERICHIA COLI": 24,
+          "STAPHYLOCOCCUS HAEMOLYTICUS": 14,
+          "STAPHYLOCOCCUS AUREUS": 12,
+          "PSEUDOMONAS AERUGINOSA": 11,
+          "ENTEROCOCCUS FAECALIS": 9,
+          "CANDIDA ALBICANS": 4,
+          "CITROBACTER FREUNDII": 4,
+          "KLEBSIELLA PNEUMONIAE": 4,
+          "ACINETOBACTER BAUMANNI": 3,
+          "STAPHYLOCOCCUS LUGDUNENSIS": 2,
+          "RAOULTELLA PLANTICOLA": 2,
+          "ENTEROCOCCUS FAECIUM": 2,
+          "CANDIDA TROPICALES": 2,
+          "KLEBSIELLA OXITOCA": 2,
+          "STAPHYLOCOCCUS HOMINNIS": 2,
+          "KLEBSIELLA PNEUMONIAE SUBS. PNEUMONIAE": 2,
+          "ACINETOBACTER BAUMANNII COMPLEX (A. BAUMANNII, A. CALCOACETICUS, A. NOSOCOMIALIS, A. PITTII)": 2,
+          "ACINETOBACTER URSINGUII": 2,
+          "CANDIDA SPP. (OTROS)": 1,
+          "STREPTOCOCCUS ANGINOSUS": 1,
+          "STREPTOCOCCUS SANGUINIS": 1,
+          "BACILLUS CEREUS": 1,
+          "ENTEROBACTER CLOACAE": 1,
+          "STAPHYLOCOCCUS SCIURI": 1,
+          "STENOTROPHOMONAS MALTOPHILIA": 1,
+          "ENTEROBACTER AEROGENES": 1,
+          "AEROMONAS HYDROPHILA": 1,
+          "ACHROMOBACTER XYLOSOXIDANS": 1,
+          "PROTEUS MIRABILIS": 1,
+          "BURKHOLDERIA CEPACIA COMPLEX": 1
         }
       },
       "micros_inf": {
@@ -90288,37 +90288,37 @@
       "svc_cul": {
         "CIRUGÍA": {
           "HEMOCULTIVOS": 17,
-          "NEUMO": 24,
           "OTROS": 34,
           "PERITONEAL": 6,
-          "UROCULTIVOS": 11
+          "UROCULTIVOS": 11,
+          "VÍAS RESPIRATORIAS": 24
         },
         "GINECOLOGÍA": {
           "HEMOCULTIVOS": 11,
-          "NEUMO": 12,
           "OTROS": 12,
           "PERITONEAL": 3,
-          "UROCULTIVOS": 6
+          "UROCULTIVOS": 6,
+          "VÍAS RESPIRATORIAS": 12
         },
         "MEDICINA INTERNA": {
           "HEMOCULTIVOS": 15,
-          "NEUMO": 23,
           "OTROS": 21,
           "PERITONEAL": 4,
-          "UROCULTIVOS": 10
+          "UROCULTIVOS": 10,
+          "VÍAS RESPIRATORIAS": 23
         },
         "PEDIATRÍA": {
           "HEMOCULTIVOS": 18,
-          "NEUMO": 17,
           "OTROS": 26,
           "PERITONEAL": 4,
-          "UROCULTIVOS": 10
+          "UROCULTIVOS": 10,
+          "VÍAS RESPIRATORIAS": 17
         },
         "URGENCIAS": {
           "HEMOCULTIVOS": 1,
-          "NEUMO": 1,
           "OTROS": 1,
-          "PERITONEAL": 1
+          "PERITONEAL": 1,
+          "VÍAS RESPIRATORIAS": 1
         }
       },
       "periodos": [
@@ -107542,7 +107542,7 @@
         "subgrupos": [
           "HEMOCULTIVOS",
           "UROCULTIVOS",
-          "NEUMO",
+          "VÍAS RESPIRATORIAS",
           "PERITONEAL",
           "OTROS"
         ],
@@ -108894,7 +108894,7 @@
               }
             ]
           },
-          "NEUMO": {
+          "VÍAS RESPIRATORIAS": {
             "TODOS": [
               {
                 "a": "G+ AmoxicilinaAcido Clavulanico",
@@ -115956,13 +115956,6 @@
           "CANDIDA ALBICANS": 1,
           "STAPHYLOCOCCUS HOMINNIS": 1
         },
-        "NEUMO": {
-          "ESCHERICHIA COLI": 2,
-          "STAPHYLOCOCCUS EPIDERMIDIS": 1,
-          "ENTEROBACTER CLOACAE": 1,
-          "ENTEROBACTER CLOACAE COMPLEX": 1,
-          "ENTEROCOCCUS FAECIUM": 1
-        },
         "OTROS": {
           "ESCHERICHIA COLI": 63,
           "STAPHYLOCOCCUS EPIDERMIDIS": 18,
@@ -116003,6 +115996,13 @@
           "CANDIDA ALBICANS": 3,
           "ESCHERICHIA COLI": 1,
           "CANDIDA TROPICALES": 1
+        },
+        "VÍAS RESPIRATORIAS": {
+          "ESCHERICHIA COLI": 2,
+          "STAPHYLOCOCCUS EPIDERMIDIS": 1,
+          "ENTEROBACTER CLOACAE": 1,
+          "ENTEROBACTER CLOACAE COMPLEX": 1,
+          "ENTEROCOCCUS FAECIUM": 1
         }
       },
       "micros_inf": {
@@ -116093,31 +116093,31 @@
       "svc_cul": {
         "CIRUGÍA": {
           "HEMOCULTIVOS": 6,
-          "NEUMO": 4,
           "OTROS": 23,
           "PERITONEAL": 2,
-          "UROCULTIVOS": 2
+          "UROCULTIVOS": 2,
+          "VÍAS RESPIRATORIAS": 4
         },
         "GINECOLOGÍA": {
           "HEMOCULTIVOS": 3,
-          "NEUMO": 2,
           "OTROS": 11,
           "PERITONEAL": 2,
-          "UROCULTIVOS": 1
+          "UROCULTIVOS": 1,
+          "VÍAS RESPIRATORIAS": 2
         },
         "MEDICINA INTERNA": {
           "HEMOCULTIVOS": 3,
-          "NEUMO": 3,
           "OTROS": 9,
           "PERITONEAL": 1,
-          "UROCULTIVOS": 3
+          "UROCULTIVOS": 3,
+          "VÍAS RESPIRATORIAS": 3
         },
         "PEDIATRÍA": {
           "HEMOCULTIVOS": 7,
-          "NEUMO": 5,
           "OTROS": 13,
           "PERITONEAL": 2,
-          "UROCULTIVOS": 2
+          "UROCULTIVOS": 2,
+          "VÍAS RESPIRATORIAS": 5
         },
         "URGENCIAS": {
           "HEMOCULTIVOS": 1
@@ -123839,7 +123839,6 @@
         "subgrupos": [
           "HEMOCULTIVOS",
           "UROCULTIVOS",
-          "NEUMO",
           "PERITONEAL",
           "OTROS",
           "HERIDA QUIRURGICA",
@@ -126008,1150 +126007,6 @@
               }
             ]
           },
-          "NEUMO": {
-            "TODOS": [
-              {
-                "a": "Hongo Anfotericina B",
-                "S": 6,
-                "R": 0,
-                "I": 0,
-                "t": 6
-              },
-              {
-                "a": "Hongo Caspofungina",
-                "S": 6,
-                "R": 0,
-                "I": 0,
-                "t": 6
-              },
-              {
-                "a": "Hongo Fluconazol",
-                "S": 6,
-                "R": 0,
-                "I": 0,
-                "t": 6
-              },
-              {
-                "a": "Hongo Voriconazol",
-                "S": 5,
-                "R": 1,
-                "I": 0,
-                "t": 6
-              },
-              {
-                "a": "G+ Ampicilina",
-                "S": 15,
-                "R": 8,
-                "I": 0,
-                "t": 23
-              },
-              {
-                "a": "G+ Ceftriaxona",
-                "S": 14,
-                "R": 16,
-                "I": 2,
-                "t": 32
-              },
-              {
-                "a": "G+ Clindamicina",
-                "S": 44,
-                "R": 15,
-                "I": 0,
-                "t": 59
-              },
-              {
-                "a": "G+ Ciprofloxacina",
-                "S": 57,
-                "R": 14,
-                "I": 3,
-                "t": 74
-              },
-              {
-                "a": "G+ Daptomicina",
-                "S": 49,
-                "R": 0,
-                "I": 0,
-                "t": 49
-              },
-              {
-                "a": "G+ Eritromicina",
-                "S": 39,
-                "R": 21,
-                "I": 2,
-                "t": 62
-              },
-              {
-                "a": "G+ Estreptomicina",
-                "S": 2,
-                "R": 1,
-                "I": 0,
-                "t": 3
-              },
-              {
-                "a": "G+ Gentamicina",
-                "S": 15,
-                "R": 5,
-                "I": 0,
-                "t": 20
-              },
-              {
-                "a": "G+ Levofloxacina,",
-                "S": 56,
-                "R": 7,
-                "I": 0,
-                "t": 63
-              },
-              {
-                "a": "G+ Linezolid",
-                "S": 63,
-                "R": 0,
-                "I": 0,
-                "t": 63
-              },
-              {
-                "a": "G+ Moxifloxacino",
-                "S": 11,
-                "R": 0,
-                "I": 0,
-                "t": 11
-              },
-              {
-                "a": "G+ Oxacilina",
-                "S": 39,
-                "R": 9,
-                "I": 0,
-                "t": 48
-              },
-              {
-                "a": "G+ Penicilina",
-                "S": 12,
-                "R": 50,
-                "I": 0,
-                "t": 62
-              },
-              {
-                "a": "G+ Rifampicina",
-                "S": 49,
-                "R": 3,
-                "I": 0,
-                "t": 52
-              },
-              {
-                "a": "G+ Tigeciclina",
-                "S": 11,
-                "R": 0,
-                "I": 0,
-                "t": 11
-              },
-              {
-                "a": "G+ TmpSmx",
-                "S": 46,
-                "R": 3,
-                "I": 2,
-                "t": 51
-              },
-              {
-                "a": "G+ Vancomicina",
-                "S": 15,
-                "R": 0,
-                "I": 0,
-                "t": 15
-              },
-              {
-                "a": "G- Amikacina",
-                "S": 15,
-                "R": 2,
-                "I": 1,
-                "t": 18
-              },
-              {
-                "a": "G- Ampicilina",
-                "S": 15,
-                "R": 8,
-                "I": 0,
-                "t": 23
-              },
-              {
-                "a": "G- Cefalotina",
-                "S": 4,
-                "R": 10,
-                "I": 0,
-                "t": 14
-              },
-              {
-                "a": "G- Cefazolina",
-                "S": 0,
-                "R": 17,
-                "I": 0,
-                "t": 17
-              },
-              {
-                "a": "G- Cefepime",
-                "S": 21,
-                "R": 8,
-                "I": 0,
-                "t": 29
-              },
-              {
-                "a": "G- Cefotaxima",
-                "S": 1,
-                "R": 2,
-                "I": 1,
-                "t": 4
-              },
-              {
-                "a": "G- Ceftacidime",
-                "S": 9,
-                "R": 10,
-                "I": 0,
-                "t": 19
-              },
-              {
-                "a": "G- Ciprofloxacina",
-                "S": 57,
-                "R": 14,
-                "I": 3,
-                "t": 74
-              },
-              {
-                "a": "G- Cloranfenicol",
-                "S": 11,
-                "R": 0,
-                "I": 0,
-                "t": 11
-              },
-              {
-                "a": "G- Eritromicina",
-                "S": 39,
-                "R": 21,
-                "I": 2,
-                "t": 62
-              },
-              {
-                "a": "G- Ertapenem",
-                "S": 16,
-                "R": 0,
-                "I": 0,
-                "t": 16
-              },
-              {
-                "a": "G- Gentamicina",
-                "S": 15,
-                "R": 5,
-                "I": 0,
-                "t": 20
-              },
-              {
-                "a": "G- Imipenem",
-                "S": 6,
-                "R": 2,
-                "I": 0,
-                "t": 8
-              },
-              {
-                "a": "G- Linezolid",
-                "S": 63,
-                "R": 0,
-                "I": 0,
-                "t": 63
-              },
-              {
-                "a": "G- Meropenem",
-                "S": 21,
-                "R": 1,
-                "I": 1,
-                "t": 23
-              },
-              {
-                "a": "G- Nitrofurantoina",
-                "S": 52,
-                "R": 3,
-                "I": 9,
-                "t": 64
-              },
-              {
-                "a": "G- Norfloxacino",
-                "S": 10,
-                "R": 1,
-                "I": 0,
-                "t": 11
-              },
-              {
-                "a": "G- Piperacilina Tazobactam",
-                "S": 5,
-                "R": 1,
-                "I": 1,
-                "t": 7
-              },
-              {
-                "a": "G- Tetraciclina",
-                "S": 51,
-                "R": 8,
-                "I": 0,
-                "t": 59
-              },
-              {
-                "a": "G- Tigeciclina",
-                "S": 11,
-                "R": 0,
-                "I": 0,
-                "t": 11
-              },
-              {
-                "a": "G- TmpSmx",
-                "S": 46,
-                "R": 3,
-                "I": 2,
-                "t": 51
-              }
-            ],
-            "2024": [
-              {
-                "a": "Hongo Anfotericina B",
-                "S": 1,
-                "R": 0,
-                "I": 0,
-                "t": 1
-              },
-              {
-                "a": "Hongo Caspofungina",
-                "S": 1,
-                "R": 0,
-                "I": 0,
-                "t": 1
-              },
-              {
-                "a": "Hongo Fluconazol",
-                "S": 1,
-                "R": 0,
-                "I": 0,
-                "t": 1
-              },
-              {
-                "a": "Hongo Voriconazol",
-                "S": 1,
-                "R": 0,
-                "I": 0,
-                "t": 1
-              },
-              {
-                "a": "G+ Ampicilina",
-                "S": 7,
-                "R": 2,
-                "I": 0,
-                "t": 9
-              },
-              {
-                "a": "G+ Ceftriaxona",
-                "S": 6,
-                "R": 5,
-                "I": 2,
-                "t": 13
-              },
-              {
-                "a": "G+ Clindamicina",
-                "S": 14,
-                "R": 5,
-                "I": 0,
-                "t": 19
-              },
-              {
-                "a": "G+ Ciprofloxacina",
-                "S": 16,
-                "R": 2,
-                "I": 1,
-                "t": 19
-              },
-              {
-                "a": "G+ Daptomicina",
-                "S": 12,
-                "R": 0,
-                "I": 0,
-                "t": 12
-              },
-              {
-                "a": "G+ Eritromicina",
-                "S": 11,
-                "R": 8,
-                "I": 0,
-                "t": 19
-              },
-              {
-                "a": "G+ Gentamicina",
-                "S": 4,
-                "R": 2,
-                "I": 0,
-                "t": 6
-              },
-              {
-                "a": "G+ Levofloxacina,",
-                "S": 19,
-                "R": 1,
-                "I": 0,
-                "t": 20
-              },
-              {
-                "a": "G+ Linezolid",
-                "S": 20,
-                "R": 0,
-                "I": 0,
-                "t": 20
-              },
-              {
-                "a": "G+ Moxifloxacino",
-                "S": 7,
-                "R": 0,
-                "I": 0,
-                "t": 7
-              },
-              {
-                "a": "G+ Oxacilina",
-                "S": 11,
-                "R": 1,
-                "I": 0,
-                "t": 12
-              },
-              {
-                "a": "G+ Penicilina",
-                "S": 6,
-                "R": 14,
-                "I": 0,
-                "t": 20
-              },
-              {
-                "a": "G+ Rifampicina",
-                "S": 14,
-                "R": 1,
-                "I": 0,
-                "t": 15
-              },
-              {
-                "a": "G+ Tigeciclina",
-                "S": 4,
-                "R": 0,
-                "I": 0,
-                "t": 4
-              },
-              {
-                "a": "G+ TmpSmx",
-                "S": 12,
-                "R": 0,
-                "I": 0,
-                "t": 12
-              },
-              {
-                "a": "G+ Vancomicina",
-                "S": 6,
-                "R": 0,
-                "I": 0,
-                "t": 6
-              },
-              {
-                "a": "G- Amikacina",
-                "S": 7,
-                "R": 0,
-                "I": 0,
-                "t": 7
-              },
-              {
-                "a": "G- Ampicilina",
-                "S": 7,
-                "R": 2,
-                "I": 0,
-                "t": 9
-              },
-              {
-                "a": "G- Cefalotina",
-                "S": 2,
-                "R": 3,
-                "I": 0,
-                "t": 5
-              },
-              {
-                "a": "G- Cefazolina",
-                "S": 0,
-                "R": 3,
-                "I": 0,
-                "t": 3
-              },
-              {
-                "a": "G- Cefepime",
-                "S": 9,
-                "R": 2,
-                "I": 0,
-                "t": 11
-              },
-              {
-                "a": "G- Cefotaxima",
-                "S": 0,
-                "R": 2,
-                "I": 1,
-                "t": 3
-              },
-              {
-                "a": "G- Ceftacidime",
-                "S": 1,
-                "R": 4,
-                "I": 0,
-                "t": 5
-              },
-              {
-                "a": "G- Ciprofloxacina",
-                "S": 16,
-                "R": 2,
-                "I": 1,
-                "t": 19
-              },
-              {
-                "a": "G- Cloranfenicol",
-                "S": 7,
-                "R": 0,
-                "I": 0,
-                "t": 7
-              },
-              {
-                "a": "G- Eritromicina",
-                "S": 11,
-                "R": 8,
-                "I": 0,
-                "t": 19
-              },
-              {
-                "a": "G- Ertapenem",
-                "S": 6,
-                "R": 0,
-                "I": 0,
-                "t": 6
-              },
-              {
-                "a": "G- Gentamicina",
-                "S": 4,
-                "R": 2,
-                "I": 0,
-                "t": 6
-              },
-              {
-                "a": "G- Imipenem",
-                "S": 1,
-                "R": 0,
-                "I": 0,
-                "t": 1
-              },
-              {
-                "a": "G- Linezolid",
-                "S": 20,
-                "R": 0,
-                "I": 0,
-                "t": 20
-              },
-              {
-                "a": "G- Meropenem",
-                "S": 7,
-                "R": 0,
-                "I": 0,
-                "t": 7
-              },
-              {
-                "a": "G- Nitrofurantoina",
-                "S": 15,
-                "R": 0,
-                "I": 4,
-                "t": 19
-              },
-              {
-                "a": "G- Norfloxacino",
-                "S": 3,
-                "R": 0,
-                "I": 0,
-                "t": 3
-              },
-              {
-                "a": "G- Piperacilina Tazobactam",
-                "S": 1,
-                "R": 0,
-                "I": 0,
-                "t": 1
-              },
-              {
-                "a": "G- Tetraciclina",
-                "S": 15,
-                "R": 2,
-                "I": 0,
-                "t": 17
-              },
-              {
-                "a": "G- Tigeciclina",
-                "S": 4,
-                "R": 0,
-                "I": 0,
-                "t": 4
-              },
-              {
-                "a": "G- TmpSmx",
-                "S": 12,
-                "R": 0,
-                "I": 0,
-                "t": 12
-              }
-            ],
-            "2025": [
-              {
-                "a": "Hongo Anfotericina B",
-                "S": 2,
-                "R": 0,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "Hongo Caspofungina",
-                "S": 2,
-                "R": 0,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "Hongo Fluconazol",
-                "S": 2,
-                "R": 0,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "Hongo Voriconazol",
-                "S": 2,
-                "R": 0,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G+ Ampicilina",
-                "S": 7,
-                "R": 5,
-                "I": 0,
-                "t": 12
-              },
-              {
-                "a": "G+ Ceftriaxona",
-                "S": 7,
-                "R": 10,
-                "I": 0,
-                "t": 17
-              },
-              {
-                "a": "G+ Clindamicina",
-                "S": 20,
-                "R": 8,
-                "I": 0,
-                "t": 28
-              },
-              {
-                "a": "G+ Ciprofloxacina",
-                "S": 31,
-                "R": 8,
-                "I": 1,
-                "t": 40
-              },
-              {
-                "a": "G+ Daptomicina",
-                "S": 25,
-                "R": 0,
-                "I": 0,
-                "t": 25
-              },
-              {
-                "a": "G+ Eritromicina",
-                "S": 18,
-                "R": 11,
-                "I": 1,
-                "t": 30
-              },
-              {
-                "a": "G+ Estreptomicina",
-                "S": 1,
-                "R": 1,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G+ Gentamicina",
-                "S": 9,
-                "R": 2,
-                "I": 0,
-                "t": 11
-              },
-              {
-                "a": "G+ Levofloxacina,",
-                "S": 27,
-                "R": 3,
-                "I": 0,
-                "t": 30
-              },
-              {
-                "a": "G+ Linezolid",
-                "S": 30,
-                "R": 0,
-                "I": 0,
-                "t": 30
-              },
-              {
-                "a": "G+ Moxifloxacino",
-                "S": 4,
-                "R": 0,
-                "I": 0,
-                "t": 4
-              },
-              {
-                "a": "G+ Oxacilina",
-                "S": 19,
-                "R": 5,
-                "I": 0,
-                "t": 24
-              },
-              {
-                "a": "G+ Penicilina",
-                "S": 5,
-                "R": 24,
-                "I": 0,
-                "t": 29
-              },
-              {
-                "a": "G+ Rifampicina",
-                "S": 24,
-                "R": 1,
-                "I": 0,
-                "t": 25
-              },
-              {
-                "a": "G+ Tigeciclina",
-                "S": 5,
-                "R": 0,
-                "I": 0,
-                "t": 5
-              },
-              {
-                "a": "G+ TmpSmx",
-                "S": 24,
-                "R": 2,
-                "I": 2,
-                "t": 28
-              },
-              {
-                "a": "G+ Vancomicina",
-                "S": 7,
-                "R": 0,
-                "I": 0,
-                "t": 7
-              },
-              {
-                "a": "G- Amikacina",
-                "S": 7,
-                "R": 1,
-                "I": 1,
-                "t": 9
-              },
-              {
-                "a": "G- Ampicilina",
-                "S": 7,
-                "R": 5,
-                "I": 0,
-                "t": 12
-              },
-              {
-                "a": "G- Cefalotina",
-                "S": 2,
-                "R": 7,
-                "I": 0,
-                "t": 9
-              },
-              {
-                "a": "G- Cefazolina",
-                "S": 0,
-                "R": 12,
-                "I": 0,
-                "t": 12
-              },
-              {
-                "a": "G- Cefepime",
-                "S": 11,
-                "R": 5,
-                "I": 0,
-                "t": 16
-              },
-              {
-                "a": "G- Cefotaxima",
-                "S": 1,
-                "R": 0,
-                "I": 0,
-                "t": 1
-              },
-              {
-                "a": "G- Ceftacidime",
-                "S": 7,
-                "R": 5,
-                "I": 0,
-                "t": 12
-              },
-              {
-                "a": "G- Ciprofloxacina",
-                "S": 31,
-                "R": 8,
-                "I": 1,
-                "t": 40
-              },
-              {
-                "a": "G- Cloranfenicol",
-                "S": 4,
-                "R": 0,
-                "I": 0,
-                "t": 4
-              },
-              {
-                "a": "G- Eritromicina",
-                "S": 18,
-                "R": 11,
-                "I": 1,
-                "t": 30
-              },
-              {
-                "a": "G- Ertapenem",
-                "S": 8,
-                "R": 0,
-                "I": 0,
-                "t": 8
-              },
-              {
-                "a": "G- Gentamicina",
-                "S": 9,
-                "R": 2,
-                "I": 0,
-                "t": 11
-              },
-              {
-                "a": "G- Imipenem",
-                "S": 3,
-                "R": 2,
-                "I": 0,
-                "t": 5
-              },
-              {
-                "a": "G- Linezolid",
-                "S": 30,
-                "R": 0,
-                "I": 0,
-                "t": 30
-              },
-              {
-                "a": "G- Meropenem",
-                "S": 12,
-                "R": 1,
-                "I": 1,
-                "t": 14
-              },
-              {
-                "a": "G- Nitrofurantoina",
-                "S": 25,
-                "R": 3,
-                "I": 4,
-                "t": 32
-              },
-              {
-                "a": "G- Norfloxacino",
-                "S": 7,
-                "R": 1,
-                "I": 0,
-                "t": 8
-              },
-              {
-                "a": "G- Piperacilina Tazobactam",
-                "S": 3,
-                "R": 0,
-                "I": 1,
-                "t": 4
-              },
-              {
-                "a": "G- Tetraciclina",
-                "S": 23,
-                "R": 6,
-                "I": 0,
-                "t": 29
-              },
-              {
-                "a": "G- Tigeciclina",
-                "S": 5,
-                "R": 0,
-                "I": 0,
-                "t": 5
-              },
-              {
-                "a": "G- TmpSmx",
-                "S": 24,
-                "R": 2,
-                "I": 2,
-                "t": 28
-              }
-            ],
-            "2026": [
-              {
-                "a": "Hongo Anfotericina B",
-                "S": 3,
-                "R": 0,
-                "I": 0,
-                "t": 3
-              },
-              {
-                "a": "Hongo Caspofungina",
-                "S": 3,
-                "R": 0,
-                "I": 0,
-                "t": 3
-              },
-              {
-                "a": "Hongo Fluconazol",
-                "S": 3,
-                "R": 0,
-                "I": 0,
-                "t": 3
-              },
-              {
-                "a": "Hongo Voriconazol",
-                "S": 2,
-                "R": 1,
-                "I": 0,
-                "t": 3
-              },
-              {
-                "a": "G+ Ampicilina",
-                "S": 1,
-                "R": 1,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G+ Ceftriaxona",
-                "S": 1,
-                "R": 1,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G+ Clindamicina",
-                "S": 10,
-                "R": 2,
-                "I": 0,
-                "t": 12
-              },
-              {
-                "a": "G+ Ciprofloxacina",
-                "S": 10,
-                "R": 4,
-                "I": 1,
-                "t": 15
-              },
-              {
-                "a": "G+ Daptomicina",
-                "S": 12,
-                "R": 0,
-                "I": 0,
-                "t": 12
-              },
-              {
-                "a": "G+ Eritromicina",
-                "S": 10,
-                "R": 2,
-                "I": 1,
-                "t": 13
-              },
-              {
-                "a": "G+ Estreptomicina",
-                "S": 1,
-                "R": 0,
-                "I": 0,
-                "t": 1
-              },
-              {
-                "a": "G+ Gentamicina",
-                "S": 2,
-                "R": 1,
-                "I": 0,
-                "t": 3
-              },
-              {
-                "a": "G+ Levofloxacina,",
-                "S": 10,
-                "R": 3,
-                "I": 0,
-                "t": 13
-              },
-              {
-                "a": "G+ Linezolid",
-                "S": 13,
-                "R": 0,
-                "I": 0,
-                "t": 13
-              },
-              {
-                "a": "G+ Oxacilina",
-                "S": 9,
-                "R": 3,
-                "I": 0,
-                "t": 12
-              },
-              {
-                "a": "G+ Penicilina",
-                "S": 1,
-                "R": 12,
-                "I": 0,
-                "t": 13
-              },
-              {
-                "a": "G+ Rifampicina",
-                "S": 11,
-                "R": 1,
-                "I": 0,
-                "t": 12
-              },
-              {
-                "a": "G+ Tigeciclina",
-                "S": 2,
-                "R": 0,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G+ TmpSmx",
-                "S": 10,
-                "R": 1,
-                "I": 0,
-                "t": 11
-              },
-              {
-                "a": "G+ Vancomicina",
-                "S": 2,
-                "R": 0,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G- Amikacina",
-                "S": 1,
-                "R": 1,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G- Ampicilina",
-                "S": 1,
-                "R": 1,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G- Cefazolina",
-                "S": 0,
-                "R": 2,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G- Cefepime",
-                "S": 1,
-                "R": 1,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G- Ceftacidime",
-                "S": 1,
-                "R": 1,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G- Ciprofloxacina",
-                "S": 10,
-                "R": 4,
-                "I": 1,
-                "t": 15
-              },
-              {
-                "a": "G- Eritromicina",
-                "S": 10,
-                "R": 2,
-                "I": 1,
-                "t": 13
-              },
-              {
-                "a": "G- Ertapenem",
-                "S": 2,
-                "R": 0,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G- Gentamicina",
-                "S": 2,
-                "R": 1,
-                "I": 0,
-                "t": 3
-              },
-              {
-                "a": "G- Imipenem",
-                "S": 2,
-                "R": 0,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G- Linezolid",
-                "S": 13,
-                "R": 0,
-                "I": 0,
-                "t": 13
-              },
-              {
-                "a": "G- Meropenem",
-                "S": 2,
-                "R": 0,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G- Nitrofurantoina",
-                "S": 12,
-                "R": 0,
-                "I": 1,
-                "t": 13
-              },
-              {
-                "a": "G- Piperacilina Tazobactam",
-                "S": 1,
-                "R": 1,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G- Tetraciclina",
-                "S": 13,
-                "R": 0,
-                "I": 0,
-                "t": 13
-              },
-              {
-                "a": "G- Tigeciclina",
-                "S": 2,
-                "R": 0,
-                "I": 0,
-                "t": 2
-              },
-              {
-                "a": "G- TmpSmx",
-                "S": 10,
-                "R": 1,
-                "I": 0,
-                "t": 11
-              }
-            ]
-          },
           "PERITONEAL": {
             "TODOS": [
               {
@@ -128097,164 +126952,164 @@
             "TODOS": [
               {
                 "a": "Hongo Anfotericina B",
-                "S": 118,
+                "S": 124,
                 "R": 3,
                 "I": 5,
-                "t": 126
+                "t": 132
               },
               {
                 "a": "Hongo Caspofungina",
-                "S": 109,
+                "S": 115,
                 "R": 7,
                 "I": 4,
-                "t": 120
+                "t": 126
               },
               {
                 "a": "Hongo Fluconazol",
-                "S": 93,
+                "S": 99,
                 "R": 4,
                 "I": 0,
-                "t": 97
+                "t": 103
               },
               {
                 "a": "Hongo Voriconazol",
-                "S": 110,
-                "R": 9,
+                "S": 115,
+                "R": 10,
                 "I": 4,
-                "t": 123
+                "t": 129
               },
               {
                 "a": "G+ Ampicilina",
-                "S": 194,
-                "R": 50,
+                "S": 209,
+                "R": 58,
                 "I": 30,
-                "t": 274
+                "t": 297
               },
               {
                 "a": "G+ Ceftriaxona",
-                "S": 133,
-                "R": 56,
-                "I": 1,
-                "t": 190
+                "S": 147,
+                "R": 72,
+                "I": 3,
+                "t": 222
               },
               {
                 "a": "G+ Clindamicina",
-                "S": 61,
-                "R": 41,
+                "S": 105,
+                "R": 56,
                 "I": 4,
-                "t": 106
+                "t": 165
               },
               {
                 "a": "G+ Ciprofloxacina",
-                "S": 110,
-                "R": 93,
-                "I": 47,
-                "t": 250
+                "S": 167,
+                "R": 107,
+                "I": 50,
+                "t": 324
               },
               {
                 "a": "G+ Daptomicina",
-                "S": 108,
+                "S": 157,
                 "R": 0,
                 "I": 6,
-                "t": 114
+                "t": 163
               },
               {
                 "a": "G+ Eritromicina",
-                "S": 51,
-                "R": 80,
-                "I": 23,
-                "t": 154
+                "S": 90,
+                "R": 101,
+                "I": 25,
+                "t": 216
               },
               {
                 "a": "G+ Estreptomicina",
-                "S": 45,
-                "R": 15,
+                "S": 47,
+                "R": 16,
                 "I": 0,
-                "t": 60
+                "t": 63
               },
               {
                 "a": "G+ Gentamicina",
-                "S": 137,
-                "R": 56,
+                "S": 152,
+                "R": 61,
                 "I": 1,
-                "t": 194
+                "t": 214
               },
               {
                 "a": "G+ Levofloxacina,",
-                "S": 136,
-                "R": 44,
+                "S": 192,
+                "R": 51,
                 "I": 7,
-                "t": 187
+                "t": 250
               },
               {
                 "a": "G+ Linezolid",
-                "S": 192,
+                "S": 255,
                 "R": 8,
                 "I": 0,
-                "t": 200
+                "t": 263
               },
               {
                 "a": "G+ Moxifloxacino",
-                "S": 41,
+                "S": 52,
                 "R": 4,
                 "I": 2,
-                "t": 47
+                "t": 58
               },
               {
                 "a": "G+ Oxacilina",
-                "S": 20,
-                "R": 39,
+                "S": 59,
+                "R": 48,
                 "I": 0,
-                "t": 59
+                "t": 107
               },
               {
                 "a": "G+ Penicilina",
-                "S": 119,
-                "R": 62,
+                "S": 131,
+                "R": 112,
                 "I": 17,
-                "t": 198
+                "t": 260
               },
               {
                 "a": "G+ Rifampicina",
-                "S": 53,
-                "R": 1,
+                "S": 102,
+                "R": 4,
                 "I": 0,
-                "t": 54
+                "t": 106
               },
               {
                 "a": "G+ Tigeciclina",
-                "S": 66,
+                "S": 77,
                 "R": 2,
                 "I": 0,
-                "t": 68
+                "t": 79
               },
               {
                 "a": "G+ TmpSmx",
-                "S": 68,
-                "R": 17,
-                "I": 1,
-                "t": 86
+                "S": 114,
+                "R": 20,
+                "I": 3,
+                "t": 137
               },
               {
                 "a": "G+ Vancomicina",
-                "S": 149,
+                "S": 164,
                 "R": 2,
                 "I": 0,
-                "t": 151
+                "t": 166
               },
               {
                 "a": "G- Amikacina",
-                "S": 122,
-                "R": 15,
-                "I": 2,
-                "t": 139
+                "S": 137,
+                "R": 17,
+                "I": 3,
+                "t": 157
               },
               {
                 "a": "G- Ampicilina",
-                "S": 194,
-                "R": 50,
+                "S": 209,
+                "R": 58,
                 "I": 30,
-                "t": 274
+                "t": 297
               },
               {
                 "a": "G- Aztreonam",
@@ -128265,201 +127120,208 @@
               },
               {
                 "a": "G- Cefalotina",
-                "S": 44,
-                "R": 62,
+                "S": 48,
+                "R": 72,
                 "I": 11,
-                "t": 117
+                "t": 131
               },
               {
                 "a": "G- Cefazolina",
                 "S": 0,
-                "R": 80,
+                "R": 97,
                 "I": 0,
-                "t": 80
+                "t": 97
               },
               {
                 "a": "G- Cefepime",
-                "S": 141,
-                "R": 49,
+                "S": 162,
+                "R": 57,
                 "I": 1,
-                "t": 191
+                "t": 220
+              },
+              {
+                "a": "G- Cefotaxima",
+                "S": 1,
+                "R": 2,
+                "I": 1,
+                "t": 4
               },
               {
                 "a": "G- Ceftacidime",
-                "S": 32,
-                "R": 56,
+                "S": 41,
+                "R": 66,
                 "I": 0,
-                "t": 88
+                "t": 107
               },
               {
                 "a": "G- Ciprofloxacina",
-                "S": 110,
-                "R": 93,
-                "I": 47,
-                "t": 250
+                "S": 167,
+                "R": 107,
+                "I": 50,
+                "t": 324
               },
               {
                 "a": "G- Cloranfenicol",
-                "S": 47,
+                "S": 58,
                 "R": 0,
                 "I": 0,
-                "t": 47
+                "t": 58
               },
               {
                 "a": "G- Eritromicina",
-                "S": 51,
-                "R": 80,
-                "I": 23,
-                "t": 154
+                "S": 90,
+                "R": 101,
+                "I": 25,
+                "t": 216
               },
               {
                 "a": "G- Ertapenem",
-                "S": 133,
+                "S": 149,
                 "R": 4,
                 "I": 0,
-                "t": 137
+                "t": 153
               },
               {
                 "a": "G- Gentamicina",
-                "S": 137,
-                "R": 56,
+                "S": 152,
+                "R": 61,
                 "I": 1,
-                "t": 194
+                "t": 214
               },
               {
                 "a": "G- Imipenem",
-                "S": 23,
-                "R": 0,
+                "S": 29,
+                "R": 2,
                 "I": 0,
-                "t": 23
+                "t": 31
               },
               {
                 "a": "G- Linezolid",
-                "S": 192,
+                "S": 255,
                 "R": 8,
                 "I": 0,
-                "t": 200
+                "t": 263
               },
               {
                 "a": "G- Meropenem",
-                "S": 140,
-                "R": 4,
-                "I": 0,
-                "t": 144
+                "S": 161,
+                "R": 5,
+                "I": 1,
+                "t": 167
               },
               {
                 "a": "G- Nitrofurantoina",
-                "S": 208,
-                "R": 23,
-                "I": 12,
-                "t": 243
+                "S": 260,
+                "R": 26,
+                "I": 21,
+                "t": 307
               },
               {
                 "a": "G- Norfloxacino",
-                "S": 65,
-                "R": 18,
+                "S": 75,
+                "R": 19,
                 "I": 0,
-                "t": 83
+                "t": 94
               },
               {
                 "a": "G- Piperacilina Tazobactam",
-                "S": 21,
-                "R": 1,
-                "I": 0,
-                "t": 22
+                "S": 26,
+                "R": 2,
+                "I": 1,
+                "t": 29
               },
               {
                 "a": "G- Tetraciclina",
-                "S": 105,
-                "R": 78,
+                "S": 156,
+                "R": 86,
                 "I": 3,
-                "t": 186
+                "t": 245
               },
               {
                 "a": "G- Tigeciclina",
-                "S": 66,
+                "S": 77,
                 "R": 2,
                 "I": 0,
-                "t": 68
+                "t": 79
               },
               {
                 "a": "G- TmpSmx",
-                "S": 68,
-                "R": 17,
-                "I": 1,
-                "t": 86
+                "S": 114,
+                "R": 20,
+                "I": 3,
+                "t": 137
               }
             ],
             "2024": [
               {
                 "a": "Hongo Anfotericina B",
-                "S": 13,
+                "S": 14,
                 "R": 0,
                 "I": 0,
-                "t": 13
+                "t": 14
               },
               {
                 "a": "Hongo Caspofungina",
-                "S": 13,
+                "S": 14,
                 "R": 0,
                 "I": 0,
-                "t": 13
+                "t": 14
               },
               {
                 "a": "Hongo Fluconazol",
-                "S": 11,
+                "S": 12,
                 "R": 0,
                 "I": 0,
-                "t": 11
+                "t": 12
               },
               {
                 "a": "Hongo Voriconazol",
-                "S": 12,
+                "S": 13,
                 "R": 0,
                 "I": 1,
-                "t": 13
+                "t": 14
               },
               {
                 "a": "G+ Ampicilina",
-                "S": 45,
-                "R": 18,
+                "S": 52,
+                "R": 20,
                 "I": 8,
-                "t": 71
+                "t": 80
               },
               {
                 "a": "G+ Ceftriaxona",
-                "S": 35,
-                "R": 15,
-                "I": 0,
-                "t": 50
+                "S": 41,
+                "R": 20,
+                "I": 2,
+                "t": 63
               },
               {
                 "a": "G+ Clindamicina",
-                "S": 15,
-                "R": 17,
+                "S": 29,
+                "R": 22,
                 "I": 0,
-                "t": 32
+                "t": 51
               },
               {
                 "a": "G+ Ciprofloxacina",
-                "S": 31,
-                "R": 27,
-                "I": 8,
-                "t": 66
+                "S": 47,
+                "R": 29,
+                "I": 9,
+                "t": 85
               },
               {
                 "a": "G+ Daptomicina",
-                "S": 35,
+                "S": 47,
                 "R": 0,
                 "I": 2,
-                "t": 37
+                "t": 49
               },
               {
                 "a": "G+ Eritromicina",
-                "S": 7,
-                "R": 29,
+                "S": 18,
+                "R": 37,
                 "I": 6,
-                "t": 42
+                "t": 61
               },
               {
                 "a": "G+ Estreptomicina",
@@ -128470,87 +127332,87 @@
               },
               {
                 "a": "G+ Gentamicina",
-                "S": 28,
-                "R": 24,
+                "S": 32,
+                "R": 26,
                 "I": 0,
-                "t": 52
+                "t": 58
               },
               {
                 "a": "G+ Levofloxacina,",
-                "S": 32,
-                "R": 12,
+                "S": 51,
+                "R": 13,
                 "I": 2,
-                "t": 46
+                "t": 66
               },
               {
                 "a": "G+ Linezolid",
-                "S": 52,
+                "S": 72,
                 "R": 5,
                 "I": 0,
-                "t": 57
+                "t": 77
               },
               {
                 "a": "G+ Moxifloxacino",
-                "S": 8,
+                "S": 15,
                 "R": 3,
                 "I": 0,
-                "t": 11
+                "t": 18
               },
               {
                 "a": "G+ Oxacilina",
-                "S": 6,
-                "R": 16,
+                "S": 17,
+                "R": 17,
                 "I": 0,
-                "t": 22
+                "t": 34
               },
               {
                 "a": "G+ Penicilina",
-                "S": 31,
-                "R": 22,
+                "S": 37,
+                "R": 36,
                 "I": 4,
-                "t": 57
+                "t": 77
               },
               {
                 "a": "G+ Rifampicina",
+                "S": 34,
+                "R": 1,
+                "I": 0,
+                "t": 35
+              },
+              {
+                "a": "G+ Tigeciclina",
                 "S": 20,
                 "R": 0,
                 "I": 0,
                 "t": 20
               },
               {
-                "a": "G+ Tigeciclina",
-                "S": 16,
-                "R": 0,
-                "I": 0,
-                "t": 16
-              },
-              {
                 "a": "G+ TmpSmx",
-                "S": 21,
+                "S": 33,
                 "R": 8,
                 "I": 0,
-                "t": 29
+                "t": 41
               },
               {
                 "a": "G+ Vancomicina",
-                "S": 42,
+                "S": 48,
                 "R": 0,
                 "I": 0,
-                "t": 42
+                "t": 48
               },
               {
                 "a": "G- Amikacina",
-                "S": 29,
+                "S": 36,
                 "R": 7,
                 "I": 1,
-                "t": 37
+                "t": 44
               },
               {
                 "a": "G- Ampicilina",
-                "S": 45,
-                "R": 18,
+                "S": 52,
+                "R": 20,
                 "I": 8,
-                "t": 71
+                "t": 80
               },
               {
                 "a": "G- Aztreonam",
@@ -128561,292 +127423,299 @@
               },
               {
                 "a": "G- Cefalotina",
-                "S": 9,
-                "R": 17,
+                "S": 11,
+                "R": 20,
                 "I": 6,
-                "t": 32
+                "t": 37
               },
               {
                 "a": "G- Cefazolina",
                 "S": 0,
-                "R": 23,
+                "R": 26,
                 "I": 0,
-                "t": 23
+                "t": 26
               },
               {
                 "a": "G- Cefepime",
-                "S": 37,
-                "R": 13,
+                "S": 46,
+                "R": 15,
                 "I": 1,
-                "t": 51
+                "t": 62
+              },
+              {
+                "a": "G- Cefotaxima",
+                "S": 0,
+                "R": 2,
+                "I": 1,
+                "t": 3
               },
               {
                 "a": "G- Ceftacidime",
-                "S": 11,
-                "R": 16,
+                "S": 12,
+                "R": 20,
                 "I": 0,
-                "t": 27
+                "t": 32
               },
               {
                 "a": "G- Ciprofloxacina",
-                "S": 31,
-                "R": 27,
-                "I": 8,
-                "t": 66
+                "S": 47,
+                "R": 29,
+                "I": 9,
+                "t": 85
               },
               {
                 "a": "G- Cloranfenicol",
-                "S": 11,
+                "S": 18,
                 "R": 0,
                 "I": 0,
-                "t": 11
+                "t": 18
               },
               {
                 "a": "G- Eritromicina",
-                "S": 7,
-                "R": 29,
+                "S": 18,
+                "R": 37,
                 "I": 6,
-                "t": 42
+                "t": 61
               },
               {
                 "a": "G- Ertapenem",
-                "S": 36,
+                "S": 42,
                 "R": 1,
                 "I": 0,
-                "t": 37
+                "t": 43
               },
               {
                 "a": "G- Gentamicina",
-                "S": 28,
-                "R": 24,
+                "S": 32,
+                "R": 26,
                 "I": 0,
-                "t": 52
+                "t": 58
               },
               {
                 "a": "G- Imipenem",
-                "S": 5,
+                "S": 6,
                 "R": 0,
                 "I": 0,
-                "t": 5
+                "t": 6
               },
               {
                 "a": "G- Linezolid",
-                "S": 52,
+                "S": 72,
                 "R": 5,
                 "I": 0,
-                "t": 57
+                "t": 77
               },
               {
                 "a": "G- Meropenem",
-                "S": 38,
+                "S": 45,
                 "R": 2,
                 "I": 0,
-                "t": 40
+                "t": 47
               },
               {
                 "a": "G- Nitrofurantoina",
-                "S": 54,
+                "S": 69,
                 "R": 4,
-                "I": 2,
-                "t": 60
+                "I": 6,
+                "t": 79
               },
               {
                 "a": "G- Norfloxacino",
-                "S": 17,
+                "S": 20,
                 "R": 5,
                 "I": 0,
-                "t": 22
+                "t": 25
               },
               {
                 "a": "G- Piperacilina Tazobactam",
-                "S": 5,
+                "S": 6,
                 "R": 0,
                 "I": 0,
-                "t": 5
+                "t": 6
               },
               {
                 "a": "G- Tetraciclina",
-                "S": 27,
-                "R": 19,
+                "S": 42,
+                "R": 21,
                 "I": 0,
-                "t": 46
+                "t": 63
               },
               {
                 "a": "G- Tigeciclina",
-                "S": 16,
+                "S": 20,
                 "R": 0,
                 "I": 0,
-                "t": 16
+                "t": 20
               },
               {
                 "a": "G- TmpSmx",
-                "S": 21,
+                "S": 33,
                 "R": 8,
                 "I": 0,
-                "t": 29
+                "t": 41
               }
             ],
             "2025": [
               {
                 "a": "Hongo Anfotericina B",
-                "S": 94,
+                "S": 96,
                 "R": 3,
                 "I": 4,
-                "t": 101
+                "t": 103
               },
               {
                 "a": "Hongo Caspofungina",
-                "S": 87,
+                "S": 89,
                 "R": 5,
                 "I": 3,
-                "t": 95
+                "t": 97
               },
               {
                 "a": "Hongo Fluconazol",
-                "S": 74,
+                "S": 76,
                 "R": 3,
                 "I": 0,
-                "t": 77
+                "t": 79
               },
               {
                 "a": "Hongo Voriconazol",
-                "S": 86,
+                "S": 88,
                 "R": 9,
                 "I": 3,
-                "t": 98
+                "t": 100
               },
               {
                 "a": "G+ Ampicilina",
-                "S": 117,
-                "R": 30,
+                "S": 124,
+                "R": 35,
                 "I": 21,
-                "t": 168
+                "t": 180
               },
               {
                 "a": "G+ Ceftriaxona",
-                "S": 83,
-                "R": 34,
+                "S": 90,
+                "R": 44,
                 "I": 1,
-                "t": 118
+                "t": 135
               },
               {
                 "a": "G+ Clindamicina",
-                "S": 41,
-                "R": 19,
+                "S": 61,
+                "R": 27,
                 "I": 4,
-                "t": 64
+                "t": 92
               },
               {
                 "a": "G+ Ciprofloxacina",
-                "S": 59,
-                "R": 55,
-                "I": 31,
-                "t": 145
+                "S": 90,
+                "R": 63,
+                "I": 32,
+                "t": 185
               },
               {
                 "a": "G+ Daptomicina",
-                "S": 56,
+                "S": 81,
                 "R": 0,
                 "I": 2,
-                "t": 58
-              },
-              {
-                "a": "G+ Eritromicina",
-                "S": 35,
-                "R": 39,
-                "I": 16,
-                "t": 90
-              },
-              {
-                "a": "G+ Estreptomicina",
-                "S": 27,
-                "R": 7,
-                "I": 0,
-                "t": 34
-              },
-              {
-                "a": "G+ Gentamicina",
-                "S": 84,
-                "R": 28,
-                "I": 1,
-                "t": 113
-              },
-              {
-                "a": "G+ Levofloxacina,",
-                "S": 85,
-                "R": 27,
-                "I": 5,
-                "t": 117
-              },
-              {
-                "a": "G+ Linezolid",
-                "S": 116,
-                "R": 3,
-                "I": 0,
-                "t": 119
-              },
-              {
-                "a": "G+ Moxifloxacino",
-                "S": 31,
-                "R": 1,
-                "I": 2,
-                "t": 34
-              },
-              {
-                "a": "G+ Oxacilina",
-                "S": 13,
-                "R": 16,
-                "I": 0,
-                "t": 29
-              },
-              {
-                "a": "G+ Penicilina",
-                "S": 72,
-                "R": 32,
-                "I": 13,
-                "t": 117
-              },
-              {
-                "a": "G+ Rifampicina",
-                "S": 25,
-                "R": 1,
-                "I": 0,
-                "t": 26
-              },
-              {
-                "a": "G+ Tigeciclina",
-                "S": 48,
-                "R": 2,
-                "I": 0,
-                "t": 50
-              },
-              {
-                "a": "G+ TmpSmx",
-                "S": 37,
-                "R": 7,
-                "I": 1,
-                "t": 45
-              },
-              {
-                "a": "G+ Vancomicina",
-                "S": 89,
-                "R": 2,
-                "I": 0,
-                "t": 91
-              },
-              {
-                "a": "G- Amikacina",
-                "S": 74,
-                "R": 8,
-                "I": 1,
                 "t": 83
               },
               {
-                "a": "G- Ampicilina",
-                "S": 117,
+                "a": "G+ Eritromicina",
+                "S": 53,
+                "R": 50,
+                "I": 17,
+                "t": 120
+              },
+              {
+                "a": "G+ Estreptomicina",
+                "S": 28,
+                "R": 8,
+                "I": 0,
+                "t": 36
+              },
+              {
+                "a": "G+ Gentamicina",
+                "S": 93,
                 "R": 30,
+                "I": 1,
+                "t": 124
+              },
+              {
+                "a": "G+ Levofloxacina,",
+                "S": 112,
+                "R": 30,
+                "I": 5,
+                "t": 147
+              },
+              {
+                "a": "G+ Linezolid",
+                "S": 146,
+                "R": 3,
+                "I": 0,
+                "t": 149
+              },
+              {
+                "a": "G+ Moxifloxacino",
+                "S": 35,
+                "R": 1,
+                "I": 2,
+                "t": 38
+              },
+              {
+                "a": "G+ Oxacilina",
+                "S": 32,
+                "R": 21,
+                "I": 0,
+                "t": 53
+              },
+              {
+                "a": "G+ Penicilina",
+                "S": 77,
+                "R": 56,
+                "I": 13,
+                "t": 146
+              },
+              {
+                "a": "G+ Rifampicina",
+                "S": 49,
+                "R": 2,
+                "I": 0,
+                "t": 51
+              },
+              {
+                "a": "G+ Tigeciclina",
+                "S": 53,
+                "R": 2,
+                "I": 0,
+                "t": 55
+              },
+              {
+                "a": "G+ TmpSmx",
+                "S": 61,
+                "R": 9,
+                "I": 3,
+                "t": 73
+              },
+              {
+                "a": "G+ Vancomicina",
+                "S": 96,
+                "R": 2,
+                "I": 0,
+                "t": 98
+              },
+              {
+                "a": "G- Amikacina",
+                "S": 81,
+                "R": 9,
+                "I": 2,
+                "t": 92
+              },
+              {
+                "a": "G- Ampicilina",
+                "S": 124,
+                "R": 35,
                 "I": 21,
-                "t": 168
+                "t": 180
               },
               {
                 "a": "G- Aztreonam",
@@ -128857,229 +127726,236 @@
               },
               {
                 "a": "G- Cefalotina",
-                "S": 27,
-                "R": 34,
+                "S": 29,
+                "R": 41,
                 "I": 4,
-                "t": 65
+                "t": 74
               },
               {
                 "a": "G- Cefazolina",
                 "S": 0,
-                "R": 45,
+                "R": 57,
                 "I": 0,
-                "t": 45
+                "t": 57
               },
               {
                 "a": "G- Cefepime",
-                "S": 90,
-                "R": 30,
+                "S": 101,
+                "R": 35,
                 "I": 0,
-                "t": 120
+                "t": 136
+              },
+              {
+                "a": "G- Cefotaxima",
+                "S": 1,
+                "R": 0,
+                "I": 0,
+                "t": 1
               },
               {
                 "a": "G- Ceftacidime",
-                "S": 15,
-                "R": 34,
+                "S": 22,
+                "R": 39,
                 "I": 0,
-                "t": 49
+                "t": 61
               },
               {
                 "a": "G- Ciprofloxacina",
-                "S": 59,
-                "R": 55,
-                "I": 31,
-                "t": 145
+                "S": 90,
+                "R": 63,
+                "I": 32,
+                "t": 185
               },
               {
                 "a": "G- Cloranfenicol",
-                "S": 34,
+                "S": 38,
                 "R": 0,
                 "I": 0,
-                "t": 34
+                "t": 38
               },
               {
                 "a": "G- Eritromicina",
-                "S": 35,
-                "R": 39,
-                "I": 16,
-                "t": 90
+                "S": 53,
+                "R": 50,
+                "I": 17,
+                "t": 120
               },
               {
                 "a": "G- Ertapenem",
-                "S": 78,
+                "S": 86,
                 "R": 3,
                 "I": 0,
-                "t": 81
+                "t": 89
               },
               {
                 "a": "G- Gentamicina",
-                "S": 84,
-                "R": 28,
+                "S": 93,
+                "R": 30,
                 "I": 1,
-                "t": 113
+                "t": 124
               },
               {
                 "a": "G- Imipenem",
-                "S": 18,
-                "R": 0,
+                "S": 21,
+                "R": 2,
                 "I": 0,
-                "t": 18
+                "t": 23
               },
               {
                 "a": "G- Linezolid",
-                "S": 116,
+                "S": 146,
                 "R": 3,
                 "I": 0,
-                "t": 119
+                "t": 149
               },
               {
                 "a": "G- Meropenem",
-                "S": 82,
-                "R": 2,
-                "I": 0,
-                "t": 84
+                "S": 94,
+                "R": 3,
+                "I": 1,
+                "t": 98
               },
               {
                 "a": "G- Nitrofurantoina",
-                "S": 121,
-                "R": 13,
-                "I": 8,
-                "t": 142
+                "S": 146,
+                "R": 16,
+                "I": 12,
+                "t": 174
               },
               {
                 "a": "G- Norfloxacino",
-                "S": 35,
-                "R": 10,
+                "S": 42,
+                "R": 11,
                 "I": 0,
-                "t": 45
+                "t": 53
               },
               {
                 "a": "G- Piperacilina Tazobactam",
-                "S": 16,
+                "S": 19,
                 "R": 1,
-                "I": 0,
-                "t": 17
+                "I": 1,
+                "t": 21
               },
               {
                 "a": "G- Tetraciclina",
-                "S": 66,
-                "R": 47,
+                "S": 89,
+                "R": 53,
                 "I": 3,
-                "t": 116
+                "t": 145
               },
               {
                 "a": "G- Tigeciclina",
-                "S": 48,
+                "S": 53,
                 "R": 2,
                 "I": 0,
-                "t": 50
+                "t": 55
               },
               {
                 "a": "G- TmpSmx",
-                "S": 37,
-                "R": 7,
-                "I": 1,
-                "t": 45
+                "S": 61,
+                "R": 9,
+                "I": 3,
+                "t": 73
               }
             ],
             "2026": [
               {
                 "a": "Hongo Anfotericina B",
-                "S": 11,
+                "S": 14,
                 "R": 0,
                 "I": 1,
-                "t": 12
+                "t": 15
               },
               {
                 "a": "Hongo Caspofungina",
-                "S": 9,
+                "S": 12,
                 "R": 2,
                 "I": 1,
-                "t": 12
+                "t": 15
               },
               {
                 "a": "Hongo Fluconazol",
-                "S": 8,
+                "S": 11,
                 "R": 1,
-                "I": 0,
-                "t": 9
-              },
-              {
-                "a": "Hongo Voriconazol",
-                "S": 12,
-                "R": 0,
                 "I": 0,
                 "t": 12
               },
               {
+                "a": "Hongo Voriconazol",
+                "S": 14,
+                "R": 1,
+                "I": 0,
+                "t": 15
+              },
+              {
                 "a": "G+ Ampicilina",
-                "S": 32,
-                "R": 2,
+                "S": 33,
+                "R": 3,
                 "I": 1,
-                "t": 35
+                "t": 37
               },
               {
                 "a": "G+ Ceftriaxona",
+                "S": 16,
+                "R": 8,
+                "I": 0,
+                "t": 24
+              },
+              {
+                "a": "G+ Clindamicina",
                 "S": 15,
                 "R": 7,
                 "I": 0,
                 "t": 22
               },
               {
-                "a": "G+ Clindamicina",
-                "S": 5,
-                "R": 5,
-                "I": 0,
-                "t": 10
-              },
-              {
                 "a": "G+ Ciprofloxacina",
-                "S": 20,
-                "R": 11,
-                "I": 8,
-                "t": 39
+                "S": 30,
+                "R": 15,
+                "I": 9,
+                "t": 54
               },
               {
                 "a": "G+ Daptomicina",
-                "S": 17,
+                "S": 29,
                 "R": 0,
                 "I": 2,
-                "t": 19
+                "t": 31
               },
               {
                 "a": "G+ Eritromicina",
-                "S": 9,
-                "R": 12,
-                "I": 1,
-                "t": 22
+                "S": 19,
+                "R": 14,
+                "I": 2,
+                "t": 35
               },
               {
                 "a": "G+ Estreptomicina",
-                "S": 6,
+                "S": 7,
                 "R": 4,
                 "I": 0,
-                "t": 10
+                "t": 11
               },
               {
                 "a": "G+ Gentamicina",
-                "S": 25,
-                "R": 4,
+                "S": 27,
+                "R": 5,
                 "I": 0,
-                "t": 29
+                "t": 32
               },
               {
                 "a": "G+ Levofloxacina,",
-                "S": 19,
-                "R": 5,
+                "S": 29,
+                "R": 8,
                 "I": 0,
-                "t": 24
+                "t": 37
               },
               {
                 "a": "G+ Linezolid",
-                "S": 24,
+                "S": 37,
                 "R": 0,
                 "I": 0,
-                "t": 24
+                "t": 37
               },
               {
                 "a": "G+ Moxifloxacino",
@@ -129090,59 +127966,59 @@
               },
               {
                 "a": "G+ Oxacilina",
-                "S": 1,
-                "R": 7,
+                "S": 10,
+                "R": 10,
                 "I": 0,
-                "t": 8
+                "t": 20
               },
               {
                 "a": "G+ Penicilina",
-                "S": 16,
-                "R": 8,
+                "S": 17,
+                "R": 20,
                 "I": 0,
-                "t": 24
+                "t": 37
               },
               {
                 "a": "G+ Rifampicina",
-                "S": 8,
-                "R": 0,
+                "S": 19,
+                "R": 1,
                 "I": 0,
-                "t": 8
+                "t": 20
               },
               {
                 "a": "G+ Tigeciclina",
-                "S": 2,
+                "S": 4,
                 "R": 0,
                 "I": 0,
-                "t": 2
+                "t": 4
               },
               {
                 "a": "G+ TmpSmx",
-                "S": 10,
-                "R": 2,
+                "S": 20,
+                "R": 3,
                 "I": 0,
-                "t": 12
+                "t": 23
               },
               {
                 "a": "G+ Vancomicina",
-                "S": 18,
+                "S": 20,
                 "R": 0,
                 "I": 0,
-                "t": 18
+                "t": 20
               },
               {
                 "a": "G- Amikacina",
-                "S": 19,
-                "R": 0,
+                "S": 20,
+                "R": 1,
                 "I": 0,
-                "t": 19
+                "t": 21
               },
               {
                 "a": "G- Ampicilina",
-                "S": 32,
-                "R": 2,
+                "S": 33,
+                "R": 3,
                 "I": 1,
-                "t": 35
+                "t": 37
               },
               {
                 "a": "G- Cefalotina",
@@ -129154,30 +128030,30 @@
               {
                 "a": "G- Cefazolina",
                 "S": 0,
-                "R": 12,
+                "R": 14,
                 "I": 0,
-                "t": 12
+                "t": 14
               },
               {
                 "a": "G- Cefepime",
-                "S": 14,
-                "R": 6,
+                "S": 15,
+                "R": 7,
                 "I": 0,
-                "t": 20
+                "t": 22
               },
               {
                 "a": "G- Ceftacidime",
-                "S": 6,
-                "R": 6,
+                "S": 7,
+                "R": 7,
                 "I": 0,
-                "t": 12
+                "t": 14
               },
               {
                 "a": "G- Ciprofloxacina",
-                "S": 20,
-                "R": 11,
-                "I": 8,
-                "t": 39
+                "S": 30,
+                "R": 15,
+                "I": 9,
+                "t": 54
               },
               {
                 "a": "G- Cloranfenicol",
@@ -129188,45 +128064,52 @@
               },
               {
                 "a": "G- Eritromicina",
-                "S": 9,
-                "R": 12,
-                "I": 1,
-                "t": 22
+                "S": 19,
+                "R": 14,
+                "I": 2,
+                "t": 35
               },
               {
                 "a": "G- Ertapenem",
-                "S": 19,
+                "S": 21,
                 "R": 0,
                 "I": 0,
-                "t": 19
+                "t": 21
               },
               {
                 "a": "G- Gentamicina",
-                "S": 25,
-                "R": 4,
+                "S": 27,
+                "R": 5,
                 "I": 0,
-                "t": 29
+                "t": 32
+              },
+              {
+                "a": "G- Imipenem",
+                "S": 2,
+                "R": 0,
+                "I": 0,
+                "t": 2
               },
               {
                 "a": "G- Linezolid",
-                "S": 24,
+                "S": 37,
                 "R": 0,
                 "I": 0,
-                "t": 24
+                "t": 37
               },
               {
                 "a": "G- Meropenem",
-                "S": 20,
+                "S": 22,
                 "R": 0,
                 "I": 0,
-                "t": 20
+                "t": 22
               },
               {
                 "a": "G- Nitrofurantoina",
-                "S": 33,
+                "S": 45,
                 "R": 6,
-                "I": 2,
-                "t": 41
+                "I": 3,
+                "t": 54
               },
               {
                 "a": "G- Norfloxacino",
@@ -129236,25 +128119,32 @@
                 "t": 16
               },
               {
-                "a": "G- Tetraciclina",
-                "S": 12,
-                "R": 12,
-                "I": 0,
-                "t": 24
-              },
-              {
-                "a": "G- Tigeciclina",
-                "S": 2,
-                "R": 0,
+                "a": "G- Piperacilina Tazobactam",
+                "S": 1,
+                "R": 1,
                 "I": 0,
                 "t": 2
               },
               {
-                "a": "G- TmpSmx",
-                "S": 10,
-                "R": 2,
+                "a": "G- Tetraciclina",
+                "S": 25,
+                "R": 12,
                 "I": 0,
-                "t": 12
+                "t": 37
+              },
+              {
+                "a": "G- Tigeciclina",
+                "S": 4,
+                "R": 0,
+                "I": 0,
+                "t": 4
+              },
+              {
+                "a": "G- TmpSmx",
+                "S": 20,
+                "R": 3,
+                "I": 0,
+                "t": 23
               }
             ]
           },
@@ -138492,33 +137382,6 @@
           "PSEUDOMONAS STUTZERI": 1,
           "ENTEROCOCCUS FAECIUM": 1
         },
-        "NEUMO": {
-          "STAPHYLOCOCCUS AUREUS": 44,
-          "KLEBSIELLA PNEUMONIAE SSP PNEUMONIAE": 9,
-          "PSEUDOMONAS AERUGINOSA": 6,
-          "STREPTOCOCCUS AGALACTIAE": 6,
-          "STENOTROPHOMONAS MALTOPHILIA": 5,
-          "CANDIDA ALBICANS": 5,
-          "STREPTOCOCCUS PNEUMONIAE": 5,
-          "HAEMOPHILUS INFLUENZAE": 5,
-          "STREPTOCOCCUS PYOGENES": 4,
-          "ENTEROBACTER CLOACAE SSP CLOACAE": 3,
-          "STAPHYLOCOCCUS HAEMOLYTICUS": 3,
-          "ESCHERICHIA COLI": 3,
-          "ENTEROCOCCUS FAECALIS": 2,
-          "STAPHYLOCOCCUS EPIDERMIDIS": 2,
-          "HAEMOPHILUS PARAINFLUENZAE": 2,
-          "ENTEROCOCCUS FAECIUM": 2,
-          "GRANULICATELLA ADIACENS": 1,
-          "SERRATIA MARCESCENS": 1,
-          "KLEBSIELLA AEROGENES": 1,
-          "NEISSERIA CINEREA": 1,
-          "ACINETOBACTER BAUMANNII COMPLEX": 1,
-          "STREPTOCOCCUS MITIS": 1,
-          "STAPHYLOCOCCUS HOMINIS SSP HOMINIS": 1,
-          "KLEBSIELLA OXYTOCA": 1,
-          "CANDIDA TROPICALIS": 1
-        },
         "NO HERIDA QUIRURGICA": {
           "ESCHERICHIA COLI": 20,
           "STAPHYLOCOCCUS EPIDERMIDIS": 9,
@@ -138550,45 +137413,55 @@
         },
         "OTROS": {
           "GARDNERELLA VAGINALIS": 163,
-          "CANDIDA ALBICANS": 97,
-          "ESCHERICHIA COLI": 92,
-          "ENTEROCOCCUS FAECALIS": 56,
-          "STREPTOCOCCUS AGALACTIAE": 39,
-          "STREPTOCOCCUS MITIS": 34,
-          "STAPHYLOCOCCUS HAEMOLYTICUS": 29,
+          "CANDIDA ALBICANS": 102,
+          "ESCHERICHIA COLI": 95,
+          "ENTEROCOCCUS FAECALIS": 58,
+          "STAPHYLOCOCCUS AUREUS": 55,
+          "STREPTOCOCCUS AGALACTIAE": 45,
+          "STREPTOCOCCUS MITIS": 35,
+          "STAPHYLOCOCCUS HAEMOLYTICUS": 32,
           "CANDIDA GLABRATA": 21,
+          "KLEBSIELLA PNEUMONIAE SSP PNEUMONIAE": 19,
+          "PSEUDOMONAS AERUGINOSA": 12,
           "PROTEUS MIRABILIS": 12,
-          "STAPHYLOCOCCUS AUREUS": 11,
-          "KLEBSIELLA PNEUMONIAE SSP PNEUMONIAE": 10,
-          "STAPHYLOCOCCUS HOMINIS SSP HOMINIS": 9,
-          "PSEUDOMONAS AERUGINOSA": 6,
-          "ENTEROCOCCUS FAECIUM": 5,
-          "STAPHYLOCOCCUS EPIDERMIDIS": 5,
+          "STAPHYLOCOCCUS HOMINIS SSP HOMINIS": 10,
+          "ENTEROCOCCUS FAECIUM": 7,
+          "STAPHYLOCOCCUS EPIDERMIDIS": 7,
+          "ENTEROBACTER CLOACAE SSP CLOACAE": 6,
+          "STENOTROPHOMONAS MALTOPHILIA": 5,
+          "STREPTOCOCCUS PNEUMONIAE": 5,
+          "HAEMOPHILUS INFLUENZAE": 5,
           "STREPTOCOCCUS SANGUINIS": 4,
+          "STREPTOCOCCUS PYOGENES": 4,
           "SALMONELLA SPP": 4,
-          "ENTEROBACTER CLOACAE SSP CLOACAE": 3,
+          "KLEBSIELLA OXYTOCA": 4,
           "SALMONELLA GROUP": 3,
           "CITROBACTER FREUNDII": 3,
           "MORGANELLA MORGANII SSP MORGANII": 3,
           "CRYPTOCOCCUS NEOFORMANS": 3,
           "CANDIDA PARAPSILOSIS": 3,
-          "KLEBSIELLA OXYTOCA": 3,
+          "ACINETOBACTER BAUMANNII COMPLEX": 3,
           "STREPTOCOCCUS SALIVARIUS SSP SALIVARIUS": 2,
           "STREPTOCOCCUS ANGINOSUS": 2,
           "CANDIDA LUSITANIAE": 2,
-          "ACINETOBACTER BAUMANNII COMPLEX": 2,
+          "HAEMOPHILUS PARAINFLUENZAE": 2,
           "PROTEUS PENNERI": 2,
           "STAPHYLOCOCCUS LUGDUNENSIS": 2,
           "STAPHYLOCOCCUS WARNERI": 1,
+          "GRANULICATELLA ADIACENS": 1,
+          "SERRATIA MARCESCENS": 1,
+          "KLEBSIELLA AEROGENES": 1,
           "RAOULTELLA PLANTICOLA": 1,
           "STAPHYLOCOCCUS SAPROPHYTICUS": 1,
           "ACINETOBACTER LWOFFII": 1,
           "MORGANELLA MORGANII SSP SIBONII": 1,
+          "NEISSERIA CINEREA": 1,
           "STAPHYLOCOCCUS CAPITIS": 1,
           "STREPTOCOCCUS CONSTELLATUS SSP PHARYNGIS": 1,
           "STAPHYLOCOCCUS CAPRAE": 1,
           "LECLERCIA ADECARBOXYLATA": 1,
           "AEROCOCCUS URINAE": 1,
+          "CANDIDA TROPICALIS": 1,
           "CANDIDA DUBLINIENSIS": 1
         },
         "PERITONEAL": {
@@ -138654,54 +137527,48 @@
         "CIRUGÍA": {
           "HEMOCULTIVOS": 9,
           "HERIDA QUIRURGICA": 10,
-          "NEUMO": 13,
           "NO HERIDA QUIRURGICA": 15,
-          "OTROS": 17,
+          "OTROS": 19,
           "PERITONEAL": 11,
           "UROCULTIVOS": 20
         },
         "GINECOLOGÍA": {
           "HEMOCULTIVOS": 6,
           "HERIDA QUIRURGICA": 6,
-          "NEUMO": 8,
           "NO HERIDA QUIRURGICA": 9,
-          "OTROS": 11,
+          "OTROS": 12,
           "PERITONEAL": 5,
           "UROCULTIVOS": 11
         },
         "MEDICINA INTERNA": {
           "HEMOCULTIVOS": 7,
           "HERIDA QUIRURGICA": 7,
-          "NEUMO": 8,
           "NO HERIDA QUIRURGICA": 10,
-          "OTROS": 10,
+          "OTROS": 11,
           "PERITONEAL": 8,
           "UROCULTIVOS": 10
         },
         "NO IAAS": {
           "HEMOCULTIVOS": 21,
           "HERIDA QUIRURGICA": 19,
-          "NEUMO": 24,
           "NO HERIDA QUIRURGICA": 27,
-          "OTROS": 40,
+          "OTROS": 49,
           "PERITONEAL": 21,
           "UROCULTIVOS": 31
         },
         "PEDIATRÍA": {
           "HEMOCULTIVOS": 9,
           "HERIDA QUIRURGICA": 9,
-          "NEUMO": 15,
           "NO HERIDA QUIRURGICA": 9,
-          "OTROS": 14,
+          "OTROS": 18,
           "PERITONEAL": 10,
           "UROCULTIVOS": 12
         },
         "URGENCIAS": {
           "HEMOCULTIVOS": 9,
           "HERIDA QUIRURGICA": 14,
-          "NEUMO": 13,
           "NO HERIDA QUIRURGICA": 13,
-          "OTROS": 15,
+          "OTROS": 16,
           "PERITONEAL": 13,
           "UROCULTIVOS": 12
         }
@@ -138719,28 +137586,301 @@
     }
   },
   "precios": {
-    "Amikacina": 12.27,
-    "Amoxicilina": 21.32,
-    "Amoxicilina Acido Clavulánico": 28.63,
-    "Ampicilina": 35.79,
-    "Azitromicina": 11.2,
-    "Penicilina": 18.56,
-    "Cefalotina": 22.62,
-    "Ceftacidime": 19.37,
-    "Ceftriaxona": 10.5,
-    "Ciprofloxacina": 4.0,
-    "Claritromicina": 48.3,
-    "Clindamicina": 18.99,
-    "Doxiciclina": 12.51,
-    "Eritromicina": 38.35,
-    "Ertapenem": 210.0,
-    "Levofloxacina": 11.72,
-    "Linezolid": 107.28,
-    "Meropenem": 41.8,
-    "Nitrofurantoina": 19.6,
-    "Piperacilina Tazobactam": 36.0,
-    "Tetraciclina": 12.15,
-    "Trimetoprim/Sulfametoxazol": 8.76,
-    "Vancomicina": 24.0
+    "Amikacina": [
+      {
+        "p": 3.99,
+        "t": "AFA"
+      },
+      {
+        "p": 16.07,
+        "t": "AFA"
+      }
+    ],
+    "Amoxicilina Acido Clavulánico": [
+      {
+        "p": 677.28,
+        "t": "F.A"
+      },
+      {
+        "p": 18.81,
+        "t": "ENV"
+      },
+      {
+        "p": 32.0,
+        "t": "TAB"
+      }
+    ],
+    "Amoxicilina": [
+      {
+        "p": 16.21,
+        "t": "CAP"
+      },
+      {
+        "p": 20.3,
+        "t": "ENV"
+      }
+    ],
+    "Ampicilina": [
+      {
+        "p": 14.76,
+        "t": "JGO"
+      },
+      {
+        "p": 24.41,
+        "t": "ML."
+      },
+      {
+        "p": 36.61,
+        "t": "C.T"
+      }
+    ],
+    "Penicilina": [
+      {
+        "p": 13.73,
+        "t": "ENV"
+      },
+      {
+        "p": 18.56,
+        "t": "ENV"
+      },
+      {
+        "p": 1.01,
+        "t": "F.A"
+      }
+    ],
+    "Cefalotina": [
+      {
+        "p": 22.62,
+        "t": "JGO"
+      }
+    ],
+    "Clindamicina": [
+      {
+        "p": 18.99,
+        "t": "CAP"
+      },
+      {
+        "p": 3.5,
+        "t": "AMP"
+      },
+      {
+        "p": 1943.58,
+        "t": "ML."
+      }
+    ],
+    "Doxiciclina": [
+      {
+        "p": 12.51,
+        "t": "C.T"
+      },
+      {
+        "p": 180.0,
+        "t": "C.T"
+      }
+    ],
+    "Gentamicina": [
+      {
+        "p": 5.79,
+        "t": "AMP"
+      },
+      {
+        "p": 5.0,
+        "t": "AMP"
+      }
+    ],
+    "Nitrofurantoína": [
+      {
+        "p": 19.6,
+        "t": "CAP"
+      },
+      {
+        "p": 288.75,
+        "t": "ML."
+      }
+    ],
+    "Tetraciclina": [
+      {
+        "p": 12.15,
+        "t": "C.T"
+      }
+    ],
+    "Trimetoprim/Sulfametoxazol": [
+      {
+        "p": 66.64,
+        "t": "AMP"
+      },
+      {
+        "p": 8.7,
+        "t": "TAB"
+      },
+      {
+        "p": 9.32,
+        "t": "ML."
+      }
+    ],
+    "Azitromicina": [
+      {
+        "p": 11.2,
+        "t": "TAB"
+      },
+      {
+        "p": 1.01,
+        "t": "TAB"
+      }
+    ],
+    "Cefotaxima": [
+      {
+        "p": 14.65,
+        "t": "ENV"
+      }
+    ],
+    "Ceftacidime": [
+      {
+        "p": 19.37,
+        "t": "F.A"
+      }
+    ],
+    "Ceftriaxona": [
+      {
+        "p": 10.5,
+        "t": "JGO"
+      }
+    ],
+    "Cefuroxima": [
+      {
+        "p": 26.86,
+        "t": "JGO"
+      }
+    ],
+    "Ciprofloxacina": [
+      {
+        "p": 4.0,
+        "t": "C.T"
+      },
+      {
+        "p": 14.57,
+        "t": "ENV"
+      },
+      {
+        "p": 258.04,
+        "t": "JGO"
+      }
+    ],
+    "Claritromicina": [
+      {
+        "p": 127.36,
+        "t": "FCO"
+      },
+      {
+        "p": 48.3,
+        "t": "TAB"
+      }
+    ],
+    "Eritromicina": [
+      {
+        "p": 38.4,
+        "t": "C.T"
+      },
+      {
+        "p": 37.0,
+        "t": "ENV"
+      }
+    ],
+    "Ertapenem": [
+      {
+        "p": 210.0,
+        "t": "F.A"
+      }
+    ],
+    "Estreptomicina": [
+      {
+        "p": 32.31,
+        "t": "JGO"
+      }
+    ],
+    "Imipenem": [
+      {
+        "p": 1341.0,
+        "t": "F.A"
+      }
+    ],
+    "Levofloxacina": [
+      {
+        "p": 16.81,
+        "t": "ENV"
+      },
+      {
+        "p": 10.7,
+        "t": "TAB"
+      },
+      {
+        "p": 13.18,
+        "t": "TAB"
+      }
+    ],
+    "Meropenem": [
+      {
+        "p": 41.8,
+        "t": "F.A"
+      },
+      {
+        "p": 28.24,
+        "t": "F.A"
+      }
+    ],
+    "Moxifloxacino": [
+      {
+        "p": 48.74,
+        "t": "ENV"
+      },
+      {
+        "p": 31.5,
+        "t": "TAB"
+      }
+    ],
+    "Piperacilina Tazobactam": [
+      {
+        "p": 36.0,
+        "t": "F.A"
+      }
+    ],
+    "Rifampicina": [
+      {
+        "p": 1999.0,
+        "t": "TCC"
+      },
+      {
+        "p": 368.47,
+        "t": "ENV"
+      }
+    ],
+    "Rifaximina": [
+      {
+        "p": 218.0,
+        "t": "TAB"
+      }
+    ],
+    "Vancomicina": [
+      {
+        "p": 24.0,
+        "t": "F.A"
+      }
+    ],
+    "Linezolid": [
+      {
+        "p": 64.0,
+        "t": "BSA"
+      },
+      {
+        "p": 107.28,
+        "t": "TAB"
+      }
+    ],
+    "Tigeciclina": [
+      {
+        "p": 67.85,
+        "t": "F.A"
+      }
+    ]
   }
 }

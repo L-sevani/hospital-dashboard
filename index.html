@@ -426,6 +426,35 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 <script>
 let RAW = {};
 
+// Cultivos incluidos en "OTROS" para mostrar en tooltip
+const OTROS_CULTIVOS_DESC = [
+  'OTROS - INADECUADO',
+  '(EN BLANCO)',
+  'CULTIVO DE BIOPSIA',
+  'CULTIVO POR HISOPO - INADECUADO',
+  'CULTIVO DEL PUS - INADECUADO',
+  'ORINA TOMADA DE RECIPIENTES - INADECUADO',
+  'CULTIVO DE DRENAJES - INADECUADO',
+  'COPROCULTIVO',
+  'CULTIVO DE LÍQUIDO PLEURAL',
+  'CULTIVO DE LCR',
+  'CULTIVO DE LÍQUIDO ESTÉRIL',
+  'CULTIVOS TOMADOS DE LA BOLSA RECOLECTORA DE ORINA - INADECUADO'
+];
+
+function attachOtrosTooltip(el){
+  if(!el) return;
+  el.style.cursor='help';
+  el.addEventListener('mouseenter',e=>{
+    const tip=getFixedTip();
+    const inn='<div style="font-weight:700;margin-bottom:6px;color:#fbbf24;">📋 OTROS incluye:</div>'
+      +OTROS_CULTIVOS_DESC.map(c=>'<div style="padding:1px 0;font-size:.68rem;">• '+c+'</div>').join('');
+    showTip(tip,inn,e);
+  });
+  el.addEventListener('mousemove',e=>placeTip(e));
+  el.addEventListener('mouseleave',()=>hideTip(80));
+}
+
 
 const ABX_META = {
   'Amikacina': {a:'Amikacina', c:'A'},
@@ -1093,14 +1122,29 @@ function sgName(s){return SG_NAMES[s]||s;}
 function getPrecio(abxName){
   if(!RAW||!RAW.precios) return null;
   const precios=RAW.precios;
-  if(precios[abxName]) return precios[abxName].toFixed(2);
+  // Búsqueda exacta
+  if(precios[abxName]) return precios[abxName];
+  // Búsqueda flexible sin prefijos G+/G-/Hongo
   const clean=abxName.replace(/^(G\+|G-|Hongo)\s*/i,'').trim();
   const found=Object.keys(precios).find(k=>
     k.toLowerCase()===clean.toLowerCase()||
     clean.toLowerCase().startsWith(k.toLowerCase())||
     k.toLowerCase().startsWith(clean.toLowerCase())
   );
-  return found?precios[found].toFixed(2):null;
+  return found?precios[found]:null;
+}
+
+function getPrecioHtml(abxName){
+  const items=getPrecio(abxName);
+  if(!items||!items.length) return '';
+  const rows=items.map(i=>
+    `<tr><td style="color:#cbd5e1;padding-right:10px;">${i.t}</td>`+
+    `<td style="color:#fbbf24;font-weight:600;text-align:right;">$${i.p.toFixed(2)}</td></tr>`
+  ).join('');
+  return '<div style="margin-top:6px;padding-top:6px;border-top:1px solid #334155;">'
+    +'<div style="color:#94a3b8;font-size:.64rem;margin-bottom:4px;">💊 Precios IMSS:</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:.68rem;">'+rows+'</table>'
+    +'</div>';
 }
 
 function buildSRIChart(data1, data2, cid, lbl1, lbl2){
@@ -1157,12 +1201,11 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
     }).replace(/'/g,'&apos;');
     h+=`<div class="vbh" data-tip='${tipData}' style="position:absolute;left:${x}px;top:${PADTOP}px;width:${zoneW}px;height:${CH}px;cursor:default;"></div>`;
 
-    // Total + x label + precio
+    // Total + x label (sin precio en el nombre)
     const tot=hasCmp&&d2?`${d.t}/${d2.t}`:d.t;
-    const precio=getPrecio(name);
     h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${zoneW}px;text-align:center;font-size:.6rem;color:#6b7280;">${tot}</div>`;
     h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${zoneW}px;height:${XLABELH-18}px;display:flex;justify-content:center;overflow:hidden;">
-      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}${precio?` · $${precio}`:''}  </div>
+      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</div>
     </div>`;
   });
 
@@ -1181,7 +1224,8 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
         const d=JSON.parse(bar.dataset.tip.replace(/&apos;/g,"'"));
         let inn=`<div style="font-weight:600;color:#fff;margin-bottom:3px;">${d.label||""}</div>`;
         inn+=`<div style="font-size:.65rem;color:#64748b;margin-bottom:4px;">${d.p1}</div>`;
-        inn+=`<div style="color:#4ade80;">S: ${d.S} (${d.pS})</div>`;
+        inn+=getPrecioHtml(d.label||'');
+        inn+=`<div style="margin-top:6px;padding-top:6px;border-top:1px solid #334155;color:#4ade80;">S: ${d.S} (${d.pS})</div>`;
         inn+=`<div style="color:#f87171;">R: ${d.R} (${d.pR})</div>`;
         inn+=`<div style="color:#fbbf24;">I: ${d.I} (${d.pI})</div>`;
         inn+=`<div style="color:#94a3b8;border-top:1px solid #334155;margin-top:3px;padding-top:3px;">Total: ${d.T}</div>`;
@@ -1268,9 +1312,8 @@ function buildSRIMultiChart(datasets, cid){
       }
     });
     h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+4}px;width:${groupW}px;text-align:center;font-size:.58rem;color:#9ca3af;">${totalN||''}</div>`;
-    const precio=getPrecio(name);
     h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+16}px;width:${groupW}px;height:${XLABELH-16}px;display:flex;justify-content:center;overflow:hidden;">
-      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}${precio?` · $${precio}`:''}  </div>
+      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</div>
     </div>`;
   });
   h+=`</div></div>`;
@@ -1292,7 +1335,8 @@ function buildSRIMultiChart(datasets, cid){
         const d=JSON.parse(bar.dataset.tip.replace(/&apos;/g,"'"));
         let inn=`<div style="font-weight:600;color:#fff;margin-bottom:3px;">${d.abx||''}</div>`;
         inn+=`<div style="font-size:.65rem;color:#94a3b8;margin-bottom:4px;">${d.hosp}</div>`;
-        inn+=`<div style="color:#4ade80;">S: ${d.S} (${d.pS})</div>`;
+        inn+=getPrecioHtml(d.abx||'');
+        inn+=`<div style="margin-top:6px;padding-top:6px;border-top:1px solid #334155;color:#4ade80;">S: ${d.S} (${d.pS})</div>`;
         inn+=`<div style="color:#f87171;">R: ${d.R} (${d.pR})</div>`;
         inn+=`<div style="color:#fbbf24;">I: ${d.I} (${d.pI})</div>`;
         inn+=`<div style="color:#94a3b8;border-top:1px solid #334155;margin-top:3px;padding-top:3px;">Total: ${d.T}</div>`;
@@ -1333,8 +1377,7 @@ function buildSRICompactChart(data, cid){
     if(d.pR>0){const h2=Math.max(1,Math.round(d.pR*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#ef4444;"></div>`;}
     if(d.pI>0){const h2=Math.max(1,Math.round(d.pI*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#f59e0b;"></div>`;}
     h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${BW}px;text-align:center;font-size:.62rem;color:#6b7280;">${d.t||0}</div>`;
-    const precio=getPrecio(d.a);
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;text-align:center;font-size:.64rem;color:#334155;white-space:normal;line-height:1.2;">${d.a}${precio?`<br><span style="font-size:.57rem;color:#374151;">$${precio}</span>`:''}</div>`;
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;text-align:center;font-size:.64rem;color:#334155;white-space:normal;line-height:1.2;">${d.a}</div>`;
     // Tooltip zone
     const tipData=JSON.stringify({a:d.a,S:d.S,R:d.R,I:d.I,t:d.t,pS:pct(d.pS),pR:pct(d.pR),pI:pct(d.pI)}).replace(/'/g,'&apos;');
     h+=`<div class="vbh" data-tip='${tipData}' data-compact="1" style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
@@ -1349,7 +1392,8 @@ function buildSRICompactChart(data, cid){
       try{
         const d=JSON.parse(bar.dataset.tip.replace(/&apos;/g,"'"));
         let inn=`<div style="font-weight:600;color:#fff;margin-bottom:3px;">${d.a}</div>`;
-        inn+=`<div style="color:#4ade80;">S: ${d.S} (${d.pS})</div>`;
+        inn+=getPrecioHtml(d.a||'');
+        inn+=`<div style="margin-top:6px;padding-top:6px;border-top:1px solid #334155;color:#4ade80;">S: ${d.S} (${d.pS})</div>`;
         inn+=`<div style="color:#f87171;">R: ${d.R} (${d.pR})</div>`;
         inn+=`<div style="color:#fbbf24;">I: ${d.I} (${d.pI})</div>`;
         inn+=`<div style="color:#94a3b8;border-top:1px solid #334155;margin-top:3px;padding-top:3px;">Total: ${d.t}</div>`;
@@ -1613,6 +1657,7 @@ function renderHospital(){
   const obj=getSRIObj('hospital');
   buildSRIChart(sriForPeriod(obj,p1), p2?sriForPeriod(obj,p2):null, 'chart-hospital', fmtP(p1), p2?fmtP(p2):null);
   renderHospitalText();
+  setTimeout(()=>attachOtrosTooltips(document.getElementById('chart-hospital')),50);
 }
 
 function renderHospitalText(){
@@ -1770,6 +1815,16 @@ function setFreqTab(idx,el){
   renderFreq();
 }
 
+function attachOtrosTooltips(container){
+  // After any chart renders, attach OTROS tooltip to bar label divs containing "OTROS"
+  if(!container) container=document;
+  container.querySelectorAll('div').forEach(div=>{
+    if(div.children.length===0 && div.textContent.trim()==='OTROS'){
+      attachOtrosTooltip(div);
+    }
+  });
+}
+
 function renderFreq(){
   const cfg=FREQ_CFG[activeFreqTab];
   const body=document.getElementById('freq-body'); if(!body) return;
@@ -1781,6 +1836,7 @@ function renderFreq(){
     data={...data, order:top20};
   }
   buildFreqChart(data,'fchart');
+  attachOtrosTooltips(document.getElementById('fchart'));
 }
 
 /* ─── COMPARAR HOSPITALES ─────────────────────────────────────── */
@@ -2338,6 +2394,7 @@ function fillDrillChecks(boxId, items, prevSet){
     ck.style.cssText='flex-shrink:0;accent-color:#7c3aed;';
     const sp=document.createElement('span'); sp.textContent=v;
     lb.appendChild(ck); lb.appendChild(sp); box.appendChild(lb);
+    if(v==='OTROS') attachOtrosTooltip(lb);
   });
 }
 
