@@ -1770,6 +1770,8 @@ function renderSg(section){
           renderSg(section);
         };
         list.appendChild(t);
+        // Tooltip de OTROS solo en pestaña cultivo
+        if(section==='cultivo' && s==='OTROS') attachOtrosTooltip(t);
       });
       const visibleSuffix=q?` · ${visibles.length} visibles`:'';
       if(count) count.textContent=`${selectedSgs.length} seleccionados${visibleSuffix}`;
@@ -2399,7 +2401,6 @@ function fillDrillChecks(boxId, items, prevSet){
     ck.style.cssText='flex-shrink:0;accent-color:#7c3aed;';
     const sp=document.createElement('span'); sp.textContent=v;
     lb.appendChild(ck); lb.appendChild(sp); box.appendChild(lb);
-    if(v==='OTROS') attachOtrosTooltip(lb);
   });
 }
 
