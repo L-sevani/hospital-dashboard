@@ -2429,11 +2429,18 @@ function drillFilterMicro(i, query){
 function rebuildDrillCascadeForHosp(i,hospId){
   _drillMapsArr[i]=buildDrillMaps(hospId,getDrillMainPeriods());
   const m=_drillMapsArr[i];
+  const isNoIaas=HOSP_NO_IAAS.has(hospId);
   ['svc','inf','cul'].forEach(key=>{
     const map=key==='svc'?m.svcMap:key==='inf'?m.infMap:m.culMap;
     const box=document.getElementById(`drill-${key}-checks-${i}`);
     const prev=box?new Set([...box.querySelectorAll('input:checked')].map(c=>c.value)):new Set();
     fillDrillChecks(`drill-${key}-checks-${i}`, Object.keys(map), prev);
+    // Tooltip de OTROS solo en cultivo y solo para hospitales IAAS
+    if(key==='cul' && !isNoIaas && box){
+      box.querySelectorAll('label').forEach(lb=>{
+        if(lb.textContent.trim()==='OTROS') attachOtrosTooltip(lb);
+      });
+    }
   });
   // Microorganismos: usar micros.subgrupos del hospital directamente
   const derived=getRawSliceForHospital(hospId)||RAW;
