@@ -1122,15 +1122,20 @@ function sgName(s){return SG_NAMES[s]||s;}
 function getPrecio(abxName){
   if(!RAW||!RAW.precios) return null;
   const precios=RAW.precios;
-  // Búsqueda exacta
   if(precios[abxName]) return precios[abxName];
-  // Búsqueda flexible sin prefijos G+/G-/Hongo
-  const clean=abxName.replace(/^(G\+|G-|Hongo)\s*/i,'').trim();
-  const found=Object.keys(precios).find(k=>
-    k.toLowerCase()===clean.toLowerCase()||
-    clean.toLowerCase().startsWith(k.toLowerCase())||
-    k.toLowerCase().startsWith(clean.toLowerCase())
-  );
+  // Limpiar prefijos: (A), (W), (R), G+, G-, Hongo
+  const clean=abxName
+    .replace(/^\([AWR]\)\s*/,'')
+    .replace(/^(G\+|G-|Hongo)\s*/i,'')
+    .trim();
+  if(precios[clean]) return precios[clean];
+  // Normalizar: quitar acentos y comparar
+  const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+  const cleanN=norm(clean);
+  const found=Object.keys(precios).find(k=>{
+    const kN=norm(k);
+    return kN===cleanN||cleanN.startsWith(kN)||kN.startsWith(cleanN);
+  });
   return found?precios[found]:null;
 }
 
