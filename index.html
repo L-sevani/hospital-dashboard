@@ -995,7 +995,10 @@ function sriForPeriod(obj,period){
   // If it's a year (4 chars) always expand to months
   const isYear=period.length===4;
   if(!isYear) return calcPct(obj[period]||null).sort((a,b)=>b.pS-a.pS || a.pR-b.pR || a.pI-b.pI);
-  const ms=RAW.periodos.filter(p=>p.startsWith(period));
+  // New JSON has year keys directly
+  if(obj[period]&&obj[period].length) return calcPct(obj[period]).sort((a,b)=>b.pS-a.pS || a.pR-b.pR || a.pI-b.pI);
+  // Fallback: old JSON with month keys
+  const ms=RAW.periodos.filter(p=>p.startsWith(period+'-'));
   if(!ms.length) return null;
   const merged={};
   ms.forEach(m=>{
@@ -1018,7 +1021,9 @@ function sriMergedRaw(obj, periods){
       // If it's a year (4 chars) always expand to months regardless of mode
       const isYear=per.length===4;
       if(isYear){
-        const ms=RAW.periodos.filter(p=>p.startsWith(per));
+        // New JSON has year keys directly; old JSON has month keys
+        if(obj[per]&&obj[per].length) return obj[per]; // year key exists directly
+        const ms=RAW.periodos.filter(p=>p.startsWith(per+'-')); // fallback: month keys
         if(!ms.length) return [];
         const mg={};
         ms.forEach(m=>(obj[m]||[]).forEach(r=>{if(!mg[r.a])mg[r.a]={a:r.a,c:r.c,t:0,S:0,R:0,I:0};mg[r.a].t+=r.t;mg[r.a].S+=r.S;mg[r.a].R+=r.R;mg[r.a].I+=r.I;}));
@@ -1726,10 +1731,14 @@ function getActiveSubgroups(section, raw){
 function sgHasData(dataMap, period){
   if(!dataMap) return false;
   if(!period||period==='TODOS') return Object.keys(dataMap).some(k=>dataMap[k]&&dataMap[k].length>0);
+  // Multi-period: si hay datos en cualquier año/mes, es válido
+  if(period==='__main_multi__') return Object.keys(dataMap).some(k=>(mainPeriodSet||[]).some(y=>k===y||k.startsWith(y+'-'))&&dataMap[k]&&dataMap[k].length>0);
+  if(period==='__adv_A__') return Object.keys(dataMap).some(k=>(advSetA||[]).some(y=>k===y||k.startsWith(y+'-'))&&dataMap[k]&&dataMap[k].length>0);
+  if(period==='__adv_B__') return Object.keys(dataMap).some(k=>(advSetB||[]).some(y=>k===y||k.startsWith(y+'-'))&&dataMap[k]&&dataMap[k].length>0);
   if(dataMap[period]&&dataMap[period].length>0) return true;
-  // Si es año (ej. '2018'), verificar si existe algún mes con datos
+  // Si es año (ej. '2018'), verificar si existe el año o algún mes
   if(/^\d{4}$/.test(String(period))){
-    return Object.keys(dataMap).some(k=>k.startsWith(period+'-')&&dataMap[k]&&dataMap[k].length>0);
+    return Object.keys(dataMap).some(k=>(k===period||k.startsWith(period+'-'))&&dataMap[k]&&dataMap[k].length>0);
   }
   return false;
 }
