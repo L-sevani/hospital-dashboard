@@ -912,6 +912,7 @@ function setHospital(h) {
   }
   // Re-render
   p1 = 'TODOS'; p2 = null;
+  activeSg = {};  // Reset subgroup selection when switching hospitals
   renderPills();
   renderContextBar();
   renderAll();
@@ -1779,8 +1780,8 @@ function renderSg(section){
           renderSg(section);
         };
         list.appendChild(t);
-        // Tooltip de OTROS solo en pestaña cultivo
-        if(section==='cultivo' && s==='OTROS') attachOtrosTooltip(t);
+        // Tooltip de OTROS solo en pestaña cultivo y solo si NO es Ambulatorios
+        if(section==='cultivo' && s==='OTROS' && !HOSP_NO_IAAS.has(activeHospital)) attachOtrosTooltip(t);
       });
       const visibleSuffix=q?` · ${visibles.length} visibles`:'';
       if(count) count.textContent=`${selectedSgs.length} seleccionados${visibleSuffix}`;
