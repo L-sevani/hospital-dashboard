@@ -2731,27 +2731,22 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
   const tipoUnidad=datasets.some(d=>HOSP_NO_IAAS.has(d.hospId||'AMBULATORIOS'))?'Mixto IAAS + Ambulatorio':'Hospitalario IAAS';
 
   const prompt=
-    'Infectologo IMSS Mexico. Antibiograma REAL de '+hospNames+' para '+dimLabel+'.\n'
-    +'Hospital(es): '+hospNames+' | Servicio(s): '+servicios
-    +' | Cultivo: '+cultivos+' | Infeccion: '+infecciones+' | Periodo: '+periodo
-    +' | Microorganismos: '+micros+'\n\n'
-    +'ANTIBIOGRAMA (AWaRe del sistema, no cambiar, S%, R%, n):\n'+datosGrafica+'\n\n'
-    +'REGLAS: Solo ABX con S>=50% y n>=5. Access primero, Watch si no hay Access, Reserve solo en IAAS. '
-    +'La clasificacion AWaRe esta en [AWaRe:X], usala exactamente, no la cambies ni inventes.\n\n'
-    +'AVISO (coloca este texto al inicio, antes de las tablas):\n'
-    +'"Los esquemas terapeuticos presentados fueron generados automaticamente con base en los filtros seleccionados '
-    +'(Hospital(es): '+hospNames+', Servicio(s): '+servicios+', '
-    +'Diagnostico: '+infecciones+', Cultivo: '+cultivos+', Microorganismo(s): '+[...new Set(micros.split(', '))].join(', ')+', Periodo: '+periodo+'). '
-    +'Estas recomendaciones son un apoyo para la toma de decisiones clinicas (PROA). '
-    +'La seleccion definitiva del tratamiento es responsabilidad exclusiva del medico tratante."\n\n'
-    +'Genera exactamente esto en orden:\n'
-    +'1. El AVISO anterior en un div con class="ia-nota"\n'
-    +'2. <h3>1. Ambulatorio</h3> + tabla HTML\n'
-    +'3. <h3>2. Hospitalizado</h3> + tabla HTML\n'
-    +'4. <h3>3. IAAS</h3> + tabla HTML\n'
-    +'5. <h3>Recomendaciones PROA</h3> con viñetas: desescalamiento, duracion minima efectiva, revision a 48-72h con cultivo\n\n'
-    +'Cada tabla: columnas Prioridad|Antibiotico|AWaRe|%S local (n)|Dosis|Via|Duracion|Contraindicaciones|Interacciones|Ajuste renal(Si/No). '
-    +'Filas: Primera eleccion, Alternativa 1, Alternativa 2. Solo HTML puro, sin markdown.';
+    'Infectologo IMSS. Antibiograma: '+hospNames+' | Svc: '+servicios+' | Cultivo: '+cultivos
+    +' | Dx: '+infecciones+' | Micro: '+[...new Set(micros.split(', '))].join(', ')+' | Periodo: '+periodo+'\n\n'
+    +'ANTIBIOGRAMA (AWaRe del sistema, NO cambiar; S%, R%, n):\n'+datosGrafica+'\n\n'
+    +'REGLAS: Solo ABX con S>=50% y n>=5. AWaRe tal como viene en [AWaRe:X]. No inventar ABX.\n\n'
+    +'AVISO (poner al inicio en div class="ia-nota"):\n'
+    +'"Esquemas generados con filtros: Hospital(es): '+hospNames+', Servicio(s): '+servicios
+    +', Dx: '+infecciones+', Cultivo: '+cultivos+', Micro: '+[...new Set(micros.split(', '))].join(', ')
+    +', Periodo: '+periodo+'. Responsabilidad del medico tratante."\n\n'
+    +'Solo HTML. Genera:\n'
+    +'1. div.ia-nota con el AVISO\n'
+    +'2. <h3>1. Ambulatorio</h3> tabla HTML\n'
+    +'3. <h3>2. Hospitalizado</h3> tabla HTML\n'
+    +'4. <h3>3. IAAS</h3> tabla HTML\n'
+    +'5. <h3>Recomendaciones PROA</h3> 3-5 bullets\n'
+    +'Tabla cols: Prioridad|Antibiotico|AWaRe|%S(n)|Dosis|Via|Duracion|Contraindicaciones|Interacciones|Ajuste renal. '
+    +'3 filas: Primera eleccion, Alternativa 1, Alternativa 2.';
 
   try{
     const res=await fetch(WORKER_URL,{
@@ -2759,8 +2754,8 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
-        model:'openai/gpt-oss-120b',
-        generationConfig:{maxOutputTokens:3500,temperature:0.2}
+        model:'openai/gpt-oss-20b',
+        generationConfig:{maxOutputTokens:2000,temperature:0.2}
       })
     });
     const data=await res.json();
