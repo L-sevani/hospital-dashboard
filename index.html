@@ -2754,7 +2754,7 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
-        model:'openai/gpt-oss-20b',
+        model:'groq/compuesto',
         generationConfig:{maxOutputTokens:2000,temperature:0.2}
       })
     });
@@ -2770,9 +2770,10 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
       html=html.replace(/\bReserve\b/g,'<span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Reserve</span>');
       el.innerHTML='<div class="drill-ia-content">'+html+'</div>';
     }else if(data.error){
-      el.innerHTML='<div style="color:#dc2626;font-size:.8rem;">Error: '+data.error.message+'</div>';
+      const errMsg=typeof data.error==='string'?data.error:(data.error?.message||JSON.stringify(data.error));
+      el.innerHTML='<div style="color:#dc2626;font-size:.8rem;padding:12px;background:#fee2e2;border-radius:8px;">⚠️ Error: '+errMsg+'</div>';
     }else{
-      el.innerHTML='<div style="color:#9ca3af;font-size:.8rem;">Sin respuesta. Intenta de nuevo.</div>';
+      el.innerHTML='<div style="color:#9ca3af;font-size:.8rem;padding:12px;">⚠️ Sin respuesta. Respuesta: '+JSON.stringify(data).slice(0,200)+'</div>';
     }
   }catch(e){
     el.innerHTML='<div style="color:#dc2626;font-size:.8rem;">Error de conexion: '+e.message+'</div>';
