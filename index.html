@@ -2759,6 +2759,7 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
+        model:'meta-llama/llama-4-maverick-17b-128e-instruct',
         generationConfig:{maxOutputTokens:3500,temperature:0.2}
       })
     });
