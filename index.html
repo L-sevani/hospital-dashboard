@@ -2753,7 +2753,6 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
-        model:'qwen/qwen3.6-27b',
         generationConfig:{maxOutputTokens:3500,temperature:0.2}
       })
     });
