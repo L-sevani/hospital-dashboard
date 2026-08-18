@@ -2709,17 +2709,16 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
   };
 
   // Datos de gráfica: solo ABX con n≥3, ordenados por S desc, max 15
-  const allAbxNames=[...new Set(datasets.flatMap(d=>d.rows.filter(r=>r.t>=3).map(r=>r.a)))];
-  const datosGrafica=allAbxNames.slice(0,15).map(abx=>{
+  const allAbxNames=[...new Set(datasets.flatMap(d=>d.rows.filter(r=>r.t>=5&&(r.pS||0)>=0.4).map(r=>r.a)))];
+  const datosGrafica=allAbxNames.slice(0,12).map(abx=>{
     const aware=getAware(abx);
-    const totalN=datasets.reduce((s,d)=>{const r=d.rows.find(x=>x.a===abx);return s+(r?r.t:0);},0);
-    const lines=datasets.map(d=>{
+    const parts=datasets.map(d=>{
       const r=d.rows.find(x=>x.a===abx);
       if(!r||r.t<1) return null;
-      return `  ${d.label}: S:${Math.round((r.pS||0)*100)}% R:${Math.round((r.pR||0)*100)}% n=${r.t}`;
-    }).filter(Boolean).join('\n');
-    return `${abx} | AWaRe: ${aware} | n total=${totalN}\n${lines}`;
-  }).join('\n\n');
+      return d.label.split('·')[0].trim()+':S'+Math.round((r.pS||0)*100)+'%,R'+Math.round((r.pR||0)*100)+'%,n'+r.t;
+    }).filter(Boolean).join('|');
+    return abx+' [AWaRe:'+aware+'] '+parts;
+  }).join('\n');
 
   // Filtros activos
   const getCheckedVals=(prefix,i)=>{const b=document.getElementById(`drill-${prefix}-checks-${i}`);return b?[...b.querySelectorAll('input:checked')].map(c=>c.value):[];};
@@ -2754,8 +2753,8 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
-        model:'groq/compuesto',
-        generationConfig:{maxOutputTokens:2000,temperature:0.2}
+        model:'qwen/qwen3.6-27b',
+        generationConfig:{maxOutputTokens:3500,temperature:0.2}
       })
     });
     const data=await res.json();
