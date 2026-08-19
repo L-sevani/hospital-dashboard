@@ -2792,28 +2792,57 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
     });
     const data=await res.json();
     if(data.candidates&&data.candidates[0]?.content?.parts[0]?.text){
-      let html=data.candidates[0].content.parts[0].text;
-      // Strip code fences
-      html=html.replace(/```html?/gi,'').replace(/```/g,'');
-      // Convert markdown tables to HTML tables
-      html=html.replace(/(?:^|\n)((?:\|[^\n]+\|\n?)+)/g,(match,block)=>{
-        const rows=block.trim().split('\n').filter(r=>r.includes('|'));
-        const dataRows=rows.filter(r=>!/^\s*\|[\s|:-]+\|\s*$/.test(r));
-        if(!dataRows.length) return match;
-        const head=dataRows[0].split('|').slice(1,-1).map(c=>'<th>'+c.trim()+'</th>').join('');
-        const body=dataRows.slice(1).map(r=>'<tr>'+r.split('|').slice(1,-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('');
-        return '<table><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';
-      });
-      // Convert **bold** headers and ## headings
-      html=html.replace(/^##\s+(.+)$/gm,'<h3>$1</h3>');
-      html=html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+      let raw=data.candidates[0].content.parts[0].text;
+      raw=raw.replace(/```html?/gi,'').replace(/```/g,'');
+
+      // ── Convertidor Markdown → HTML ──
+      function mdToTable(text){
+        const lines=text.split('\n');
+        let out=''; let inTable=false; let tableLines=[];
+
+        function flushTable(){
+          if(!tableLines.length){inTable=false;return;}
+          // Filter out separator rows (---|---|---)
+          const rows=tableLines.filter(l=>/\|/.test(l)&&!/^\s*\|[\s\-:|]+\|\s*$/.test(l));
+          if(rows.length<2){out+=tableLines.join('\n');tableLines=[];inTable=false;return;}
+          const parse=l=>l.split('|').slice(1,-1).map(c=>c.trim());
+          const head=parse(rows[0]).map(c=>'<th>'+c+'</th>').join('');
+          const body=rows.slice(1).map(r=>'<tr>'+parse(r).map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('');
+          out+='<table><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';
+          tableLines=[];inTable=false;
+        }
+
+        lines.forEach(line=>{
+          if(/\|/.test(line)){
+            inTable=true; tableLines.push(line);
+          } else {
+            if(inTable) flushTable();
+            // Headings
+            if(/^##\s+/.test(line)) out+='<h3>'+line.replace(/^##\s+/,'')+'</h3>';
+            else if(/^###\s+/.test(line)) out+='<h4>'+line.replace(/^###\s+/,'')+'</h4>';
+            // Bullets
+            else if(/^[*\-•]\s+/.test(line)) out+='<li>'+line.replace(/^[*\-•]\s+/,'')+'</li>';
+            // Blank
+            else if(!line.trim()) out+='<br>';
+            // Normal
+            else out+='<p>'+line+'</p>';
+          }
+        });
+        if(inTable) flushTable();
+        // Bold
+        out=out.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+        return out;
+      }
+
+      let html=mdToTable(raw);
+
       // AWaRe badges
-      html=html.replace(/\bAccess\s*\(A\)/g,'<span style="background:#dcfce7;color:#166534;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Access</span>');
-      html=html.replace(/\bWatch\s*\(W\)/g,'<span style="background:#fef9c3;color:#854d0e;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Watch</span>');
-      html=html.replace(/\bReserve\s*\(R\)/g,'<span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Reserve</span>');
-      html=html.replace(/\bAccess\b/g,'<span style="background:#dcfce7;color:#166534;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Access</span>');
-      html=html.replace(/\bWatch\b/g,'<span style="background:#fef9c3;color:#854d0e;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Watch</span>');
-      html=html.replace(/\bReserve\b/g,'<span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">Reserve</span>');
+      const badge=(t,bg,c)=>`<span style="background:${bg};color:${c};border-radius:4px;padding:1px 6px;font-weight:700;font-size:.68rem;">${t}</span>`;
+      html=html.replace(/\bAccess\s*(?:\(A\))?/g,badge('Access','#dcfce7','#166534'));
+      html=html.replace(/\bWatch\s*(?:\(W\))?/g,badge('Watch','#fef9c3','#854d0e'));
+      html=html.replace(/\bReserve\s*(?:\(R\))?/g,badge('Reserve','#fee2e2','#991b1b'));
+      html=html.replace(/\bSin clasificar\b/g,'<span style="color:#6b7280;font-size:.68rem;">Sin clasificar</span>');
+
       el.innerHTML='<div class="drill-ia-content">'+html+'</div>';
     }else if(data.error){
       const errMsg=typeof data.error==='string'?data.error:(data.error?.message||JSON.stringify(data.error));
