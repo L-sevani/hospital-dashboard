@@ -2731,57 +2731,49 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
 
   const microsList=[...new Set(micros.split(', '))].join(', ');
 
-  // System instruction: rol, reglas y formato (siempre respetado por Gemini)
   const systemText=
-    'Eres medico infectologo, epidemiologo hospitalario y especialista en PROA del Sistema Nacional de Salud de Mexico (IMSS).\n\n'
-    +'REGLA ABSOLUTA: NO inventar microorganismos, antibioticos, porcentajes, n, hospitales ni diagnosticos fuera de los datos proporcionados.\n\n'
-    +'FUENTES: Usa exclusivamente fuentes mexicanas (CENETEC > SS > IMSS > ISSSTE > CSG). NO uses IDSA, ESCMID, CDC, OMS ni guias extranjeras como base terapeutica.\n\n'
-    +'UMBRALES:\n'
-    +'- S>=50% y n>=5: potencialmente activo\n'
-    +'- S<50%: NO usar empirico\n'
-    +'- n<5: no interpretable, no basar recomendacion\n'
-    +'- Resistencia>=50%: NO recomendar empirico\n\n'
-    +'PRIORIDAD AWaRe: Access (A) > Watch (W) > Reserve (R). Reserve solo en IAAS sin alternativa razonable.\n\n'
-    +'VERIFICACIONES OBLIGATORIAS:\n'
-    +'- Nitrofurantoina/fosfomicina: SOLO cistitis, nunca pielonefritis ni bacteriemia\n'
-    +'- Daptomicina: NUNCA en neumonia\n'
-    +'- Tigeciclina: NO en bacteriemia ni infeccion urinaria\n'
-    +'- Aminoglucosidos en monoterapia: NO en neumonia\n\n'
-    +'FORMATO OBLIGATORIO DE RESPUESTA — sigue exactamente este orden:\n\n'
-    +'1. AVISO en div.ia-nota\n'
-    +'2. ## 1. Resumen ejecutivo (max 5 puntos)\n'
-    +'3. ## 2. Interpretacion clinica\n'
-    +'4. ## 3. Hallazgos importantes (viñetas)\n'
-    +'5. ## 4. Esquema ambulatorio → TABLA MARKDOWN + observaciones\n'
-    +'6. ## 5. Esquema hospitalizado → TABLA MARKDOWN + observaciones\n'
-    +'7. ## 6. Esquema IAAS → TABLA MARKDOWN + observaciones\n'
-    +'8. ## 7. Recomendaciones finales PROA\n\n'
-    +'ESTRUCTURA DE CADA TABLA (obligatoria, sin variaciones):\n'
-    +'| Prioridad | Antibiotico | AWaRe | %S (n) | Dosis | Via | Duracion | Contraindicaciones | Interacciones | Ajuste renal |\n'
-    +'|-----------|-------------|-------|--------|-------|-----|----------|--------------------|---------------|-------------|\n'
-    +'| Primera eleccion | [antibiotico] | [Access/Watch/Reserve] | [S%] ([n]) | [dosis] | [via] | [duracion] | [contraindicaciones] | [interacciones] | [Si/No] |\n'
-    +'| Alternativa 1 | ... |\n'
-    +'| Alternativa 2 | ... |\n\n'
-    +'Si un dato no puede determinarse: "No determinado". Si no hay antibiotico adecuado: indicarlo explicitamente.\n'
-    +'NUNCA uses bullets en lugar de tablas para los esquemas terapeuticos.';
+    'Eres medico infectologo PROA del IMSS Mexico. '
+    +'NUNCA uses bullets para los esquemas terapeuticos. '
+    +'SIEMPRE usa tablas Markdown exactamente como el ejemplo. '
+    +'NO inventes datos que no esten en el antibiograma proporcionado. '
+    +'Fuentes: solo mexicanas (CENETEC, IMSS, SS). '
+    +'AWaRe: Access>Watch>Reserve. Solo ABX con S>=50% y n>=5.';
 
-  // User content: solo los datos del caso actual
   const userText=
-    'FILTROS DEL CASO:\n'
-    +'Hospital(es): '+hospNames+'\n'
-    +'Servicio(s): '+servicios+'\n'
-    +'Diagnostico: '+infecciones+'\n'
-    +'Cultivo: '+cultivos+'\n'
-    +'Periodo: '+periodo+'\n'
-    +'Microorganismos: '+microsList+'\n\n'
-    +'ANTIBIOGRAMA (Antibiotico [AWaRe:X] Hospital:S%,R%,n):\n'
+    'ANTIBIOGRAMA:\n'
+    +'Hospital(es): '+hospNames+' | Servicio: '+servicios+' | Diagnostico: '+infecciones
+    +' | Cultivo: '+cultivos+' | Micro: '+microsList+' | Periodo: '+periodo+'\n\n'
     +datosGrafica+'\n\n'
-    +'AVISO para incluir al inicio:\n'
-    +'<div class="ia-nota">Los esquemas terapeuticos fueron generados automaticamente con base en los filtros: '
-    +'Hospital(es): '+hospNames+', Servicio(s): '+servicios+', Diagnostico: '+infecciones
-    +', Cultivo: '+cultivos+', Microorganismo(s): '+microsList+', Periodo: '+periodo+'. '
-    +'La seleccion definitiva es responsabilidad exclusiva del medico tratante.</div>\n\n'
-    +'Genera el analisis completo siguiendo el formato del system instruction.';
+    +'GENERA el siguiente formato EXACTAMENTE. Rellena cada [...] con datos reales del antibiograma.\n\n'
+    +'<div class="ia-nota">Los esquemas fueron generados automaticamente. '
+    +'Hospital(es): '+hospNames+'. Servicio: '+servicios+'. Dx: '+infecciones
+    +'. Micro: '+microsList+'. Periodo: '+periodo+'. '
+    +'Responsabilidad exclusiva del medico tratante.</div>\n\n'
+    +'## Resumen\n'
+    +'[2-3 lineas: patron de sensibilidad, mejor opcion, principal resistencia]\n\n'
+    +'## Esquema Ambulatorio\n\n'
+    +'| Prioridad | Antibiotico | AWaRe | %S (n) | Dosis | Via | Duracion | Contraindicaciones | Interacciones | Ajuste renal |\n'
+    +'|---|---|---|---|---|---|---|---|---|---|\n'
+    +'| Primera eleccion | [antibiotico con mayor S%] | [Access/Watch/Reserve] | [S%] ([n]) | [dosis ej: 500mg c/8h] | [Oral/IV/IM] | [ej: 7 dias] | [ej: Hipersensibilidad] | [ej: Warfarina] | [Si/No] |\n'
+    +'| Alternativa 1 | [siguiente mejor ABX] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n'
+    +'| Alternativa 2 | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n\n'
+    +'**Observaciones:** [cuando cambiar, cultivo de control, embarazo, pediatria, insuficiencia renal]\n\n'
+    +'## Esquema Hospitalizado\n\n'
+    +'| Prioridad | Antibiotico | AWaRe | %S (n) | Dosis | Via | Duracion | Contraindicaciones | Interacciones | Ajuste renal |\n'
+    +'|---|---|---|---|---|---|---|---|---|---|\n'
+    +'| Primera eleccion | [...] | [...] | [...] | [...] | [IV preferente] | [...] | [...] | [...] | [...] |\n'
+    +'| Alternativa 1 | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n'
+    +'| Alternativa 2 | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n\n'
+    +'**Observaciones:** [desescalamiento, cultivo de control, referencia a infectologia]\n\n'
+    +'## Esquema IAAS\n\n'
+    +'| Prioridad | Antibiotico | AWaRe | %S (n) | Dosis | Via | Duracion | Contraindicaciones | Interacciones | Ajuste renal |\n'
+    +'|---|---|---|---|---|---|---|---|---|---|\n'
+    +'| Primera eleccion | [...] | [...] | [...] | [...] | [IV] | [...] | [...] | [...] | [...] |\n'
+    +'| Alternativa 1 | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n'
+    +'| Alternativa 2 | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n\n'
+    +'**Observaciones:** [Reserve solo sin alternativa, desescalamiento, PROA]\n\n'
+    +'## Recomendaciones PROA\n'
+    +'[desescalamiento 48-72h, duracion minima, vigilancia resistencia, referencia infectologia si aplica]';
 
   try{
     const res=await fetch(WORKER_URL,{
