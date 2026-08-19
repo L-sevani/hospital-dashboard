@@ -2733,47 +2733,47 @@ async function drillGenerateTreatment(datasets, targetId, topMicros=[]){
 
   const systemText=
     'Eres medico infectologo PROA del IMSS Mexico. '
-    +'NUNCA uses bullets para los esquemas terapeuticos. '
-    +'SIEMPRE usa tablas Markdown exactamente como el ejemplo. '
-    +'NO inventes datos que no esten en el antibiograma proporcionado. '
-    +'Fuentes: solo mexicanas (CENETEC, IMSS, SS). '
-    +'AWaRe: Access>Watch>Reserve. Solo ABX con S>=50% y n>=5.';
+    +'Genera UNICAMENTE tablas Markdown para los esquemas terapeuticos, nunca bullets ni listas. '
+    +'Rellena TODAS las celdas con datos clinicos reales y completos. '
+    +'No dejes celdas vacias, con corchetes ni con puntos suspensivos. '
+    +'Fuentes: CENETEC, IMSS, SS Mexico. AWaRe: Access>Watch>Reserve. Solo ABX con S>=50% y n>=5. '
+    +'No inventes antibioticos ni datos fuera del antibiograma proporcionado.';
 
   const userText=
-    'ANTIBIOGRAMA:\n'
-    +'Hospital(es): '+hospNames+' | Servicio: '+servicios+' | Diagnostico: '+infecciones
-    +' | Cultivo: '+cultivos+' | Micro: '+microsList+' | Periodo: '+periodo+'\n\n'
+    'DATOS DEL CASO:\n'
+    +'Hospital(es): '+hospNames+'\n'
+    +'Servicio: '+servicios+' | Diagnostico: '+infecciones+' | Cultivo: '+cultivos+'\n'
+    +'Microorganismos: '+microsList+' | Periodo: '+periodo+'\n\n'
+    +'ANTIBIOGRAMA (ABX con S>=50% y n>=5 unicamente):\n'
     +datosGrafica+'\n\n'
-    +'GENERA el siguiente formato EXACTAMENTE. Rellena cada [...] con datos reales del antibiograma.\n\n'
-    +'<div class="ia-nota">Los esquemas fueron generados automaticamente. '
+    +'---\n'
+    +'Usando los datos anteriores, completa las siguientes tablas Markdown.\n'
+    +'Cada fila debe tener EXACTAMENTE 10 celdas con informacion clinica completa y especifica.\n'
+    +'Ejemplo de fila correctamente rellena:\n'
+    +'| Primera eleccion | Amikacina | Access | 96% (184) | 15 mg/kg/dia IV | IV | 7-10 dias | Insuficiencia renal, embarazo | Nefrotoxicos, diureticos de asa | Si |\n\n'
+    +'<div class="ia-nota">Esquemas generados automaticamente. '
     +'Hospital(es): '+hospNames+'. Servicio: '+servicios+'. Dx: '+infecciones
     +'. Micro: '+microsList+'. Periodo: '+periodo+'. '
     +'Responsabilidad exclusiva del medico tratante.</div>\n\n'
     +'## Resumen\n'
-    +'[2-3 lineas: patron de sensibilidad, mejor opcion, principal resistencia]\n\n'
+    +'(Describe el patron de sensibilidad en 3-4 lineas, los mejores antibioticos y las principales resistencias)\n\n'
     +'## Esquema Ambulatorio\n\n'
     +'| Prioridad | Antibiotico | AWaRe | %S (n) | Dosis | Via | Duracion | Contraindicaciones | Interacciones | Ajuste renal |\n'
     +'|---|---|---|---|---|---|---|---|---|---|\n'
-    +'| Primera eleccion | [antibiotico con mayor S%] | [Access/Watch/Reserve] | [S%] ([n]) | [dosis ej: 500mg c/8h] | [Oral/IV/IM] | [ej: 7 dias] | [ej: Hipersensibilidad] | [ej: Warfarina] | [Si/No] |\n'
-    +'| Alternativa 1 | [siguiente mejor ABX] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n'
-    +'| Alternativa 2 | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n\n'
-    +'**Observaciones:** [cuando cambiar, cultivo de control, embarazo, pediatria, insuficiencia renal]\n\n'
+    +'(completa 3 filas con los antibioticos mas adecuados para ambulatorio segun los datos)\n\n'
+    +'**Observaciones clinicas:** (cuando cambiar tratamiento, embarazo, pediatria, insuficiencia renal, alergias, desescalamiento)\n\n'
     +'## Esquema Hospitalizado\n\n'
     +'| Prioridad | Antibiotico | AWaRe | %S (n) | Dosis | Via | Duracion | Contraindicaciones | Interacciones | Ajuste renal |\n'
     +'|---|---|---|---|---|---|---|---|---|---|\n'
-    +'| Primera eleccion | [...] | [...] | [...] | [...] | [IV preferente] | [...] | [...] | [...] | [...] |\n'
-    +'| Alternativa 1 | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n'
-    +'| Alternativa 2 | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n\n'
-    +'**Observaciones:** [desescalamiento, cultivo de control, referencia a infectologia]\n\n'
+    +'(completa 3 filas priorizando via IV para infecciones graves)\n\n'
+    +'**Observaciones clinicas:** (desescalamiento, cultivo de control, referencia a infectologia)\n\n'
     +'## Esquema IAAS\n\n'
     +'| Prioridad | Antibiotico | AWaRe | %S (n) | Dosis | Via | Duracion | Contraindicaciones | Interacciones | Ajuste renal |\n'
     +'|---|---|---|---|---|---|---|---|---|---|\n'
-    +'| Primera eleccion | [...] | [...] | [...] | [...] | [IV] | [...] | [...] | [...] | [...] |\n'
-    +'| Alternativa 1 | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n'
-    +'| Alternativa 2 | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] | [...] |\n\n'
-    +'**Observaciones:** [Reserve solo sin alternativa, desescalamiento, PROA]\n\n'
+    +'(completa 3 filas considerando mayor resistencia en IAAS, Reserve solo sin alternativa)\n\n'
+    +'**Observaciones clinicas:** (desescalamiento, PROA, referencia a infectologia)\n\n'
     +'## Recomendaciones PROA\n'
-    +'[desescalamiento 48-72h, duracion minima, vigilancia resistencia, referencia infectologia si aplica]';
+    +'(desescalamiento a 48-72h, duracion minima efectiva, vigilancia resistencia, valoracion por infectologia si aplica)';
 
   try{
     const res=await fetch(WORKER_URL,{
