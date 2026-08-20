@@ -195,6 +195,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
   <div class="ntab" onclick="setSection('avanzado',this)">🔬 Análisis Avanzado</div>
   <div class="ntab" onclick="setSection('comparar',this)">⚖️ Comparar Hospitales</div>
   <div class="ntab" onclick="setSection('aware',this)">🌐 Clasificación AWaRe</div>
+  <div class="ntab" onclick="setSection('consumo',this)">💉 Consumo (DDD)</div>
 </div>
 
 <div class="controls" id="controls-bar">
@@ -421,6 +422,11 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
     <!-- Lista -->
     <div id="aware-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;"></div>
     <div id="aware-count" style="font-size:.72rem;color:#94a3b8;text-align:center;padding-top:4px;"></div>
+  </div>
+
+  <!-- CONSUMO DE ANTIMICROBIANOS (DDD) -->
+  <div class="section" id="sec-consumo" style="padding:22px 32px;flex-direction:column;gap:18px;background:#f8fafc;">
+    <div id="consumo-body"></div>
   </div>
 </div>
 
@@ -2095,7 +2101,7 @@ function renderComparar(){
 }
 
 function sectionLabel(sec){
-  const labels={hospital:'Todo el hospital',servicio:'Por servicio',infeccion:'Por infección',cultivo:'Por cultivo',micro:'Por microorganismo',frecuencias:'Frecuencias',avanzado:'Análisis avanzado',comparar:'Comparar hospitales',aware:'Clasificación AWaRe'};
+  const labels={hospital:'Todo el hospital',servicio:'Por servicio',infeccion:'Por infección',cultivo:'Por cultivo',micro:'Por microorganismo',frecuencias:'Frecuencias',avanzado:'Análisis avanzado',comparar:'Comparar hospitales',aware:'Clasificación AWaRe',consumo:'Consumo (DDD)'};
   return labels[sec]||sec;
 }
 
@@ -2103,7 +2109,7 @@ function renderContextBar(){
   const bar=document.getElementById('context-bar');
   if(!bar) return;
   const sourceChip=`<span style="font-size:.68rem;padding:3px 10px;border-radius:14px;border:1px solid #d1fae5;background:#ecfdf5;color:#065f46;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-left:auto;white-space:nowrap;">🗄️ Fuente: Sistema interno IMSS (INOSO)</span>`;
-  if(activeSection==='aware'){
+  if(activeSection==='aware'||activeSection==='consumo'){
     bar.style.display='none';
     bar.innerHTML='';
     return;
@@ -2120,6 +2126,7 @@ function renderAll(){
   if(activeSection==='avanzado') return;
   if(activeSection==='comparar'){renderComparar();return;}
   if(activeSection==='aware') return;
+  if(activeSection==='consumo'){renderConsumo();return;}
   document.getElementById('hperiodo').textContent='IMSS · '+fmtP(p1)+(p2?' vs '+fmtP(p2):'');
   const legSri=document.getElementById('leg-sri');
   if(legSri) legSri.style.display='none';
@@ -2146,9 +2153,10 @@ function setSection(sec,el){
   const isFreq=sec==='frecuencias';
   const isCmp=sec==='comparar';
   const isAware=sec==='aware';
-  if(fb) fb.style.display=(isFreq||isAdv||isCmp||isAware)?'none':'flex';
-  if(ctrl) ctrl.style.display=(isAdv||isCmp||isAware)?'none':'flex';
-  if(cmp) cmp.style.display=(isFreq||isAdv||isCmp||isAware)?'none':'flex';
+  const isConsumo=sec==='consumo';
+  if(fb) fb.style.display=(isFreq||isAdv||isCmp||isAware||isConsumo)?'none':'flex';
+  if(ctrl) ctrl.style.display=(isAdv||isCmp||isAware||isConsumo)?'none':'flex';
+  if(cmp) cmp.style.display=(isFreq||isAdv||isCmp||isAware||isConsumo)?'none':'flex';
   if(legSri) legSri.style.display='none'; // siempre oculto — leyenda dentro de cada gráfica
   // Restaurar período de la nueva pestaña
   if(_DATA_TABS.has(sec)){
@@ -2161,9 +2169,10 @@ function setSection(sec,el){
   }
   if(isAdv){ buildAdvPills(); buildAdvAbxSelect(); buildAdvHospitalSelector(); }
   if(isAware){ initAwareTab(); }
+  if(isConsumo){ renderConsumo(); }
   activeSection=sec;
   renderContextBar();
-  if(!isAdv&&!isAware) renderAll();
+  if(!isAdv&&!isAware&&!isConsumo) renderAll();
 }
 
 function setMode(m){mode=m;p1='TODOS';p2=null;renderPills();renderAll();}
@@ -3382,6 +3391,26 @@ async function fetchDashboardData(){
   throw lastErr||new Error('No se pudo cargar dashboard_data.json');
 }
 
+async function fetchConsumoData(){
+  const stamp='?ts='+Date.now();
+  const basePath=(window.location.pathname||'').replace(/[^/]*$/, '');
+  const tries=[
+    basePath+'consumo_data.json'+stamp,
+    'consumo_data.json'+stamp,
+    './consumo_data.json'+stamp,
+    '/consumo_data.json'+stamp
+  ];
+  let lastErr=null;
+  for(const url of [...new Set(tries)]){
+    try{
+      const resp=await fetch(url,{cache:'no-store'});
+      if(!resp.ok) throw new Error(`HTTP ${resp.status} @ ${url}`);
+      return await resp.json();
+    }catch(err){ lastErr=err; }
+  }
+  throw lastErr||new Error('No se pudo cargar consumo_data.json');
+}
+
 async function initDashboard(){
   let loadFailed=false;
   try {
@@ -3421,6 +3450,14 @@ async function initDashboard(){
   renderAll();
   buildAdvHospitalSelector();
   if(loadFailed) setLoadErrorUI('No se pudieron cargar períodos desde dashboard_data.json.');
+
+  try {
+    CONSUMO_DATA = await fetchConsumoData();
+  } catch (e) {
+    console.warn('No se pudo cargar consumo_data.json (el módulo de Consumo/Cobertura Empírica quedará vacío hasta que exista ese archivo):', e);
+    CONSUMO_DATA = {};
+  }
+  if(activeSection==='consumo') renderConsumo();
 }
 async function reloadData(){
   const btn = document.getElementById('btn-reload');
@@ -3796,12 +3833,861 @@ const AWARE_DATA=[
   {n:'Tetraciclina + Nistatina',e:'Tetracycline + nystatin',c:'N'},
   {n:'Tinidazol + Diloxanida',e:'Tinidazole + diloxanide',c:'N'}
 ];
+let CONSUMO_DATA={};
+
 let _awareFilter='all';
 
 function initAwareTab(){
   if(document.getElementById('aware-filters').children.length) return;
   buildAwareFilters(); buildAwareStats(); renderAwareList();
 }
+
+/* ─── CONSUMO DE ANTIMICROBIANOS (DDD) ─────────────────────────── */
+const AWARE_COLORS={Access:'#16a34a',Watch:'#d97706',Reserve:'#dc2626','Sin clasificar':'#94a3b8'};
+/* ─── Helper genérico de tooltips (reutiliza el sistema de SYRA) ── */
+let _tipRegistry={};
+function registerTip(html){
+  const id='tip'+Math.random().toString(36).slice(2,9);
+  _tipRegistry[id]=html;
+  return id;
+}
+function wireTips(root){
+  if(!root) return;
+  root.querySelectorAll('[data-tipid]').forEach(el=>{
+    const id=el.getAttribute('data-tipid');
+    const html=_tipRegistry[id];
+    if(!html) return;
+    el.style.cursor=el.style.cursor||'pointer';
+    el.addEventListener('mouseenter',e=>showTip(getFixedTip(),html,e));
+    el.addEventListener('mousemove',e=>placeTip(e));
+    el.addEventListener('mouseleave',()=>hideTip(80));
+  });
+}
+
+/* ─── Clasificación por grupo farmacológico (para consumo agregado) */
+const GRUPO_FARM_RULES=[
+  {re:/carbapenem|meropenem|imipenem|ertapenem|doripenem/,g:'Carbapenémicos'},
+  {re:/cefalotina|cefazolina/,g:'Cefalosporinas 1ª gen'},
+  {re:/cefuroxima|cefoxitina|cefotetan/,g:'Cefalosporinas 2ª gen'},
+  {re:/cefotaxima|ceftriaxona|ceftazidima(?!.avibactam)/,g:'Cefalosporinas 3ª gen'},
+  {re:/cefepime/,g:'Cefalosporinas 4ª gen'},
+  {re:/ceftolozano|ceftarolina|avibactam/,g:'Cefalosporinas + inhibidor'},
+  {re:/amika|gentamic|estreptomicina|tobramicina/,g:'Aminoglucósidos'},
+  {re:/ciprofloxac|levofloxac|moxifloxac|norfloxac/,g:'Quinolonas'},
+  {re:/vancomicina|teicoplanina/,g:'Glucopéptidos'},
+  {re:/clindamicina/,g:'Lincosamidas'},
+  {re:/metronidazol/,g:'Nitroimidazoles'},
+  {re:/nitrofurantoin/,g:'Nitrofuranos'},
+  {re:/azitromicina|claritromicina|eritromicina/,g:'Macrólidos'},
+  {re:/trimetoprim/,g:'Sulfonamidas'},
+  {re:/tigeciclina/,g:'Glicilciclinas'},
+  {re:/doxiciclina|tetraciclina|minociclina/,g:'Tetraciclinas'},
+  {re:/linezolid/,g:'Oxazolidinonas'},
+  {re:/colistina|polimixina/,g:'Polimixinas'},
+  {re:/piperacilina|amoxicilina|ampicilina|penicilina|dicloxacilina|bencilpenicilina/,g:'Penicilinas'},
+];
+const GRUPO_COLORS={
+  'Carbapenémicos':'#7c3aed','Cefalosporinas 1ª gen':'#0ea5e9','Cefalosporinas 2ª gen':'#0284c7',
+  'Cefalosporinas 3ª gen':'#2563eb','Cefalosporinas 4ª gen':'#1d4ed8','Cefalosporinas + inhibidor':'#4338ca',
+  'Aminoglucósidos':'#16a34a','Quinolonas':'#d97706','Glucopéptidos':'#dc2626','Lincosamidas':'#0d9488',
+  'Nitroimidazoles':'#65a30d','Nitrofuranos':'#15803d','Macrólidos':'#c2410c','Sulfonamidas':'#9333ea',
+  'Glicilciclinas':'#be185d','Tetraciclinas':'#b45309','Oxazolidinonas':'#991b1b','Polimixinas':'#4b5563',
+  'Penicilinas':'#0891b2','Otros':'#94a3b8'
+};
+function grupoFarmacologico(nombre){
+  const n=_stripAccents(nombre||'').toLowerCase();
+  const rule=GRUPO_FARM_RULES.find(r=>r.re.test(n));
+  return rule?rule.g:'Otros';
+}
+
+let _consumoHospital=null, _consumoPeriodo=null, _consumoView='ddd', _consumoModo='mensual';
+let _coberturaCultivo=null, _coberturaAbxSel=null, _coberturaSortCol=null, _coberturaDim='cultivos';
+let _consumoAwareFilter=null; // Set de categorías activas, null = todas
+
+function consumoHospIds(){
+  // Solo hospitales con datos de consumo cargados (por ahora: 3 unidades IAAS)
+  return HOSPITALES_ORDEN.filter(h=>CONSUMO_DATA[h]);
+}
+
+function getHospRawData(hid){
+  if(RAW._derivedByHospital && RAW._derivedByHospital[hid]) return RAW._derivedByHospital[hid];
+  if(hid===activeHospital) return RAW;
+  return null;
+}
+
+const MESES_ABBR={'01':'Ene','02':'Feb','03':'Mar','04':'Abr','05':'May','06':'Jun','07':'Jul','08':'Ago','09':'Sep','10':'Oct','11':'Nov','12':'Dic'};
+
+function mergeConsumoPeriodos(hosp, uptoPeriod){
+  const per=CONSUMO_DATA[hosp] && CONSUMO_DATA[hosp].periodos;
+  if(!per) return null;
+  const keys=Object.keys(per).filter(p=>per[p].consumo_cargado && p<=uptoPeriod).sort();
+  if(!keys.length) return null;
+  let camasSum=0,dddSum=0,diasSum=0;
+  const awareSum={}, abxSum={};
+  keys.forEach(k=>{
+    const d=per[k];
+    camasSum+=d.camas||0;
+    diasSum+=d.dias_paciente||0;
+    dddSum+=d.ddd_total||0;
+    Object.entries(d.por_aware||{}).forEach(([a,v])=>{awareSum[a]=(awareSum[a]||0)+v;});
+    (d.top_antibioticos||[]).forEach(a=>{
+      if(!abxSum[a.antibiotico]) abxSum[a.antibiotico]={antibiotico:a.antibiotico,ddd:0,aware:a.aware};
+      abxSum[a.antibiotico].ddd+=a.ddd;
+    });
+  });
+  const ddd100=camasSum?(dddSum/camasSum*100):null;
+  const porAwarePct={};
+  Object.entries(awareSum).forEach(([k,v])=>{porAwarePct[k]=dddSum?Math.round(v/dddSum*1000)/10:0;});
+  return {
+    camas:Math.round(camasSum/keys.length*10)/10, dias_paciente:diasSum, ddd_total:Math.round(dddSum*100)/100,
+    ddd_100_camas: ddd100!==null?Math.round(ddd100*100)/100:null,
+    por_aware:awareSum, por_aware_pct:porAwarePct,
+    top_antibioticos:Object.values(abxSum).sort((a,b)=>b.ddd-a.ddd),
+    consumo_cargado:true, meses:keys,
+  };
+}
+
+function consumoParaHospital(hosp, periodo, modo){
+  const per=CONSUMO_DATA[hosp] && CONSUMO_DATA[hosp].periodos;
+  if(!per) return null;
+  if(modo==='acumulado'){
+    return mergeConsumoPeriodos(hosp, periodo) || per[periodo] || null;
+  }
+  return per[periodo] || null;
+}
+
+function renderConsumo(){
+  const body=document.getElementById('consumo-body');
+  if(!body) return;
+  const ids=consumoHospIds();
+  if(!ids.length){
+    body.innerHTML=`<div style="padding:40px;text-align:center;color:#94a3b8;">Aún no hay datos de consumo cargados.<br><span style="font-size:.78rem;">Genera <code>consumo_data.json</code> con <code>consumo_ddd.py</code> y colócalo junto a <code>index.html</code> (mismo repo/carpeta que <code>dashboard_data.json</code>).</span></div>`;
+    return;
+  }
+  if(!_consumoHospital || !CONSUMO_DATA[_consumoHospital]) _consumoHospital=ids[0];
+
+  const tabBtn=(id,label)=>`<button onclick="_consumoView='${id}';renderConsumo();" style="padding:8px 16px;border-radius:10px 10px 0 0;font-size:.8rem;font-weight:700;cursor:pointer;border:1.5px solid ${id===_consumoView?'#154f39':'transparent'};border-bottom:none;background:${id===_consumoView?'#fff':'transparent'};color:${id===_consumoView?'#154f39':'#64748b'};">${label}</button>`;
+
+  body.innerHTML=`
+    <div>
+      <h2 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin:0 0 4px;">💉 Consumo de Antimicrobianos</h2>
+      <p style="font-size:.75rem;color:#64748b;margin:0;">Fuente: CONSABI (consumo, AWaRe) + PARTE II (camas, días paciente) + antibiogramas (sensibilidad).</p>
+    </div>
+    <div style="display:flex;gap:4px;border-bottom:2px solid #154f39;margin-top:6px;">
+      ${tabBtn('ddd','📊 DDD / 100 camas')}
+      ${tabBtn('cobertura','🎯 Cobertura Empírica')}
+    </div>
+    <div id="consumo-inner"></div>
+  `;
+  if(_consumoView==='ddd') renderConsumoDDD();
+  else renderCobertura();
+}
+
+function toggleAwareFilter(cat){
+  if(!_consumoAwareFilter) _consumoAwareFilter=new Set(['Access','Watch','Reserve','Sin clasificar']);
+  if(_consumoAwareFilter.has(cat) && _consumoAwareFilter.size===1){
+    _consumoAwareFilter=null; // volver a "todas" si ya solo quedaba esta
+  } else if(_consumoAwareFilter.has(cat)){
+    _consumoAwareFilter=new Set(_consumoAwareFilter); _consumoAwareFilter.delete(cat);
+  } else {
+    _consumoAwareFilter=new Set(_consumoAwareFilter); _consumoAwareFilter.add(cat);
+  }
+  renderConsumoDDD();
+}
+
+function renderConsumoDDD(){
+  const inner=document.getElementById('consumo-inner');
+  if(!inner) return;
+  _tipRegistry={};
+  const ids=consumoHospIds();
+  const periodosMap=CONSUMO_DATA[_consumoHospital].periodos;
+  const periodos=Object.keys(periodosMap).sort();
+  const periodosConConsumo=periodos.filter(p=>periodosMap[p].consumo_cargado);
+  if(!_consumoPeriodo || !periodosMap[_consumoPeriodo]) _consumoPeriodo=periodosConConsumo[periodosConConsumo.length-1]||periodos[periodos.length-1];
+
+  const d=consumoParaHospital(_consumoHospital,_consumoPeriodo,_consumoModo) || periodosMap[_consumoPeriodo];
+  const mesActualCargado = !!(periodosMap[_consumoPeriodo] && periodosMap[_consumoPeriodo].consumo_cargado);
+  const mesActualPreliminar = !!(periodosMap[_consumoPeriodo] && periodosMap[_consumoPeriodo].estatus_periodo==='Abierto');
+
+  // Selector de hospital
+  const hospTabs=ids.map(h=>`<button onclick="_consumoHospital='${h}';_consumoPeriodo=null;renderConsumo();" style="padding:7px 14px;border-radius:20px;font-size:.76rem;font-weight:700;cursor:pointer;border:1.5px solid ${h===_consumoHospital?'#154f39':'#e2e8f0'};background:${h===_consumoHospital?'#154f39':'#fff'};color:${h===_consumoHospital?'#fff':'#374151'};">${getHospitalDisplayName(h)}</button>`).join('');
+
+  // Toggle Mensual / Acumulado
+  const modoToggle=`<div style="display:flex;gap:0;align-items:center;">
+    <button onclick="_consumoModo='mensual';renderConsumoDDD();" style="padding:6px 14px;border-radius:8px 0 0 8px;font-size:.74rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;background:${_consumoModo==='mensual'?'#154f39':'#fff'};color:${_consumoModo==='mensual'?'#fff':'#154f39'};">📆 Mensual</button>
+    <button onclick="_consumoModo='acumulado';renderConsumoDDD();" style="padding:6px 14px;border-radius:0 8px 8px 0;font-size:.74rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;border-left:none;background:${_consumoModo==='acumulado'?'#154f39':'#fff'};color:${_consumoModo==='acumulado'?'#fff':'#154f39'};">📊 Acumulado</button>
+  </div>`;
+
+  // Selector de período (mes) — incluye meses de PARTE II sin CONSABI aún, marcados como pendientes
+  const periodTabs=periodos.map(p=>{
+    const cargado=periodosMap[p].consumo_cargado;
+    const estatus=periodosMap[p].estatus_periodo;
+    const esPreliminar=estatus==='Abierto';
+    const tid=registerTip(cargado?`<div style="font-weight:700;">${p}</div><div>Consumo cargado${esPreliminar?' · dato preliminar (mes Abierto)':' · dato oficial (mes Cerrado)'}</div>`:`<div style="font-weight:700;">${p}</div><div>Solo PARTE II (camas/días paciente) — consumo aún no cargado</div><div style="color:#94a3b8;">Estatus: ${estatus||'—'}</div>`);
+    const badge=cargado&&esPreliminar?' <span style="opacity:.7;">~</span>':(cargado?'':' ○');
+    return `<button data-tipid="${tid}" onclick="_consumoPeriodo='${p}';renderConsumo();" style="position:relative;padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid ${p===_consumoPeriodo?'#154f39':'#e2e8f0'};background:${p===_consumoPeriodo?'#ecfdf5':'#fff'};color:${p===_consumoPeriodo?'#154f39':cargado?'#6b7280':'#cbd5e1'};">${p}${badge}</button>`;
+  }).join('');
+
+  // Mini-calendario de cobertura anual (12 meses, verde=oficial cargado, ámbar=preliminar cargado, gris=solo PARTE II, punteado=sin datos)
+  const calMeses=Object.keys(MESES_ABBR);
+  const calHtml=calMeses.map(m=>{
+    const key=_consumoPeriodo.slice(0,4)+'-'+m;
+    const info=periodosMap[key];
+    let bg='#f1f5f9',col='#cbd5e1',label='Sin datos aún';
+    if(info && info.consumo_cargado && info.estatus_periodo==='Abierto'){bg='#d97706';col='#fff';label='Consumo cargado · dato PRELIMINAR (mes Abierto, aún puede cambiar)';}
+    else if(info && info.consumo_cargado){bg='#154f39';col='#fff';label='Consumo cargado · dato oficial (mes Cerrado)';}
+    else if(info){bg='#e2e8f0';col='#94a3b8';label='Solo PARTE II — falta CONSABI · Estatus: '+(info.estatus_periodo||'—');}
+    const tid=registerTip(`<div style="font-weight:700;">${MESES_ABBR[m]} ${key.slice(0,4)}</div><div>${label}</div>`);
+    return `<div data-tipid="${tid}" onclick="${info?`_consumoPeriodo='${key}';renderConsumoDDD();`:''}" style="width:30px;height:26px;border-radius:6px;background:${bg};color:${col};display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:800;cursor:${info?'pointer':'default'};">${MESES_ABBR[m]}</div>`;
+  }).join('');
+
+  // Comparación con el mes anterior con consumo cargado (para flechas de tendencia)
+  const idxActual=periodosConConsumo.indexOf(mesActualCargado?_consumoPeriodo:'');
+  const mesAnteriorKey=idxActual>0?periodosConConsumo[idxActual-1]:null;
+  const dAnterior=mesAnteriorKey?periodosMap[mesAnteriorKey]:null;
+  function deltaPct(actual,anterior){
+    if(actual==null||anterior==null||!anterior) return null;
+    return ((actual-anterior)/anterior*100);
+  }
+  function deltaArrow(val,favorableSiSube){
+    if(val==null) return '';
+    const sube=val>0.05, baja=val<-0.05;
+    if(!sube&&!baja) return '<span style="color:#94a3b8;font-size:.66rem;font-weight:700;"> ▬ sin cambio</span>';
+    const bueno=(sube&&favorableSiSube)||(baja&&!favorableSiSube);
+    const color=bueno?'#15803d':'#dc2626';
+    const flecha=sube?'▲':'▼';
+    return ` <span style="color:${color};font-size:.66rem;font-weight:800;">${flecha} ${Math.abs(val).toFixed(1)}%</span>`;
+  }
+
+  // KPI cards (con variación vs mes anterior cuando aplica)
+  const kpis=[
+    {label:'DDD / 100 camas',val:d.ddd_100_camas!=null?d.ddd_100_camas.toLocaleString('es-MX',{maximumFractionDigits:1}):'—',sub:`Camas censables: ${Math.round(d.camas)}`,delta:_consumoModo==='mensual'&&dAnterior?deltaArrow(deltaPct(d.ddd_100_camas,dAnterior.ddd_100_camas),false):''},
+    {label:'ΣDDD total',val:d.ddd_total!=null?d.ddd_total.toLocaleString('es-MX',{maximumFractionDigits:1}):'—',sub:'Antibióticos endovenosos (CONSABI)',delta:''},
+    {label:'Días paciente',val:Math.round(d.dias_paciente).toLocaleString('es-MX'),sub:'Fuente: PARTE II',delta:''},
+    {label:'% Access',val:(d.por_aware_pct.Access||0)+'%',sub:'Meta OMS: ≥60%',delta:_consumoModo==='mensual'&&dAnterior?deltaArrow(deltaPct(d.por_aware_pct.Access,dAnterior.por_aware_pct?dAnterior.por_aware_pct.Access:null),true):''},
+    {label:'Ocupación hospitalaria',val:d.ocupacion!=null?d.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—',sub:'Fuente: PARTE II',delta:''},
+  ];
+  const kpiHtml=kpis.map(k=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;flex:1;min-width:160px;"><div style="font-size:.68rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.03em;">${k.label}</div><div style="font-size:1.5rem;font-weight:800;color:#154f39;margin:2px 0;">${k.val}${k.delta}</div><div style="font-size:.68rem;color:#94a3b8;">${k.sub}</div></div>`).join('');
+
+  // Donut AWaRe (conic-gradient), ordenado de mayor a menor
+  const awareOrder=Object.keys(d.por_aware_pct).sort((a,b)=>(d.por_aware_pct[b]||0)-(d.por_aware_pct[a]||0));
+  let acc=0; const stops=[];
+  awareOrder.forEach(k=>{
+    const pct=d.por_aware_pct[k]||0;
+    if(pct<=0) return;
+    const start=acc, end=acc+pct;
+    stops.push(`${AWARE_COLORS[k]} ${start}% ${end}%`);
+    acc=end;
+  });
+  const donutCss=stops.length?stops.join(', '):'#e2e8f0 0% 100%';
+  const activeFilt=_consumoAwareFilter;
+  const awareLegend=awareOrder.filter(k=>d.por_aware_pct[k]>0).map(k=>{
+    const dimmed=activeFilt && !activeFilt.has(k);
+    const ddAbx=d.top_antibioticos.filter(a=>a.aware===k).length;
+    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${k}</div><div>${d.por_aware_pct[k]}% del consumo (${(d.por_aware[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD)</div><div style="color:#94a3b8;font-size:.66rem;margin-top:2px;">${ddAbx} antibiótico(s) · clic para filtrar</div>`);
+    return `<div data-tipid="${tid}" onclick="toggleAwareFilter('${k}')" style="display:flex;align-items:center;gap:6px;font-size:.76rem;cursor:pointer;opacity:${dimmed?.4:1};padding:3px 4px;border-radius:6px;transition:opacity .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'"><span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]};display:inline-block;"></span><span style="color:#374151;">${k}</span><span style="margin-left:auto;font-weight:700;color:#1e293b;">${d.por_aware_pct[k]}%</span></div>`;
+  }).join('');
+  const filterHint = activeFilt ? `<div style="font-size:.64rem;color:#154f39;margin-top:6px;">Filtro activo — <span style="text-decoration:underline;cursor:pointer;" onclick="_consumoAwareFilter=null;renderConsumoDDD();">mostrar todos</span></div>` : '';
+
+  // Top antibióticos (barra horizontal), ya vienen ordenados desc por ΣDDD; aplica filtro AWaRe
+  const topFull=d.top_antibioticos.filter(a=>!activeFilt||activeFilt.has(a.aware));
+  const top=topFull.slice(0,10);
+  const maxDdd=Math.max(...top.map(a=>a.ddd),1);
+  const barsHtml=top.map(a=>{
+    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${a.antibiotico}</div><div>ΣDDD: ${a.ddd.toLocaleString('es-MX',{maximumFractionDigits:2})}</div><div>Clasificación AWaRe: ${a.aware}</div><div>Grupo: ${grupoFarmacologico(a.antibiotico)}</div>`);
+    return `
+    <div data-tipid="${tid}" style="display:grid;grid-template-columns:170px 1fr 60px;align-items:center;gap:8px;cursor:pointer;">
+      <span style="font-size:.74rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.antibiotico}</span>
+      <div style="background:#f1f5f9;border-radius:5px;height:14px;position:relative;">
+        <div style="width:${(a.ddd/maxDdd*100).toFixed(1)}%;background:${AWARE_COLORS[a.aware]||'#94a3b8'};height:14px;border-radius:5px;transition:width .3s;"></div>
+      </div>
+      <span style="font-size:.72rem;font-weight:700;color:#1e293b;text-align:right;">${a.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})}</span>
+    </div>`;
+  }).join('') || `<div style="color:#94a3b8;font-size:.78rem;padding:10px 0;">Sin antibióticos en el filtro seleccionado.</div>`;
+
+  // Consumo por grupo farmacológico, ordenado de mayor a menor
+  const grupoMap={};
+  d.top_antibioticos.forEach(a=>{
+    const g=grupoFarmacologico(a.antibiotico);
+    if(!grupoMap[g]) grupoMap[g]={ddd:0,items:[]};
+    grupoMap[g].ddd+=a.ddd;
+    grupoMap[g].items.push(a.antibiotico);
+  });
+  const gruposOrdenados=Object.entries(grupoMap).sort((a,b)=>b[1].ddd-a[1].ddd);
+  const maxGrupo=Math.max(...gruposOrdenados.map(g=>g[1].ddd),1);
+  const gruposHtml=gruposOrdenados.map(([g,info])=>{
+    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${g}</div><div>ΣDDD: ${info.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})}</div><div style="color:#94a3b8;font-size:.66rem;margin-top:2px;">${info.items.join(', ')}</div>`);
+    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:150px 1fr 55px;align-items:center;gap:8px;cursor:pointer;">
+      <span style="font-size:.72rem;color:#374151;font-weight:600;">${g}</span>
+      <div style="background:#f1f5f9;border-radius:5px;height:12px;"><div style="width:${(info.ddd/maxGrupo*100).toFixed(1)}%;background:${GRUPO_COLORS[g]||'#94a3b8'};height:12px;border-radius:5px;transition:width .3s;"></div></div>
+      <span style="font-size:.7rem;font-weight:700;color:#1e293b;text-align:right;">${info.ddd.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+    </div>`;
+  }).join('');
+
+  // Comparativo entre hospitales (mismo período si existe, si no el más reciente de cada uno), ordenado desc
+  const compHosp=ids.map(h=>{
+    const perKeysConsumo=Object.keys(CONSUMO_DATA[h].periodos).filter(p=>CONSUMO_DATA[h].periodos[p].consumo_cargado).sort();
+    const per=CONSUMO_DATA[h].periodos[_consumoPeriodo]&&CONSUMO_DATA[h].periodos[_consumoPeriodo].consumo_cargado?_consumoPeriodo:perKeysConsumo[perKeysConsumo.length-1];
+    const dd=per?consumoParaHospital(h,per,_consumoModo):null;
+    return {h,val:dd&&dd.ddd_100_camas!=null?dd.ddd_100_camas:0,per};
+  }).sort((a,b)=>b.val-a.val);
+  const maxComp=Math.max(...compHosp.map(c=>c.val),1);
+  const compHtml=compHosp.map(c=>{
+    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${getHospitalDisplayName(c.h)}</div><div>DDD/100 camas: ${c.val.toLocaleString('es-MX',{maximumFractionDigits:1})}</div><div style="color:#94a3b8;font-size:.66rem;">${_consumoModo==='acumulado'?'Acumulado a':'Período'}: ${c.per||'—'}${c.h===_consumoHospital?' · seleccionado':''}</div>`);
+    return `<div data-tipid="${tid}" onclick="_consumoHospital='${c.h}';_consumoPeriodo=null;renderConsumoDDD();" style="display:grid;grid-template-columns:150px 1fr 60px;align-items:center;gap:8px;cursor:pointer;">
+      <span style="font-size:.74rem;font-weight:700;color:${c.h===_consumoHospital?'#154f39':'#374151'};">${getHospitalDisplayName(c.h)}</span>
+      <div style="background:#f1f5f9;border-radius:5px;height:14px;"><div style="width:${(c.val/maxComp*100).toFixed(1)}%;background:${c.h===_consumoHospital?'#154f39':'#94a3b8'};height:14px;border-radius:5px;transition:width .3s;"></div></div>
+      <span style="font-size:.72rem;font-weight:700;color:#1e293b;text-align:right;">${c.val.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+    </div>`;
+  }).join('');
+
+  // Composición AWaRe apilada — comparativo entre los 3 hospitales
+  const awareStackHtml=ids.map(h=>{
+    const perKeysConsumo=Object.keys(CONSUMO_DATA[h].periodos).filter(p=>CONSUMO_DATA[h].periodos[p].consumo_cargado).sort();
+    const per=CONSUMO_DATA[h].periodos[_consumoPeriodo]&&CONSUMO_DATA[h].periodos[_consumoPeriodo].consumo_cargado?_consumoPeriodo:perKeysConsumo[perKeysConsumo.length-1];
+    const dd=per?consumoParaHospital(h,per,_consumoModo):null;
+    if(!dd) return '';
+    const segs=Object.keys(dd.por_aware_pct).sort((a,b)=>(dd.por_aware_pct[b]||0)-(dd.por_aware_pct[a]||0));
+    const bar=segs.map(k=>{
+      const pct=dd.por_aware_pct[k]||0;
+      if(pct<=0) return '';
+      const tid=registerTip(`<div style="font-weight:700;">${getHospitalDisplayName(h)}</div><div>${k}: ${pct}%</div>`);
+      return `<div data-tipid="${tid}" style="width:${pct}%;background:${AWARE_COLORS[k]||'#94a3b8'};height:100%;cursor:pointer;"></div>`;
+    }).join('');
+    return `<div style="display:grid;grid-template-columns:150px 1fr;align-items:center;gap:8px;margin-bottom:10px;">
+      <span style="font-size:.72rem;font-weight:700;color:${h===_consumoHospital?'#154f39':'#374151'};">${getHospitalDisplayName(h)}</span>
+      <div style="display:flex;height:16px;border-radius:5px;overflow:hidden;background:#f1f5f9;">${bar}</div>
+    </div>`;
+  }).join('');
+
+  // Antibióticos de mayor riesgo (alto consumo + baja sensibilidad), a nivel hospital completo
+  const hdRisk=getHospRawData(_consumoHospital);
+  let riesgoHtml='';
+  if(hdRisk && hdRisk.hospital){
+    const sriHosp=(sriForPeriod(hdRisk.hospital,'TODOS')||[]).filter(r=>r.t>=3);
+    const consumoNames=d.top_antibioticos.map(a=>a.antibiotico);
+    const cruzados=sriHosp.map(r=>{
+      const matchName=matchConsumoName(r.a,consumoNames);
+      const cons=matchName?d.top_antibioticos.find(a=>a.antibiotico===matchName):null;
+      if(!cons) return null;
+      return {abx:r.a,pct:Math.round(r.pS*100),ddd:cons.ddd,aware:cons.aware,n:r.t};
+    }).filter(Boolean);
+    if(cruzados.length){
+      const maxDdd=Math.max(...cruzados.map(c=>c.ddd),1);
+      cruzados.forEach(c=>{c.risk=(c.ddd/maxDdd)*(1-c.pct/100);});
+      const top5=cruzados.filter(c=>c.pct<80).sort((a,b)=>b.risk-a.risk).slice(0,5);
+      if(top5.length){
+        riesgoHtml=top5.map(c=>{
+          const {c:col,bg}=coberturaColor(c.pct);
+          const tid=registerTip(`<div style="font-weight:700;">${c.abx}</div><div>%Sensibilidad (todo el hospital): ${c.pct}% (n=${c.n})</div><div>ΣDDD: ${c.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})}</div><div>AWaRe: ${c.aware}</div>`);
+          return `<div data-tipid="${tid}" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;background:${bg};border-radius:8px;cursor:pointer;">
+            <span style="font-weight:700;color:${col};font-size:.76rem;">${c.abx}</span>
+            <span style="font-size:.68rem;color:#374151;">%S ${c.pct}% · ΣDDD ${c.ddd.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+          </div>`;
+        }).join('');
+      }
+    }
+  }
+  if(!riesgoHtml){
+    riesgoHtml=`<div style="color:#94a3b8;font-size:.78rem;">Sin combinaciones de alto riesgo detectadas (alto consumo + baja sensibilidad, &lt;80%S) con los datos actuales.</div>`;
+  }
+
+  // Ocupación hospitalaria mensual (los 12 meses de PARTE II, con o sin CONSABI)
+  const ocupPuntos=periodos.map(p=>({p,v:periodosMap[p].ocupacion!=null?periodosMap[p].ocupacion:null})).filter(x=>x.v!==null);
+  let ocupHtml='';
+  if(ocupPuntos.length){
+    const maxOcup=Math.max(...ocupPuntos.map(x=>x.v),100);
+    ocupHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🛏️ Ocupación hospitalaria mensual</div>
+      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">% de camas ocupadas por mes (PARTE II) · línea de 100% marca capacidad plena</div>
+      <div style="position:relative;display:flex;align-items:flex-end;gap:8px;height:110px;border-bottom:1px solid #e2e8f0;">
+        <div style="position:absolute;left:0;right:0;bottom:${Math.min(100,100/maxOcup*100)}%;border-top:1px dashed #cbd5e1;"></div>
+        ${ocupPuntos.map(pt=>{
+          const tid=registerTip(`<div style="font-weight:700;">${pt.p}</div><div>Ocupación: ${pt.v.toLocaleString('es-MX',{maximumFractionDigits:1})}%</div>`);
+          const over=pt.v>100;
+          return `<div data-tipid="${tid}" onclick="_consumoPeriodo='${pt.p}';renderConsumoDDD();" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;cursor:pointer;"><div style="font-size:.64rem;font-weight:700;color:${over?'#dc2626':'#0369a1'};">${pt.v.toLocaleString('es-MX',{maximumFractionDigits:0})}%</div><div style="width:100%;max-width:28px;background:${over?'linear-gradient(180deg,#f87171,#dc2626)':'linear-gradient(180deg,#38bdf8,#0369a1)'};border-radius:4px 4px 0 0;height:${Math.max(4,pt.v/maxOcup*95)}px;transition:height .3s;"></div><div style="font-size:.62rem;color:#94a3b8;">${MESES_ABBR[pt.p.slice(5)]}</div></div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Radar comparativo AWaRe entre los 3 hospitales (SVG, triangulo Access/Watch/Reserve)
+  let radarHtml='';
+  {
+    const ejes=['Access','Watch','Reserve'];
+    const angulos=[-90,30,150]; // grados, 3 ejes a 120°
+    const cx=90,cy=90,rMax=68;
+    const colHosp={'HGZ 1 TLAXCALA':'#2563eb','HGZMF 2 APIZACO':'#16a34a','HGSMF 8 TLAXCALA':'#d97706'};
+    const pt=(ang,r)=>{const rad=ang*Math.PI/180;return [cx+r*Math.cos(rad),cy+r*Math.sin(rad)];};
+    const gridPolys=[0.25,0.5,0.75,1].map(f=>{
+      const pts=angulos.map(a=>pt(a,rMax*f).join(',')).join(' ');
+      return `<polygon points="${pts}" fill="none" stroke="#e2e8f0" stroke-width="1"/>`;
+    }).join('');
+    const axisLines=angulos.map((a,i)=>{const [x,y]=pt(a,rMax);return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;}).join('');
+    const axisLabels=angulos.map((a,i)=>{const [x,y]=pt(a,rMax+16);return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#374151">${ejes[i]}</text>`;}).join('');
+    const hospPolys=ids.map(h=>{
+      const perKC=Object.keys(CONSUMO_DATA[h].periodos).filter(p=>CONSUMO_DATA[h].periodos[p].consumo_cargado).sort();
+      const per=CONSUMO_DATA[h].periodos[_consumoPeriodo]&&CONSUMO_DATA[h].periodos[_consumoPeriodo].consumo_cargado?_consumoPeriodo:perKC[perKC.length-1];
+      const dd=per?consumoParaHospital(h,per,_consumoModo):null;
+      if(!dd) return '';
+      const pts=ejes.map((e,i)=>{const val=(dd.por_aware_pct[e]||0)/100*rMax;return pt(angulos[i],val);});
+      const ptsStr=pts.map(p=>p.join(',')).join(' ');
+      const color=colHosp[h]||'#94a3b8';
+      return `<polygon points="${ptsStr}" fill="${color}" fill-opacity="0.15" stroke="${color}" stroke-width="2"/>`;
+    }).join('');
+    const legendHosp=ids.map(h=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${colHosp[h]||'#94a3b8'};display:inline-block;"></span>${getHospitalDisplayName(h)}</div>`).join('');
+    radarHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">🕸️ Perfil AWaRe comparativo</div>
+      <svg viewBox="0 0 180 190" style="width:100%;max-width:220px;display:block;margin:0 auto;">
+        ${gridPolys}${axisLines}${hospPolys}${axisLabels}
+      </svg>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;">${legendHosp}</div>
+    </div>`;
+  }
+
+  // Resumen ejecutivo (narrativa automática)
+  let resumenHtml='';
+  {
+    const pctAccess=d.por_aware_pct.Access||0;
+    const metaOk=pctAccess>=60;
+    const topAbx=d.top_antibioticos[0];
+    const deltaDdd=_consumoModo==='mensual'&&dAnterior?deltaPct(d.ddd_100_camas,dAnterior.ddd_100_camas):null;
+    let tendenciaTxt='';
+    if(deltaDdd!=null){
+      tendenciaTxt = deltaDdd>0.5
+        ? `el consumo <b>subió ${deltaDdd.toFixed(1)}%</b> respecto a ${mesAnteriorKey}`
+        : deltaDdd<-0.5
+        ? `el consumo <b>bajó ${Math.abs(deltaDdd).toFixed(1)}%</b> respecto a ${mesAnteriorKey}`
+        : `el consumo se mantuvo estable respecto a ${mesAnteriorKey}`;
+    }
+    resumenHtml=`<div style="background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1px solid #bbf7d0;border-radius:14px;padding:16px 20px;">
+      <div style="font-size:.85rem;font-weight:800;color:#154f39;margin-bottom:8px;">📋 Resumen ejecutivo — ${getHospitalDisplayName(_consumoHospital)} · ${_consumoModo==='acumulado'?'Acumulado a '+_consumoPeriodo:_consumoPeriodo}</div>
+      <p style="font-size:.8rem;color:#1e293b;line-height:1.7;margin:0;">
+        El indicador de consumo se ubica en <b>${d.ddd_100_camas!=null?d.ddd_100_camas.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'} DDD/100 camas</b>${tendenciaTxt?', '+tendenciaTxt:''}.
+        La proporción de antibióticos <b>Access</b> es de <b>${pctAccess}%</b>, ${metaOk?'cumpliendo':'por debajo de'} la meta OMS de ≥60%${!metaOk?' — se recomienda revisar el esquema empírico predominante':''}.
+        ${topAbx?`El antibiótico de mayor consumo es <b>${topAbx.antibiotico}</b> (${topAbx.aware}), con ${topAbx.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})} DDD.`:''}
+        ${d.ocupacion!=null?` La ocupación hospitalaria del período es de <b>${d.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})}%</b>.`:''}
+      </p>
+    </div>`;
+  }
+
+  // Tendencia (mensual = valor propio de cada mes; acumulado = curva acumulada corriendo)
+  let trendHtml='';
+  if(periodosConConsumo.length>1){
+    const trendPoints = _consumoModo==='acumulado'
+      ? periodosConConsumo.map(p=>({p,v:(mergeConsumoPeriodos(_consumoHospital,p)||{}).ddd_100_camas||0}))
+      : periodosConConsumo.map(p=>({p,v:periodosMap[p].ddd_100_camas||0}));
+    const maxTrend=Math.max(...trendPoints.map(pt=>pt.v),1);
+    trendHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">📈 Tendencia DDD/100 camas ${_consumoModo==='acumulado'?'(acumulada)':'(mensual)'}</div>
+      <div style="display:flex;align-items:flex-end;gap:10px;height:120px;">
+        ${trendPoints.map(pt=>{
+          const tid=registerTip(`<div style="font-weight:700;">${pt.p}</div><div>DDD/100 camas: ${pt.v.toLocaleString('es-MX',{maximumFractionDigits:1})}</div>`);
+          return `<div data-tipid="${tid}" onclick="_consumoPeriodo='${pt.p}';renderConsumoDDD();" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;cursor:pointer;"><div style="font-size:.68rem;font-weight:700;color:#154f39;">${pt.v.toLocaleString('es-MX',{maximumFractionDigits:0})}</div><div style="width:100%;max-width:36px;background:linear-gradient(180deg,#1a6347,#154f39);border-radius:4px 4px 0 0;height:${Math.max(4,pt.v/maxTrend*90)}px;transition:height .3s;"></div><div style="font-size:.68rem;color:#94a3b8;">${pt.p.slice(5)}</div></div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  } else {
+    trendHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;color:#94a3b8;font-size:.78rem;">📈 La tendencia se mostrará automáticamente cuando se carguen más meses de CONSABI para esta unidad (por ahora solo ${periodosConConsumo.length===1?periodosConConsumo[0]:'ninguno'} tiene consumo cargado).</div>`;
+  }
+
+  inner.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-top:14px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">${hospTabs}</div>
+      ${modoToggle}
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:10px;"><span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Mes:</span>${periodTabs}</div>
+    <div style="display:flex;gap:5px;align-items:center;padding-top:10px;flex-wrap:wrap;">
+      <span style="font-size:.7rem;color:#94a3b8;font-weight:600;margin-right:4px;">Cobertura del año:</span>${calHtml}
+    </div>
+    ${_consumoModo==='acumulado'?`<div style="font-size:.7rem;color:#154f39;font-weight:700;padding-top:6px;">📊 Acumulado ${d.meses?MESES_ABBR[d.meses[0].slice(5)]+'–'+MESES_ABBR[d.meses[d.meses.length-1].slice(5)]:''} ${_consumoPeriodo.slice(0,4)} (${d.meses?d.meses.length:0} mes${d.meses&&d.meses.length===1?'':'es'} con consumo cargado)</div>`:(!mesActualCargado?`<div style="font-size:.7rem;color:#92400e;font-weight:700;padding-top:6px;">○ ${_consumoPeriodo}: aún no se ha cargado CONSABI de este mes — solo se muestran camas y días paciente de PARTE II.</div>`:(mesActualPreliminar?`<div style="font-size:.7rem;color:#d97706;font-weight:700;padding-top:6px;">~ ${_consumoPeriodo}: mes con estatus "Abierto" en PARTE II — dato PRELIMINAR, puede cambiar cuando IMSS lo cierre oficialmente.</div>`:''))}
+    <div style="padding-top:14px;">${resumenHtml}</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;">${kpiHtml}</div>
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Antimicrobianos con mayor consumo (ΣDDD)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🌐 Clasificación AWaRe del consumo <span style="font-size:.64rem;color:#94a3b8;font-weight:600;">· clic para filtrar</span></div>
+        <div style="display:flex;align-items:center;gap:18px;">
+          <div style="width:120px;height:120px;border-radius:50%;background:conic-gradient(${donutCss});flex-shrink:0;position:relative;">
+            <div style="position:absolute;inset:16px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:#154f39;">${(d.por_aware_pct.Access||0)}%<br><span style="font-size:.6rem;font-weight:600;color:#94a3b8;">ACCESS</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;flex:1;">${awareLegend}${filterHint}</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🧪 Consumo por grupo farmacológico</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">${gruposHtml}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">⚖️ Comparativo entre hospitales <span style="font-size:.64rem;color:#94a3b8;font-weight:600;">· clic para cambiar</span></div>
+        <div style="display:flex;flex-direction:column;gap:10px;">${compHtml}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🌈 Composición AWaRe — comparativo entre hospitales</div>
+        ${awareStackHtml}
+        <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">${['Access','Watch','Reserve'].map(k=>`<div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${AWARE_COLORS[k]};display:inline-block;"></span>${k}</div>`).join('')}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">⚠️ Antibióticos de mayor riesgo</div>
+        <div style="font-size:.66rem;color:#94a3b8;margin-bottom:10px;">Alto consumo + baja sensibilidad hospital-wide — candidatos a revisar en el COA</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">${riesgoHtml}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      ${radarHtml}
+      ${ocupHtml||'<div></div>'}
+    </div>
+    <div style="padding-top:14px;">${trendHtml}</div>
+  `;
+  wireTips(inner);
+}
+
+/* ─── COBERTURA EMPÍRICA (sensibilidad × consumo) ──────────────── */
+function _stripAccents(s){return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+
+function matchConsumoName(sriName, consumoNames){
+  const norm=_stripAccents(sriName).toLowerCase().replace(/[^a-z]/g,'');
+  let best=null,bestLen=0;
+  (consumoNames||[]).forEach(cn=>{
+    const cnorm=_stripAccents(cn).toLowerCase().replace(/[^a-z]/g,'');
+    let len=0; while(len<norm.length&&len<cnorm.length&&norm[len]===cnorm[len]) len++;
+    if(len>bestLen&&len>=5){bestLen=len;best=cn;}
+  });
+  return best;
+}
+
+function coberturaColor(pct){
+  if(pct>=80) return {c:'#15803d',bg:'#dcfce7'};
+  if(pct>=60) return {c:'#92400e',bg:'#fef3c7'};
+  return {c:'#991b1b',bg:'#fee2e2'};
+}
+
+function toggleCoberturaAbx(name){
+  if(!_coberturaAbxSel) _coberturaAbxSel=[];
+  const i=_coberturaAbxSel.indexOf(name);
+  if(i>=0) _coberturaAbxSel.splice(i,1);
+  else _coberturaAbxSel.push(name);
+  renderCobertura();
+}
+
+function sortCoberturaBy(col){
+  _coberturaSortCol = (_coberturaSortCol===col) ? null : col; // toggle: col-desc → default (aislamientos desc)
+  renderCobertura();
+}
+
+function toggleCoberturaDim(dim){
+  if(_coberturaDim===dim) return;
+  _coberturaDim=dim; _coberturaCultivo=null; _coberturaAbxSel=null; _coberturaSortCol=null;
+  renderCobertura();
+}
+
+function renderCobertura(){
+  const inner=document.getElementById('consumo-inner');
+  if(!inner) return;
+  _tipRegistry={};
+  const hd=getHospRawData(_consumoHospital);
+  const dimCfg = _coberturaDim==='servicios'
+    ? {obj:(hd&&hd.servicios), chartKey:'chart1', label:'Servicio', icon:'🏢'}
+    : {obj:(hd&&hd.cultivos), chartKey:'chart4', label:'Cultivo', icon:'🧫'};
+  const dimToggle=`<div style="display:flex;gap:4px;align-items:center;">
+    <span style="font-size:.7rem;color:#94a3b8;font-weight:600;margin-right:2px;">Ver por:</span>
+    <button onclick="toggleCoberturaDim('cultivos')" style="padding:5px 12px;border-radius:8px 0 0 8px;font-size:.72rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;background:${_coberturaDim==='cultivos'?'#154f39':'#fff'};color:${_coberturaDim==='cultivos'?'#fff':'#154f39'};">🧫 Cultivo</button>
+    <button onclick="toggleCoberturaDim('servicios')" style="padding:5px 12px;border-radius:0 8px 8px 0;font-size:.72rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;border-left:none;background:${_coberturaDim==='servicios'?'#154f39':'#fff'};color:${_coberturaDim==='servicios'?'#fff':'#154f39'};">🏢 Servicio</button>
+  </div>`;
+  if(!hd || !dimCfg.obj || !dimCfg.obj.subgrupos || !dimCfg.obj.subgrupos.length){
+    inner.innerHTML=`<div style="padding-top:14px;">${dimToggle}</div><div style="padding:40px;text-align:center;color:#94a3b8;">No hay datos de ${dimCfg.label.toLowerCase()} cargados para esta unidad todavía.</div>`;
+    return;
+  }
+  const cultivos=dimCfg.obj.subgrupos;
+  if(!_coberturaCultivo || !cultivos.includes(_coberturaCultivo)){
+    _coberturaCultivo = cultivos.find(c=>/URO/i.test(c)) || cultivos[0];
+  }
+  const cultivoObj = dimCfg.obj.data[_coberturaCultivo];
+  const sriCultivo = (sriForPeriod(cultivoObj,'TODOS')||[]).filter(r=>r.t>=3);
+
+  if(!_coberturaAbxSel || !_coberturaAbxSel.length){
+    _coberturaAbxSel = sriCultivo.slice().sort((a,b)=>b.t-a.t).slice(0,3).map(r=>r.a);
+  }
+  // Antibióticos seleccionados, ordenados de mayor a menor cobertura (%S)
+  const abxSelSorted = _coberturaAbxSel.slice().sort((a,b)=>{
+    const ra=sriCultivo.find(r=>r.a===a), rb=sriCultivo.find(r=>r.a===b);
+    return (rb?rb.pS:0)-(ra?ra.pS:0);
+  });
+
+  // Cultivos/servicios ordenados por volumen de aislamientos (mayor a menor)
+  const cultivosOrdenados = cultivos.slice().sort((a,b)=>{
+    const ta=(sriForPeriod(dimCfg.obj.data[a],'TODOS')||[]).reduce((s,r)=>s+r.t,0);
+    const tb=(sriForPeriod(dimCfg.obj.data[b],'TODOS')||[]).reduce((s,r)=>s+r.t,0);
+    return tb-ta;
+  });
+  const cultivoTabs=cultivosOrdenados.map(c=>`<button onclick="_coberturaCultivo='${c.replace(/'/g,"\\'")}';_coberturaAbxSel=null;_coberturaSortCol=null;renderCobertura();" style="padding:6px 13px;border-radius:18px;font-size:.74rem;font-weight:700;cursor:pointer;border:1.5px solid ${c===_coberturaCultivo?'#154f39':'#e2e8f0'};background:${c===_coberturaCultivo?'#154f39':'#fff'};color:${c===_coberturaCultivo?'#fff':'#374151'};">${c}</button>`).join('');
+
+  // Top microorganismos para este cultivo/servicio (via crosstab micro→dimensión), mayor a menor
+  const chart4 = (hd.freq && hd.freq[dimCfg.chartKey] && hd.freq[dimCfg.chartKey]['TODOS']) ? hd.freq[dimCfg.chartKey]['TODOS'] : null;
+  let topMicros=[];
+  if(chart4 && chart4.stacks){
+    topMicros = Object.entries(chart4.stacks)
+      .map(([micro,cols])=>({micro,n:cols[_coberturaCultivo]||0}))
+      .filter(x=>x.n>0)
+      .sort((a,b)=>b.n-a.n)
+      .slice(0,8);
+  }
+
+  // Antibióticos elegibles (con n>=3 en este cultivo), mayor a menor
+  const abxOptions = sriCultivo.slice().sort((a,b)=>b.t-a.t);
+  const abxChecks = abxOptions.map(r=>{
+    const sel=_coberturaAbxSel.includes(r.a);
+    const tid=registerTip(`<div style="font-weight:700;">${r.a}</div><div>%S global en ${_coberturaCultivo}: ${Math.round(r.pS*100)}% (n=${r.t})</div>`);
+    return `<button data-tipid="${tid}" onclick="toggleCoberturaAbx('${r.a.replace(/'/g,"\\'")}')" style="padding:5px 11px;border-radius:14px;font-size:.7rem;font-weight:700;cursor:pointer;border:1.5px solid ${sel?'#154f39':'#e2e8f0'};background:${sel?'#ecfdf5':'#fff'};color:${sel?'#154f39':'#6b7280'};">${r.a}</button>`;
+  }).join('');
+
+  // Tabla: microorganismos × antibióticos seleccionados (ordenable por columna, clic en encabezado)
+  let tablaHtml='';
+  let microRowsData=[];
+  if(!topMicros.length){
+    tablaHtml=`<div style="padding:20px;text-align:center;color:#94a3b8;font-size:.78rem;">No hay suficiente información de microorganismos por cultivo para esta unidad.</div>`;
+  } else if(!_coberturaAbxSel.length){
+    tablaHtml=`<div style="padding:20px;text-align:center;color:#94a3b8;font-size:.78rem;">Selecciona al menos un antibiótico arriba.</div>`;
+  } else {
+    // Calcular filas con el %S de cada antibiótico seleccionado por microorganismo
+    microRowsData = topMicros.map(({micro,n})=>{
+      const microObj=hd.micros && hd.micros.data ? hd.micros.data[micro] : null;
+      const sriMicro=microObj?(sriForPeriod(microObj,'TODOS')||[]):[];
+      const vals={};
+      _coberturaAbxSel.forEach(abxName=>{
+        const row=sriMicro.find(r=>r.a===abxName);
+        vals[abxName]=row&&row.t>=1?{pct:Math.round(row.pS*100),n:row.t}:null;
+      });
+      return {micro,n,vals};
+    });
+    // Orden: por columna clicada (desc, n/d al final) o por Aislamientos (desc) por defecto
+    if(_coberturaSortCol && _coberturaAbxSel.includes(_coberturaSortCol)){
+      microRowsData.sort((a,b)=>{
+        const va=a.vals[_coberturaSortCol], vb=b.vals[_coberturaSortCol];
+        if(!va&&!vb) return 0; if(!va) return 1; if(!vb) return -1;
+        return vb.pct-va.pct;
+      });
+    } else {
+      microRowsData.sort((a,b)=>b.n-a.n);
+    }
+
+    const sortIcon=(col)=> _coberturaSortCol===col ? ' ▾' : '';
+    const headerCols=_coberturaAbxSel.map(a=>`<th onclick="sortCoberturaBy('${a.replace(/'/g,"\\'")}')" style="padding:8px 6px;color:#fff;text-align:center;cursor:pointer;user-select:none;" title="Clic para ordenar por ${a}">${a}${sortIcon(a)}</th>`).join('');
+    const rows=microRowsData.map(({micro,n,vals})=>{
+      const cells=_coberturaAbxSel.map(abxName=>{
+        const v=vals[abxName];
+        if(!v) return `<td style="text-align:center;color:#94a3b8;font-size:.7rem;">n/d</td>`;
+        const {c,bg}=coberturaColor(v.pct);
+        const tid=registerTip(`<div style="font-weight:700;">${micro}</div><div>${abxName}: ${v.pct}% S (n=${v.n})</div>`);
+        return `<td data-tipid="${tid}" style="text-align:center;cursor:pointer;"><span style="display:inline-block;padding:2px 8px;border-radius:8px;background:${bg};color:${c};font-weight:800;font-size:.76rem;">${v.pct}%</span><div style="font-size:.62rem;color:#94a3b8;">n=${v.n}</div></td>`;
+      }).join('');
+      return `<tr><td style="font-weight:700;color:#154f39;font-style:italic;padding:6px 10px;">${micro}</td><td onclick="sortCoberturaBy(null)" title="Clic en encabezado para ordenar por antibiótico" style="text-align:center;color:#6b7280;font-size:.72rem;padding:6px;">${n}</td>${cells}</tr>`;
+    }).join('');
+    tablaHtml=`<table style="width:100%;border-collapse:collapse;font-size:.76rem;">
+      <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
+        <th style="text-align:left;padding:8px 10px;color:#fff;">Microorganismo</th>
+        <th onclick="sortCoberturaBy(null)" style="padding:8px 6px;color:#fff;cursor:pointer;user-select:none;" title="Ordenar por aislamientos">Aislamientos${!_coberturaSortCol?' ▾':''}</th>
+        ${headerCols}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="font-size:.62rem;color:#94a3b8;margin-top:6px;">Clic en un encabezado de columna para ordenar la tabla por ese antibiótico.</div>`;
+  }
+
+  // Cobertura empírica ponderada, ordenada de mayor a menor %S
+  const ponderadaBars=abxSelSorted.map(abxName=>{
+    const row=sriCultivo.find(r=>r.a===abxName);
+    const pct=row?Math.round(row.pS*100):0;
+    const n=row?row.t:0;
+    const {c}=coberturaColor(pct);
+    const tid=registerTip(`<div style="font-weight:700;">${abxName}</div><div>Cobertura ponderada: ${pct}%</div><div>Aislamientos con antibiograma: ${n}</div>`);
+    return `<div data-tipid="${tid}" style="margin-bottom:10px;cursor:pointer;">
+      <div style="display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:3px;"><span style="font-weight:700;color:#374151;">${abxName}</span><span style="font-weight:800;color:${c};">${pct}% <span style="color:#94a3b8;font-weight:600;">(n=${n})</span></span></div>
+      <div style="background:#f1f5f9;border-radius:6px;height:12px;"><div style="width:${pct}%;background:${c};height:12px;border-radius:6px;transition:width .3s;"></div></div>
+    </div>`;
+  }).join('') || `<div style="color:#94a3b8;font-size:.78rem;">Selecciona antibióticos arriba.</div>`;
+
+  // Cobertura del antibiótico principal en TODAS las categorías de la dimensión actual
+  let crossCultivoHtml='';
+  if(abxSelSorted[0]){
+    const abx0=abxSelSorted[0];
+    const porCultivo=cultivosOrdenados.map(c=>{
+      const rows=sriForPeriod(dimCfg.obj.data[c],'TODOS')||[];
+      const row=rows.find(r=>r.a===abx0);
+      return {c,pct:row?Math.round(row.pS*100):null,n:row?row.t:0};
+    }).filter(x=>x.pct!==null && x.n>=3).sort((a,b)=>b.pct-a.pct);
+    if(porCultivo.length>1){
+      crossCultivoHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🔬 ${abx0} — cobertura por ${dimCfg.label.toLowerCase()}</div>
+        <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Útil para ver en qué focos infecciosos conviene este antibiótico · clic para cambiar</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+        ${porCultivo.map(x=>{
+          const {c:col}=coberturaColor(x.pct);
+          const tid=registerTip(`<div style="font-weight:700;">${x.c}</div><div>${abx0}: ${x.pct}% S (n=${x.n})</div>`);
+          return `<div data-tipid="${tid}" onclick="_coberturaCultivo='${x.c.replace(/'/g,"\\'")}';_coberturaSortCol=null;renderCobertura();" style="display:grid;grid-template-columns:150px 1fr 50px;align-items:center;gap:8px;cursor:pointer;">
+            <span style="font-size:.72rem;font-weight:${x.c===_coberturaCultivo?800:600};color:${x.c===_coberturaCultivo?'#154f39':'#374151'};">${x.c}</span>
+            <div style="background:#f1f5f9;border-radius:5px;height:12px;"><div style="width:${x.pct}%;background:${col};height:12px;border-radius:5px;transition:width .3s;"></div></div>
+            <span style="font-size:.7rem;font-weight:700;color:#1e293b;text-align:right;">${x.pct}%</span>
+          </div>`;
+        }).join('')}
+        </div>
+      </div>`;
+    }
+  }
+  if(!crossCultivoHtml){
+    crossCultivoHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;color:#94a3b8;font-size:.78rem;">🔬 Selecciona un antibiótico con datos en al menos 2 ${dimCfg.label.toLowerCase()}s para comparar cobertura entre focos infecciosos.</div>`;
+  }
+
+  // Mapa de calor completo: TODOS los microorganismos frecuentes × TODOS los antibióticos elegibles
+  let heatmapHtml='';
+  if(topMicros.length && abxOptions.length){
+    const heatAbx=abxOptions.slice(0,10);
+    const heatHead=heatAbx.map(r=>`<th style="padding:6px 4px;color:#fff;text-align:center;font-size:.6rem;font-weight:700;writing-mode:vertical-rl;transform:rotate(180deg);max-height:90px;">${r.a}</th>`).join('');
+    const heatRows=topMicros.map(({micro})=>{
+      const microObj=hd.micros && hd.micros.data ? hd.micros.data[micro] : null;
+      const sriMicro=microObj?(sriForPeriod(microObj,'TODOS')||[]):[];
+      const cells=heatAbx.map(r=>{
+        const row=sriMicro.find(x=>x.a===r.a);
+        if(!row||row.t<1) return `<td style="text-align:center;background:#f8fafc;color:#cbd5e1;font-size:.62rem;">·</td>`;
+        const pct=Math.round(row.pS*100);
+        const {c,bg}=coberturaColor(pct);
+        const tid=registerTip(`<div style="font-weight:700;">${micro}</div><div>${r.a}: ${pct}% S (n=${row.t})</div>`);
+        return `<td data-tipid="${tid}" style="text-align:center;background:${bg};color:${c};font-weight:800;font-size:.64rem;padding:5px 2px;cursor:pointer;">${pct}</td>`;
+      }).join('');
+      return `<tr><td style="font-weight:700;color:#154f39;font-style:italic;font-size:.68rem;padding:5px 8px;white-space:nowrap;">${micro}</td>${cells}</tr>`;
+    }).join('');
+    heatmapHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🌡️ Mapa de calor — Sensibilidad global · ${_coberturaCultivo}</div>
+      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Todos los microorganismos frecuentes × todos los antibióticos con datos (verde ≥80%, ámbar 60–79%, rojo &lt;60%, · sin datos)</div>
+      <table style="border-collapse:collapse;font-size:.7rem;">
+        <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);"><th style="padding:6px 8px;color:#fff;text-align:left;">Microorganismo</th>${heatHead}</tr></thead>
+        <tbody>${heatRows}</tbody>
+      </table>
+    </div>`;
+  }
+
+  // Tendencia de sensibilidad por año (antibiótico principal, mayor cobertura)
+  let trendSensHtml='';
+  const años=(hd.años||[]).slice().sort();
+  if(abxSelSorted[0] && años.length>1){
+    const abx0=abxSelSorted[0];
+    const pts=años.map(y=>{
+      const rows=sriForPeriod(cultivoObj,String(y))||[];
+      const row=rows.find(r=>r.a===abx0);
+      return {y,pct:row?Math.round(row.pS*100):null,n:row?row.t:0};
+    }).filter(p=>p.pct!==null && p.n>=3);
+    if(pts.length>1){
+      trendSensHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">📈 Tendencia de sensibilidad · ${abx0} en ${_coberturaCultivo}</div>
+        <div style="display:flex;align-items:flex-end;gap:10px;height:110px;">
+          ${pts.map(p=>{
+            const tid=registerTip(`<div style="font-weight:700;">${p.y}</div><div>${abx0}: ${p.pct}% S (n=${p.n})</div>`);
+            return `<div data-tipid="${tid}" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;cursor:pointer;"><div style="font-size:.66rem;font-weight:700;color:#154f39;">${p.pct}%</div><div style="width:100%;max-width:32px;background:linear-gradient(180deg,#1a6347,#154f39);border-radius:4px 4px 0 0;height:${Math.max(4,p.pct*0.85)}px;transition:height .3s;"></div><div style="font-size:.64rem;color:#94a3b8;">${p.y}</div></div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }
+  }
+  if(!trendSensHtml){
+    trendSensHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;color:#94a3b8;font-size:.78rem;">📈 La tendencia por año aparecerá cuando haya ≥2 años con datos de antibiograma (n≥3) para este cultivo.</div>`;
+  }
+
+  // Gráfica consumo vs sensibilidad (burbujas por cuadrante), con tooltip real
+  const consumoHosp=CONSUMO_DATA[_consumoHospital];
+  const periodosCons=consumoHosp?Object.keys(consumoHosp.periodos).filter(p=>consumoHosp.periodos[p].consumo_cargado).sort():[];
+  const ultimoPeriodo=periodosCons[periodosCons.length-1];
+  const consumoDatos=ultimoPeriodo?consumoHosp.periodos[ultimoPeriodo]:null;
+  let bubbleHtml='';
+  if(consumoDatos){
+    const consumoNames=consumoDatos.top_antibioticos.map(a=>a.antibiotico);
+    const puntos=sriCultivo.map(r=>{
+      const matchName=matchConsumoName(r.a,consumoNames);
+      const consEntry=matchName?consumoDatos.top_antibioticos.find(a=>a.antibiotico===matchName):null;
+      if(!consEntry) return null;
+      return {abx:r.a,pctS:Math.round(r.pS*100),ddd:consEntry.ddd,aware:consEntry.aware,n:r.t};
+    }).filter(Boolean).sort((a,b)=>b.ddd-a.ddd);
+    if(puntos.length){
+      const maxDdd=Math.max(...puntos.map(p=>p.ddd),1);
+      const bubbles=puntos.map(p=>{
+        const size=14+Math.sqrt(p.ddd/maxDdd)*32;
+        const color=AWARE_COLORS[p.aware]||'#94a3b8';
+        const tid=registerTip(`<div style="font-weight:700;">${p.abx}</div><div>%Sensibilidad: ${p.pctS}% (n=${p.n})</div><div>ΣDDD: ${p.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})}</div><div>AWaRe: ${p.aware}</div>`);
+        return `<div data-tipid="${tid}" style="position:absolute;left:${p.pctS}%;bottom:${Math.min(92,8+p.ddd/maxDdd*80)}%;transform:translate(-50%,50%);width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:.85;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:800;color:#fff;cursor:pointer;">${p.abx.slice(0,3)}</div>`;
+      }).join('');
+      bubbleHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px 8px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🎯 Consumo vs. Sensibilidad · ${_coberturaCultivo}</div>
+        <div style="font-size:.7rem;color:#94a3b8;margin-bottom:10px;">Eje X: %Sensibilidad (antibiograma, todos los períodos) · Altura: DDD relativo (consumo ${ultimoPeriodo}) · Tamaño = consumo · pasa el cursor sobre una burbuja</div>
+        <div style="position:relative;height:280px;background:linear-gradient(90deg,#fef2f2 0%,#fef2f2 60%,#fffbeb 60%,#fffbeb 80%,#f0fdf4 80%,#f0fdf4 100%);border-radius:10px;border:1px solid #e2e8f0;margin-bottom:6px;">
+          <div style="position:absolute;top:6px;left:2%;font-size:.62rem;font-weight:700;color:#991b1b;">FUERA DEL ESQUEMA EMPÍRICO</div>
+          <div style="position:absolute;top:6px;left:62%;font-size:.62rem;font-weight:700;color:#92400e;">SÓLO DIRIGIDO</div>
+          <div style="position:absolute;top:6px;left:82%;font-size:.62rem;font-weight:700;color:#15803d;">APTO EMPÍRICO</div>
+          ${bubbles}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.66rem;color:#94a3b8;padding:0 4px;"><span>0% S</span><span>60%</span><span>80%</span><span>100% S</span></div>
+      </div>`;
+    }
+  }
+  if(!bubbleHtml){
+    bubbleHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;color:#94a3b8;font-size:.78rem;">🎯 No se pudo cruzar sensibilidad con consumo para este cultivo (nombres sin coincidencia o falta consumo cargado para esta unidad).</div>`;
+  }
+
+  // Lectura automática para el COA, ordenada de mayor a menor cobertura
+  const insights=[];
+  abxSelSorted.forEach(abxName=>{
+    const row=sriCultivo.find(r=>r.a===abxName);
+    if(!row) return;
+    const pct=Math.round(row.pS*100);
+    const meta=ABX_META[abxName];
+    const aware=meta?meta.c:'?';
+    if(pct>=80) insights.push(`✓ <b>${abxName}</b> cubre el <b>${pct}%</b> de los aislamientos de ${_coberturaCultivo.toLowerCase()} (n=${row.t}) — buena opción empírica${aware==='A'?' y es Access':''}.`);
+    else if(pct<60) insights.push(`⚠️ <b>${abxName}</b> sólo cubre <b>${pct}%</b> (n=${row.t}) — no se recomienda como esquema empírico en ${_coberturaCultivo.toLowerCase()}; reservar para uso dirigido por antibiograma.`);
+    else insights.push(`◦ <b>${abxName}</b> cubre <b>${pct}%</b> (n=${row.t}) — zona intermedia, valorar uso dirigido.`);
+  });
+  const insightsHtml=insights.length?insights.map(t=>`<div style="padding:8px 12px;background:#f8fafc;border-left:3px solid #154f39;border-radius:0 8px 8px 0;font-size:.76rem;color:#374151;line-height:1.5;">${t}</div>`).join(''):`<div style="color:#94a3b8;font-size:.78rem;">Selecciona antibióticos para ver la lectura automática.</div>`;
+
+  inner.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-top:14px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${cultivoTabs}</div>
+      ${dimToggle}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding-top:10px;">
+      <span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Antibióticos a evaluar:</span>${abxChecks}
+    </div>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">🦠 ¿Qué cubre cada opción empírica? · ${_coberturaCultivo}</div>
+        <div style="font-size:.7rem;color:#94a3b8;margin-bottom:10px;">Sensibilidad por microorganismo (verde ≥80%, ámbar 60–79%, rojo &lt;60%). Microorganismos según frecuencia registrada en ${dimCfg.label.toLowerCase()}.</div>
+        ${tablaHtml}
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">⚖️ Cobertura empírica ponderada</div>
+        ${ponderadaBars}
+        <div style="font-size:.66rem;color:#94a3b8;margin-top:4px;">Calculada sobre el total de aislamientos con antibiograma en ${_coberturaCultivo.toLowerCase()} (equivale a Σ(aislamientos×%S)/Σaislamientos).</div>
+      </div>
+    </div>
+    <div style="padding-top:14px;">${heatmapHtml}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      ${crossCultivoHtml}
+      ${trendSensHtml}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">🩺 Lectura para el COA</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">${insightsHtml}</div>
+      </div>
+      ${bubbleHtml}
+    </div>
+  `;
+  wireTips(inner);
+}
+
 
 function buildAwareFilters(){
   const box=document.getElementById('aware-filters'); if(!box) return;
