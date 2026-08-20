@@ -4565,7 +4565,13 @@ function renderCobertura(){
     }).join('');
     heatmapHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🌡️ Mapa de calor — Sensibilidad global · ${_coberturaCultivo}</div>
-      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Todos los microorganismos frecuentes × todos los antibióticos con datos (verde ≥80%, ámbar 60–79%, rojo &lt;60%, · sin datos)</div>
+      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:8px;">Todos los microorganismos frecuentes × todos los antibióticos con datos. El color de cada celda es el %S — eso es lo que hace que sea un mapa de calor (no es una tabla común).</div>
+      <div style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#dcfce7;border:1px solid #bbf7d0;display:inline-block;"></span>≥80% (buena cobertura)</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#fef3c7;border:1px solid #fde68a;display:inline-block;"></span>60–79% (intermedia)</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#fee2e2;border:1px solid #fecaca;display:inline-block;"></span>&lt;60% (baja cobertura)</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#f8fafc;border:1px solid #e2e8f0;display:inline-block;"></span>· sin datos (n&lt;1)</div>
+      </div>
       <table style="border-collapse:collapse;font-size:.7rem;">
         <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);"><th style="padding:6px 8px;color:#fff;text-align:left;">Microorganismo</th>${heatHead}</tr></thead>
         <tbody>${heatRows}</tbody>
@@ -4621,16 +4627,21 @@ function renderCobertura(){
         const tid=registerTip(`<div style="font-weight:700;">${p.abx}</div><div>%Sensibilidad: ${p.pctS}% (n=${p.n})</div><div>ΣDDD: ${p.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})}</div><div>AWaRe: ${p.aware}</div>`);
         return `<div data-tipid="${tid}" style="position:absolute;left:${p.pctS}%;bottom:${Math.min(92,8+p.ddd/maxDdd*80)}%;transform:translate(-50%,50%);width:${size}px;height:${size}px;border-radius:50%;background:${color};opacity:.85;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:800;color:#fff;cursor:pointer;">${p.abx.slice(0,3)}</div>`;
       }).join('');
+      // Escala real del eje Y (antes solo era relativa sin números)
+      const yTicks=[1,0.75,0.5,0.25,0].map(f=>({val:maxDdd*f,bottom:8+f*80}));
+      const yAxisHtml=yTicks.map(t=>`<div style="position:absolute;left:-6px;bottom:${t.bottom}%;transform:translate(-100%,50%);font-size:.6rem;color:#94a3b8;white-space:nowrap;">${t.val.toLocaleString('es-MX',{maximumFractionDigits:0})}</div><div style="position:absolute;left:0;right:0;bottom:${t.bottom}%;border-top:1px dashed #f1f5f9;"></div>`).join('');
       bubbleHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px 8px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🎯 Consumo vs. Sensibilidad · ${_coberturaCultivo}</div>
-        <div style="font-size:.7rem;color:#94a3b8;margin-bottom:10px;">Eje X: %Sensibilidad (antibiograma, todos los períodos) · Altura: DDD relativo (consumo ${ultimoPeriodo}) · Tamaño = consumo · pasa el cursor sobre una burbuja</div>
-        <div style="position:relative;height:280px;background:linear-gradient(90deg,#fef2f2 0%,#fef2f2 60%,#fffbeb 60%,#fffbeb 80%,#f0fdf4 80%,#f0fdf4 100%);border-radius:10px;border:1px solid #e2e8f0;margin-bottom:6px;">
+        <div style="font-size:.7rem;color:#94a3b8;margin-bottom:4px;">Cada burbuja es un antibiótico. <b>Eje X</b> = % de sensibilidad en antibiograma (todos los períodos). <b>Eje Y y tamaño</b> = ΣDDD consumido en ${ultimoPeriodo} (mismo dato, dos veces, para que se note más el consumo alto). Pasa el cursor sobre una burbuja para ver el detalle.</div>
+        <div style="position:relative;height:280px;margin-left:34px;background:linear-gradient(90deg,#fef2f2 0%,#fef2f2 60%,#fffbeb 60%,#fffbeb 80%,#f0fdf4 80%,#f0fdf4 100%);border-radius:10px;border:1px solid #e2e8f0;margin-bottom:6px;">
+          ${yAxisHtml}
           <div style="position:absolute;top:6px;left:2%;font-size:.62rem;font-weight:700;color:#991b1b;">FUERA DEL ESQUEMA EMPÍRICO</div>
           <div style="position:absolute;top:6px;left:62%;font-size:.62rem;font-weight:700;color:#92400e;">SÓLO DIRIGIDO</div>
           <div style="position:absolute;top:6px;left:82%;font-size:.62rem;font-weight:700;color:#15803d;">APTO EMPÍRICO</div>
           ${bubbles}
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:.66rem;color:#94a3b8;padding:0 4px;"><span>0% S</span><span>60%</span><span>80%</span><span>100% S</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:.66rem;color:#94a3b8;padding:0 4px 0 34px;"><span>0% S</span><span>60%</span><span>80%</span><span>100% S</span></div>
+        <div style="font-size:.62rem;color:#94a3b8;margin-top:4px;margin-left:34px;">Eje Y: ΣDDD del antibiótico (${ultimoPeriodo})</div>
       </div>`;
     }
   }
