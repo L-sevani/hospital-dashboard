@@ -3901,7 +3901,7 @@ function grupoFarmacologico(nombre){
 }
 
 let _consumoHospital=null, _consumoPeriodo=null, _consumoView='ddd', _consumoModo='mensual';
-let _coberturaCultivo=null, _coberturaAbxSel=null, _coberturaSortCol=null, _coberturaDim='cultivos';
+let _coberturaCultivo=null, _coberturaAbxSel=null, _coberturaSortCol=null, _coberturaDim='cultivos', _coberturaFiltroCB='todos';
 let _consumoAwareFilter=null; // Set de categorías activas, null = todas
 
 function consumoHospIds(){
@@ -4479,6 +4479,12 @@ function toggleCoberturaDim(dim){
   renderCobertura();
 }
 
+function setCoberturaFiltroCB(f){
+  if(_coberturaFiltroCB===f) return;
+  _coberturaFiltroCB=f; _coberturaAbxSel=null; _coberturaSortCol=null;
+  renderCobertura();
+}
+
 function renderCobertura(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
@@ -4503,8 +4509,18 @@ function renderCobertura(){
   const cultivoObj = dimCfg.obj.data[_coberturaCultivo];
   const sriCultivo = (sriForPeriod(cultivoObj,'TODOS')||[]).filter(r=>r.t>=3);
 
+  // Antibióticos elegibles (con n>=3 en este cultivo), filtrados por Cuadro Básico si aplica, mayor a menor
+  const abxOptionsTodos = sriCultivo.slice().sort((a,b)=>b.t-a.t);
+  const abxOptions = _coberturaFiltroCB==='cb'
+    ? abxOptionsTodos.filter(r=>CB_ALLOWED.has(normalizeForCb(r.a)))
+    : abxOptionsTodos;
+  const filtroCBToggle=`<div style="display:flex;gap:0;align-items:center;">
+    <button onclick="setCoberturaFiltroCB('todos')" style="padding:5px 12px;border-radius:8px 0 0 8px;font-size:.7rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;background:${_coberturaFiltroCB==='todos'?'#154f39':'#fff'};color:${_coberturaFiltroCB==='todos'?'#fff':'#154f39'};">Todos los antibióticos</button>
+    <button onclick="setCoberturaFiltroCB('cb')" style="padding:5px 12px;border-radius:0 8px 8px 0;font-size:.7rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;border-left:none;background:${_coberturaFiltroCB==='cb'?'#154f39':'#fff'};color:${_coberturaFiltroCB==='cb'?'#fff':'#154f39'};">📋 Solo Cuadro Básico</button>
+  </div>`;
+
   if(!_coberturaAbxSel || !_coberturaAbxSel.length){
-    _coberturaAbxSel = sriCultivo.slice().sort((a,b)=>b.t-a.t).slice(0,3).map(r=>r.a);
+    _coberturaAbxSel = abxOptions.slice(0,3).map(r=>r.a);
   }
   // Antibióticos seleccionados, ordenados de mayor a menor cobertura (%S)
   const abxSelSorted = _coberturaAbxSel.slice().sort((a,b)=>{
@@ -4531,8 +4547,7 @@ function renderCobertura(){
       .slice(0,8);
   }
 
-  // Antibióticos elegibles (con n>=3 en este cultivo), mayor a menor
-  const abxOptions = sriCultivo.slice().sort((a,b)=>b.t-a.t);
+  // Antibióticos elegibles (con n>=3 en este cultivo), filtrados por Cuadro Básico si aplica, mayor a menor
   const abxChecks = abxOptions.map(r=>{
     const sel=_coberturaAbxSel.includes(r.a);
     const tid=registerTip(`<div style="font-weight:700;">${r.a}</div><div>%S global en ${_coberturaCultivo}: ${Math.round(r.pS*100)}% (n=${r.t})</div>`);
@@ -4545,7 +4560,7 @@ function renderCobertura(){
   if(!topMicros.length){
     tablaHtml=`<div style="padding:20px;text-align:center;color:#94a3b8;font-size:.78rem;">No hay suficiente información de microorganismos por cultivo para esta unidad.</div>`;
   } else if(!_coberturaAbxSel.length){
-    tablaHtml=`<div style="padding:20px;text-align:center;color:#94a3b8;font-size:.78rem;">Selecciona al menos un antibiótico arriba.</div>`;
+    tablaHtml=`<div style="padding:20px;text-align:center;color:#94a3b8;font-size:.78rem;">${_coberturaFiltroCB==='cb'&&!abxOptions.length?'No hay antibióticos de Cuadro Básico con datos suficientes (n≥3) en este cultivo/servicio — prueba con "Todos los antibióticos".':'Selecciona al menos un antibiótico arriba.'}</div>`;
   } else {
     // Calcular filas con el %S de cada antibiótico seleccionado por microorganismo
     microRowsData = topMicros.map(({micro,n})=>{
@@ -4759,9 +4774,13 @@ function renderCobertura(){
       <div style="display:flex;gap:6px;flex-wrap:wrap;">${cultivoTabs}</div>
       ${dimToggle}
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding-top:10px;">
-      <span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Antibióticos a evaluar:</span>${abxChecks}
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-top:10px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Antibióticos a evaluar:</span>${abxChecks}
+      </div>
+      ${filtroCBToggle}
     </div>
+    ${_coberturaFiltroCB==='cb'?`<div style="font-size:.66rem;color:#94a3b8;padding-top:4px;">📋 Mostrando solo antibióticos de Cuadro Básico — es el conjunto del que hoy tenemos precios de referencia.</div>`:''}
     <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">🦠 ¿Qué cubre cada opción empírica? · ${_coberturaCultivo}</div>
