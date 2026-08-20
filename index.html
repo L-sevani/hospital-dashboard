@@ -4211,6 +4211,54 @@ function renderConsumoDDD(){
     </div>`;
   }
 
+  // Consumo por servicio (real: camas/días paciente/ocupación de PARTE II a nivel
+  // Especialidad — el desglose más fino que trae el reporte — agrupado visualmente
+  // por División. El DDD sí es únicamente a nivel hospital completo: CONSABI no
+  // desglosa el consumo por servicio, así que esa columna se marca honestamente
+  // como no disponible en vez de inventar un reparto).
+  let servicioTablaHtml='';
+  if(d.servicios && Object.keys(d.servicios).length){
+    const filas=Object.entries(d.servicios).map(([nombre,info])=>({nombre,...info}));
+    // Agrupar por División, orden de divisiones por total de días paciente (mayor a menor)
+    const porDivision={};
+    filas.forEach(f=>{
+      const div=f.division||'Otros';
+      if(!porDivision[div]) porDivision[div]=[];
+      porDivision[div].push(f);
+    });
+    const divisionesOrdenadas=Object.entries(porDivision)
+      .map(([div,items])=>({div,items,total:items.reduce((s,i)=>s+(i.dias_paciente||0),0)}))
+      .sort((a,b)=>b.total-a.total);
+    const rows=divisionesOrdenadas.map(({div,items})=>{
+      const filasDiv=items.slice().sort((a,b)=>(b.dias_paciente||0)-(a.dias_paciente||0)).map(s=>{
+        const tid=registerTip(`<div style="font-weight:700;">${s.nombre}</div><div>División: ${div}</div><div>Camas: ${Math.round(s.camas)}</div><div>Días paciente: ${Math.round(s.dias_paciente)}</div><div>Ocupación: ${s.ocupacion!=null?s.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</div>`);
+        return `<tr data-tipid="${tid}" style="cursor:pointer;">
+          <td style="padding:5px 10px 5px 22px;color:#374151;">${s.nombre}</td>
+          <td style="text-align:center;padding:5px;">${Math.round(s.camas)}</td>
+          <td style="text-align:center;padding:5px;">${Math.round(s.dias_paciente).toLocaleString('es-MX')}</td>
+          <td style="text-align:center;padding:5px;font-weight:700;color:${s.ocupacion>100?'#dc2626':'#374151'};">${s.ocupacion!=null?s.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</td>
+          <td style="text-align:center;padding:5px;color:#cbd5e1;font-size:.68rem;">N/D</td>
+        </tr>`;
+      }).join('');
+      return `<tr><td colspan="5" style="padding:8px 10px 2px;font-weight:800;color:#154f39;font-size:.72rem;text-transform:uppercase;letter-spacing:.02em;border-top:1px solid #f1f5f9;">${div}</td></tr>${filasDiv}`;
+    }).join('');
+    servicioTablaHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🏥 Consumo por servicio</div>
+      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Camas, días paciente y ocupación reales (PARTE II) por especialidad, agrupadas por División. La columna DDD/100 no está disponible a nivel servicio porque CONSABI solo reporta el consumo del hospital completo, no desglosado — se marca N/D en vez de inventar un reparto.</div>
+      <table style="width:100%;border-collapse:collapse;font-size:.76rem;">
+        <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
+          <th style="text-align:left;padding:7px 10px;color:#fff;">Servicio / Especialidad</th>
+          <th style="padding:7px 6px;color:#fff;">Camas</th>
+          <th style="padding:7px 6px;color:#fff;">Días Pac.</th>
+          <th style="padding:7px 6px;color:#fff;">Ocupación</th>
+          <th style="padding:7px 6px;color:#fff;">DDD/100</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }
+
+
   // Radar comparativo AWaRe entre los 3 hospitales (SVG, triangulo Access/Watch/Reserve)
   let radarHtml='';
   {
@@ -4291,6 +4339,47 @@ function renderConsumoDDD(){
     trendHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;color:#94a3b8;font-size:.78rem;">📈 La tendencia se mostrará automáticamente cuando se carguen más meses de CONSABI para esta unidad (por ahora solo ${periodosConConsumo.length===1?periodosConConsumo[0]:'ninguno'} tiene consumo cargado).</div>`;
   }
 
+  // Tendencia de grupos trazadores (varias líneas, una por grupo farmacológico)
+  let trazadoresHtml='';
+  if(periodosConConsumo.length>1){
+    const gruposPorPeriodo=periodosConConsumo.map(p=>{
+      const dp=periodosMap[p];
+      const g={};
+      (dp.top_antibioticos||[]).forEach(a=>{
+        const grp=grupoFarmacologico(a.antibiotico);
+        g[grp]=(g[grp]||0)+a.ddd;
+      });
+      return {p,g};
+    });
+    const totalesPorGrupo={};
+    gruposPorPeriodo.forEach(({g})=>Object.entries(g).forEach(([k,v])=>{totalesPorGrupo[k]=(totalesPorGrupo[k]||0)+v;}));
+    const topGrupos=Object.entries(totalesPorGrupo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]);
+    const maxVal=Math.max(...gruposPorPeriodo.flatMap(({g})=>topGrupos.map(k=>g[k]||0)),1);
+    const W=560,H=180,padL=34,padB=22,padT=10,padR=10;
+    const xStep=periodosConConsumo.length>1?(W-padL-padR)/(periodosConConsumo.length-1):0;
+    const yScale=v=>padT+(H-padT-padB)*(1-v/maxVal);
+    const linesHtml=topGrupos.map((grp,gi)=>{
+      const color=GRUPO_COLORS[grp]||PALETTE[gi]||'#94a3b8';
+      const pts=gruposPorPeriodo.map((d,i)=>`${padL+i*xStep},${yScale(d.g[grp]||0)}`).join(' ');
+      const circles=gruposPorPeriodo.map((d,i)=>{
+        const x=padL+i*xStep,y=yScale(d.g[grp]||0);
+        const tid=registerTip(`<div style="font-weight:700;">${grp}</div><div>${d.p}: ${(d.g[grp]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD</div>`);
+        return `<circle data-tipid="${tid}" cx="${x}" cy="${y}" r="3.5" fill="${color}" style="cursor:pointer;"/>`;
+      }).join('');
+      return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2"/>${circles}`;
+    }).join('');
+    const xLabels=periodosConConsumo.map((p,i)=>`<text x="${padL+i*xStep}" y="${H-4}" text-anchor="middle" font-size="9" fill="#94a3b8">${MESES_ABBR[p.slice(5)]}</text>`).join('');
+    const legendTraz=topGrupos.map((g,gi)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${GRUPO_COLORS[g]||PALETTE[gi]};display:inline-block;"></span>${g}</div>`).join('');
+    trazadoresHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📉 Tendencia de grupos trazadores</div>
+      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">ΣDDD por grupo farmacológico, mes a mes (top 5 grupos) — solo meses con CONSABI cargado</div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;">${linesHtml}${xLabels}</svg>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">${legendTraz}</div>
+    </div>`;
+  } else {
+    trazadoresHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;color:#94a3b8;font-size:.78rem;">📉 La tendencia por grupo trazador (varias líneas) se activa con ≥2 meses de CONSABI cargados. Por ahora solo hay ${periodosConConsumo.length} mes(es).</div>`;
+  }
+
   inner.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-top:14px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">${hospTabs}</div>
@@ -4344,7 +4433,9 @@ function renderConsumoDDD(){
       ${radarHtml}
       ${ocupHtml||'<div></div>'}
     </div>
+    ${servicioTablaHtml?`<div style="padding-top:14px;">${servicioTablaHtml}</div>`:''}
     <div style="padding-top:14px;">${trendHtml}</div>
+    <div style="padding-top:14px;">${trazadoresHtml}</div>
   `;
   wireTips(inner);
 }
