@@ -4569,8 +4569,10 @@ function renderConsumoDDD(){
       ${ocupHtml||'<div></div>'}
     </div>
     ${servicioTablaHtml?`<div style="padding-top:14px;">${servicioTablaHtml}</div>`:''}
-    <div style="padding-top:14px;">${trendHtml}</div>
-    <div style="padding-top:14px;">${trazadoresHtml}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      ${trendHtml}
+      ${trazadoresHtml}
+    </div>
   `;
   wireTips(inner);
 }
@@ -4861,7 +4863,7 @@ function renderCobertura(){
   if(topMicros.length && abxOptions.length){
     const heatAbx=abxOptions; // ya no se recorta a 10 — se muestran todos los que tengan datos (n>=3)
     const heatHead=heatAbx.map(r=>{
-      return `<th style="padding:8px 4px;color:#fff;text-align:center;font-size:.62rem;font-weight:700;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;">${awareBadge(r.c)}${r.a}</th>`;
+      return `<th style="padding:6px 3px;color:#fff;text-align:center;font-size:.6rem;font-weight:700;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;">${awareBadge(r.c)}${r.a}</th>`;
     }).join('');
     const heatRows=topMicros.map(({micro})=>{
       const microObj=hd.micros && hd.micros.data ? hd.micros.data[micro] : null;
@@ -4885,7 +4887,7 @@ function renderCobertura(){
         <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#fee2e2;border:1px solid #fecaca;display:inline-block;"></span>&lt;60% (baja cobertura)</div>
         <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#f8fafc;border:1px solid #e2e8f0;display:inline-block;"></span>· sin datos (n&lt;1)</div>
       </div>
-      <table style="border-collapse:collapse;font-size:.7rem;">
+      <table style="border-collapse:collapse;font-size:.7rem;width:100%;">
         <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);"><th style="padding:6px 8px;color:#fff;text-align:left;">Microorganismo</th>${heatHead}</tr></thead>
         <tbody>${heatRows}</tbody>
       </table>
