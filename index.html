@@ -5314,14 +5314,18 @@ function renderConsumoEspecialidad(){
     const entradasAware=Object.entries(f.por_aware||{}).sort((a,b)=>b[1]-a[1]);
     const dominante=entradasAware[0];
     const cruzada=serviciosNormalizados[f.especialidad_normalizada];
+    const diasPaciente=(cruzada && cruzada.dias_paciente!=null)?cruzada.dias_paciente:null;
     const piezasPorCama=(cruzada && cruzada.camas)?Math.round(f.piezas/cruzada.camas*10)/10:null;
-    const tid=registerTip(`<div style="font-weight:700;">${f.especialidad}</div><div>${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas · ${f.num_medicos} médico(s)</div>${entradasAware.map(([k,v])=>`<div>${k}: ${v.toLocaleString('es-MX',{maximumFractionDigits:0})} (${f.por_aware_pct[k]}%)</div>`).join('')}`);
+    const piezasPor100DiasPac=(diasPaciente)?Math.round(f.piezas/diasPaciente*100*10)/10:null;
+    const tid=registerTip(`<div style="font-weight:700;">${f.especialidad}</div><div>${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas · ${f.num_medicos} médico(s)</div>${diasPaciente!=null?`<div>Días paciente (PARTE II): ${diasPaciente.toLocaleString('es-MX',{maximumFractionDigits:0})}</div>`:''}${entradasAware.map(([k,v])=>`<div>${k}: ${v.toLocaleString('es-MX',{maximumFractionDigits:0})} (${f.por_aware_pct[k]}%)</div>`).join('')}`);
     return `<tr data-tipid="${tid}" style="cursor:pointer;">
       <td style="padding:5px 10px;font-weight:700;color:#000;">${f.especialidad}</td>
       <td style="text-align:center;padding:5px 6px;font-weight:800;color:#000;">${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
       <td style="text-align:center;padding:5px 6px;color:#000;">${f.num_medicos||'—'}</td>
       <td style="text-align:center;padding:5px 6px;">${dominante?`${awareBadge(dominante[0])}<span style="color:#000;">${Math.round(f.por_aware_pct[dominante[0]]||0)}%</span>`:'—'}</td>
+      <td style="text-align:center;padding:5px 6px;color:#000;">${diasPaciente!=null?diasPaciente.toLocaleString('es-MX',{maximumFractionDigits:0}):'<span style="color:#cbd5e1;">N/D</span>'}</td>
       <td style="text-align:center;padding:5px 6px;color:#000;">${piezasPorCama!=null?piezasPorCama:'<span style="color:#cbd5e1;">N/D</span>'}</td>
+      <td style="text-align:center;padding:5px 6px;color:#000;">${piezasPor100DiasPac!=null?piezasPor100DiasPac:'<span style="color:#cbd5e1;">N/D</span>'}</td>
     </tr>`;
   }).join('');
 
@@ -5331,7 +5335,9 @@ function renderConsumoEspecialidad(){
       <th style="padding:7px 6px;color:#fff;">Piezas</th>
       <th style="padding:7px 6px;color:#fff;">Médicos</th>
       <th style="padding:7px 6px;color:#fff;">AWaRe dominante</th>
+      <th style="padding:7px 6px;color:#fff;">Días Paciente</th>
       <th style="padding:7px 6px;color:#fff;">Piezas/cama</th>
+      <th style="padding:7px 6px;color:#fff;">Piezas/100 días pac.</th>
     </tr></thead>
     <tbody>${filasTabla}</tbody>
   </table>`;
@@ -5401,7 +5407,18 @@ function renderConsumoEspecialidad(){
 
   // Lectura automática por especialidad: felicita a las que tienen buen perfil AWaRe
   // (Access dominante y alto) y sugiere revisión a las que dependen mucho de Watch/Reserve.
-  // Usa el mismo orden que la tabla (por % de AWaRe dominante, mayor a menor).
+  // También incorpora piezas/100 días paciente (PARTE II) cuando hay cruce disponible,
+  // comparando cada especialidad contra el promedio de la propia unidad.
+  const tasasPorEspecialidad={};
+  filas.forEach(f=>{
+    const cruzada=serviciosNormalizados[f.especialidad_normalizada];
+    if(cruzada && cruzada.dias_paciente){
+      tasasPorEspecialidad[f.especialidad]=Math.round(f.piezas/cruzada.dias_paciente*100*10)/10;
+    }
+  });
+  const tasasValidas=Object.values(tasasPorEspecialidad);
+  const tasaPromedio=tasasValidas.length?Math.round(tasasValidas.reduce((s,v)=>s+v,0)/tasasValidas.length*10)/10:null;
+
   const lecturaEspecialidadHtml=filas.filter(f=>f.piezas>=10).map(f=>{ // ignora especialidades con muy pocas piezas (poco representativo)
     const cat=f._domCat, pct=Math.round(f._domPct);
     let msg, icono;
@@ -5417,6 +5434,16 @@ function renderConsumoEspecialidad(){
       icono='◦'; msg=`<b>${f.especialidad}</b> tiene Watch como dominante (${pct}%) — zona intermedia, no es alarmante pero se puede optimizar.`;
     } else {
       icono='ℹ️'; msg=`<b>${f.especialidad}</b> tiene un perfil AWaRe mixto (${cat||'sin datos'} ${pct}% dominante), sin un patrón claro que destacar.`;
+    }
+    // Enriquece con la tasa piezas/100 días paciente vs el promedio de la unidad, si hay cruce con PARTE II
+    const tasa=tasasPorEspecialidad[f.especialidad];
+    if(tasa!=null && tasaPromedio){
+      const diffPct=Math.round((tasa-tasaPromedio)/tasaPromedio*100);
+      if(Math.abs(diffPct)>=20){
+        msg+=` Además, consume ${tasa} piezas por cada 100 días paciente — ${diffPct>0?`${diffPct}% por encima`:`${Math.abs(diffPct)}% por debajo`} del promedio de ${_especialidadUnidad} (${tasaPromedio}).`;
+      } else {
+        msg+=` Su ritmo de consumo (${tasa} piezas/100 días paciente) está en línea con el promedio de la unidad.`;
+      }
     }
     return `<div style="padding:7px 10px;background:#f8fafc;border-left:3px solid ${AWARE_COLORS[cat]||'#94a3b8'};border-radius:0 8px 8px 0;font-size:.73rem;color:#374151;line-height:1.5;">${icono} ${msg}</div>`;
   }).join('') || `<div style="color:#94a3b8;font-size:.78rem;">Sin especialidades con suficientes piezas para evaluar.</div>`;
@@ -5489,7 +5516,7 @@ function renderConsumoEspecialidad(){
     <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">📋 Especialidades — ${_especialidadUnidad} <span style="font-size:.62rem;color:#94a3b8;font-weight:600;">· ordenado por % AWaRe dominante</span></div>
-        <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${hospitalId?`Piezas/cama cruzado con PARTE II donde el nombre de especialidad coincide exacto (período ${_consumoPeriodo||'—'}). Sin match = N/D, no se fuerza el emparejamiento.`:'Esta unidad no tiene equivalente en PARTE II (solo cubre los 3 hospitales, no UMF), por eso no hay piezas/cama aquí.'}</div>
+        <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${hospitalId?`Días Paciente, piezas/cama y piezas/100 días paciente cruzados con PARTE II donde el nombre de especialidad coincide exacto (período ${_consumoPeriodo||'—'}). Sin match = N/D, no se fuerza el emparejamiento.`:'Esta unidad no tiene equivalente en PARTE II (solo cubre los 3 hospitales, no UMF), por eso no hay días paciente ni piezas/cama aquí.'}</div>
         ${tablaHtml}
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
