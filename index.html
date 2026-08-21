@@ -5281,7 +5281,14 @@ function renderConsumoEspecialidad(){
   }).join('');
 
   const infoUnidad=porUnidad[_especialidadUnidad];
-  const filas=infoUnidad.especialidades.slice().sort((a,b)=>b.piezas-a.piezas);
+  // Cada fila trae su AWaRe dominante (categoría + %) precalculado, para ordenar por
+  // eso en vez de por piezas — lo que más importa aquí es qué tan "sano" es el perfil
+  // AWaRe de cada especialidad, no cuánto consume en bruto.
+  const filas=infoUnidad.especialidades.slice().map(f=>{
+    const entradas=Object.entries(f.por_aware_pct||{}).sort((a,b)=>b[1]-a[1]);
+    const dom=entradas[0];
+    return {...f, _domCat: dom?dom[0]:null, _domPct: dom?dom[1]:0};
+  }).sort((a,b)=>b._domPct-a._domPct);
   const totalUnidad=filas.reduce((s,f)=>s+f.piezas,0);
 
   const hospitalId=infoUnidad.hospital_id;
@@ -5296,8 +5303,8 @@ function renderConsumoEspecialidad(){
   }
 
   const kpis=[
-    {label:'Total piezas antibiótico (OOAD)',val:datosDelPeriodo.total_piezas_antibioticos.toLocaleString('es-MX',{maximumFractionDigits:0})},
-    {label:'Sin médico registrado en receta',val:datosDelPeriodo.piezas_sin_medico_registrado.toLocaleString('es-MX',{maximumFractionDigits:0})},
+    {label:'Total piezas (solo receta individual)',val:datosDelPeriodo.total_piezas_antibioticos.toLocaleString('es-MX',{maximumFractionDigits:0})},
+    {label:'Piezas de receta colectiva (excluidas)',val:(datosDelPeriodo.piezas_colectivas_excluidas||0).toLocaleString('es-MX',{maximumFractionDigits:0})},
     {label:'Médico sin catálogo',val:`${datosDelPeriodo.piezas_medico_sin_catalogo.toLocaleString('es-MX',{maximumFractionDigits:0})} (${datosDelPeriodo.matriculas_prescriptoras_sin_catalogo} matrículas)`},
     {label:`Piezas en ${_especialidadUnidad}`,val:totalUnidad.toLocaleString('es-MX',{maximumFractionDigits:0})},
   ];
@@ -5392,7 +5399,28 @@ function renderConsumoEspecialidad(){
     </div>`;
   }
 
-  // 🧮 DDD estimado por especialidad — ESTIMACIÓN DERIVADA, no un dato oficial de CONSABI.
+  // Lectura automática por especialidad: felicita a las que tienen buen perfil AWaRe
+  // (Access dominante y alto) y sugiere revisión a las que dependen mucho de Watch/Reserve.
+  // Usa el mismo orden que la tabla (por % de AWaRe dominante, mayor a menor).
+  const lecturaEspecialidadHtml=filas.filter(f=>f.piezas>=10).map(f=>{ // ignora especialidades con muy pocas piezas (poco representativo)
+    const cat=f._domCat, pct=Math.round(f._domPct);
+    let msg, icono;
+    if(cat==='Access' && pct>=70){
+      icono='🏆'; msg=`<b>${f.especialidad}</b> tiene un perfil AWaRe excelente — ${pct}% de su consumo es Access. Buen manejo, se puede usar como referencia para otras especialidades.`;
+    } else if(cat==='Access' && pct>=50){
+      icono='✅'; msg=`<b>${f.especialidad}</b> va bien — mayoría Access (${pct}%). Sigue así, vale la pena monitorear que se mantenga.`;
+    } else if(cat==='Reserve'){
+      icono='🚨'; msg=`<b>${f.especialidad}</b> tiene Reserve como categoría dominante (${pct}%) — esto amerita revisión prioritaria del comité, Reserve debe limitarse a casos muy específicos.`;
+    } else if(cat==='Watch' && pct>=70){
+      icono='⚠️'; msg=`<b>${f.especialidad}</b> depende fuertemente de Watch (${pct}%) — vale la pena revisar si hay oportunidad de esquemas Access de primera línea.`;
+    } else if(cat==='Watch' && pct>=50){
+      icono='◦'; msg=`<b>${f.especialidad}</b> tiene Watch como dominante (${pct}%) — zona intermedia, no es alarmante pero se puede optimizar.`;
+    } else {
+      icono='ℹ️'; msg=`<b>${f.especialidad}</b> tiene un perfil AWaRe mixto (${cat||'sin datos'} ${pct}% dominante), sin un patrón claro que destacar.`;
+    }
+    return `<div style="padding:7px 10px;background:#f8fafc;border-left:3px solid ${AWARE_COLORS[cat]||'#94a3b8'};border-radius:0 8px 8px 0;font-size:.73rem;color:#374151;line-height:1.5;">${icono} ${msg}</div>`;
+  }).join('') || `<div style="color:#94a3b8;font-size:.78rem;">Sin especialidades con suficientes piezas para evaluar.</div>`;
+
   // Metodología: CONSABI reporta, por antibiótico, tanto el DDD como las piezas (ambos
   // a nivel hospital completo). De ahí se saca el factor implícito DDD÷pieza para cada
   // antibiótico de ESE hospital y mes. Ese mismo factor se aplica a las piezas que la
@@ -5453,14 +5481,14 @@ function renderConsumoEspecialidad(){
   inner.innerHTML=`
     <div style="padding-top:14px;">
       <h3 style="font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 4px;">🩺 Consumo de Antibióticos por Especialidad Médica</h3>
-      <p style="font-size:.72rem;color:#64748b;margin:0;">Cruce Plantilla de Recetas (matrícula del médico prescriptor) × Catálogo de Especialidades/Personal. Piezas dispensadas (no DDD). La clasificación AWaRe viene directo de la propia Plantilla de Recetas, sin usar CONSABI.</p>
+      <p style="font-size:.72rem;color:#64748b;margin:0;">Cruce Plantilla de Recetas (matrícula del médico prescriptor) × Catálogo de Especialidades/Personal. Solo <b>Receta Individual</b> (las colectivas no tienen un médico específico detrás, se excluyen). Piezas dispensadas (no DDD). La clasificación AWaRe viene directo de la propia Plantilla de Recetas, sin usar CONSABI.</p>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:10px;"><span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Mes:</span>${periodoTabs}</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;">${kpiHtml}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:14px;">${unidadTabs}</div>
     <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">📋 Especialidades — ${_especialidadUnidad}</div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">📋 Especialidades — ${_especialidadUnidad} <span style="font-size:.62rem;color:#94a3b8;font-weight:600;">· ordenado por % AWaRe dominante</span></div>
         <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${hospitalId?`Piezas/cama cruzado con PARTE II donde el nombre de especialidad coincide exacto (período ${_consumoPeriodo||'—'}). Sin match = N/D, no se fuerza el emparejamiento.`:'Esta unidad no tiene equivalente en PARTE II (solo cubre los 3 hospitales, no UMF), por eso no hay piezas/cama aquí.'}</div>
         ${tablaHtml}
       </div>
@@ -5473,6 +5501,10 @@ function renderConsumoEspecialidad(){
           <div style="display:flex;flex-direction:column;gap:6px;flex:1;">${legendDonut}${filtroHint}</div>
         </div>
       </div>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;margin-top:14px;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">🩺 Lectura por especialidad</div>
+      <div style="display:flex;flex-direction:column;gap:7px;">${lecturaEspecialidadHtml}</div>
     </div>
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
