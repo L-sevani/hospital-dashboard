@@ -4124,7 +4124,7 @@ function renderConsumoDDD(){
     const dimmed=activeFilt && !activeFilt.has(k);
     const ddAbx=d.top_antibioticos.filter(a=>a.aware===k).length;
     const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${k}</div><div>${d.por_aware_pct[k]}% del consumo (${(d.por_aware[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD)</div><div style="color:#94a3b8;font-size:.66rem;margin-top:2px;">${ddAbx} antibiótico(s) · clic para filtrar</div>`);
-    return `<div data-tipid="${tid}" onclick="toggleAwareFilter('${k}')" style="display:flex;align-items:center;gap:6px;font-size:.76rem;cursor:pointer;opacity:${dimmed?.4:1};padding:3px 4px;border-radius:6px;transition:opacity .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'"><span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]};display:inline-block;"></span><span style="color:#374151;">${k}</span><span style="margin-left:auto;font-weight:700;color:#1e293b;">${d.por_aware_pct[k]}%</span></div>`;
+    return `<div data-tipid="${tid}" onclick="toggleAwareFilter('${k}')" style="display:flex;align-items:center;gap:6px;font-size:.76rem;cursor:pointer;opacity:${dimmed?.4:1};padding:3px 4px;border-radius:6px;transition:opacity .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'"><span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]};display:inline-block;"></span><span style="color:#000;">${k}</span><span style="margin-left:auto;font-weight:700;color:#1e293b;">${d.por_aware_pct[k]}%</span></div>`;
   }).join('');
   const filterHint = activeFilt ? `<div style="font-size:.64rem;color:#154f39;margin-top:6px;">Filtro activo — <span style="text-decoration:underline;cursor:pointer;" onclick="_consumoAwareFilter=null;renderConsumoDDD();">mostrar todos</span></div>` : '';
 
@@ -4136,7 +4136,7 @@ function renderConsumoDDD(){
     const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${a.antibiotico}</div><div>ΣDDD: ${a.ddd.toLocaleString('es-MX',{maximumFractionDigits:2})}</div><div>Clasificación AWaRe: ${a.aware}</div><div>Grupo: ${grupoFarmacologico(a.antibiotico)}</div>`);
     return `
     <div data-tipid="${tid}" style="display:grid;grid-template-columns:190px 1fr 60px;align-items:center;gap:8px;cursor:pointer;">
-      <span style="font-size:.74rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${awareBadge(a.aware)}${a.antibiotico}</span>
+      <span style="font-size:.74rem;color:#000;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${awareBadge(a.aware)}${a.antibiotico}</span>
       <div style="background:#f1f5f9;border-radius:5px;height:14px;position:relative;">
         <div style="width:${(a.ddd/maxDdd*100).toFixed(1)}%;background:${AWARE_COLORS[a.aware]||'#94a3b8'};height:14px;border-radius:5px;transition:width .3s;"></div>
       </div>
@@ -4157,7 +4157,7 @@ function renderConsumoDDD(){
   const gruposHtml=gruposOrdenados.map(([g,info])=>{
     const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${g}</div><div>ΣDDD: ${info.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})}</div><div style="color:#94a3b8;font-size:.66rem;margin-top:2px;">${info.items.join(', ')}</div>`);
     return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:150px 1fr 55px;align-items:center;gap:8px;cursor:pointer;">
-      <span style="font-size:.72rem;color:#374151;font-weight:600;">${g}</span>
+      <span style="font-size:.72rem;color:#000;font-weight:600;">${g}</span>
       <div style="background:#f1f5f9;border-radius:5px;height:12px;"><div style="width:${(info.ddd/maxGrupo*100).toFixed(1)}%;background:${GRUPO_COLORS[g]||'#94a3b8'};height:12px;border-radius:5px;transition:width .3s;"></div></div>
       <span style="font-size:.7rem;font-weight:700;color:#1e293b;text-align:right;">${info.ddd.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
     </div>`;
@@ -4231,7 +4231,7 @@ function renderConsumoDDD(){
         const tid=registerTip(`<div style="font-weight:700;">${k}</div><div>${awarePctActivo[k]}% (${(awareSumActivo[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD)</div>`);
         return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:10px 62px 42px 68px;align-items:center;gap:7px;font-size:.75rem;cursor:pointer;padding:2px 0;">
           <span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;"></span>
-          <span style="color:#374151;font-weight:600;">${k}</span>
+          <span style="color:#000;font-weight:600;">${k}</span>
           <span style="font-weight:800;color:#1e293b;">${awarePctActivo[k]}%</span>
           <span style="color:#94a3b8;font-size:.66rem;">(${(awareSumActivo[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})})</span>
         </div>`;
@@ -4294,7 +4294,7 @@ function renderConsumoDDD(){
           const tid=registerTip(`<div style="font-weight:700;">${c.abx}</div><div>%Sensibilidad (todo el hospital): ${c.pct}% (n=${c.n})</div><div>ΣDDD: ${c.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})}</div><div>AWaRe: ${c.aware}</div>`);
           return `<div data-tipid="${tid}" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;background:${bg};border-radius:8px;cursor:pointer;">
             <span style="font-weight:700;color:${col};font-size:.76rem;">${awareBadge(c.aware)}${c.abx}</span>
-            <span style="font-size:.68rem;color:#374151;">%S ${c.pct}% · ΣDDD ${c.ddd.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+            <span style="font-size:.68rem;color:#000;">%S ${c.pct}% · ΣDDD ${c.ddd.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
           </div>`;
         }).join('');
       }
@@ -4345,7 +4345,7 @@ function renderConsumoDDD(){
       const filasDiv=items.slice().sort((a,b)=>(b.dias_paciente||0)-(a.dias_paciente||0)).map(s=>{
         const tid=registerTip(`<div style="font-weight:700;">${s.nombre}</div><div>División: ${div}</div><div>Camas: ${Math.round(s.camas)}</div><div>Días paciente: ${Math.round(s.dias_paciente)}</div><div>Ocupación: ${s.ocupacion!=null?s.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</div>`);
         return `<tr data-tipid="${tid}" style="cursor:pointer;">
-          <td style="padding:5px 10px 5px 22px;color:#374151;">${s.nombre}</td>
+          <td style="padding:5px 10px 5px 22px;color:#000;">${s.nombre}</td>
           <td style="text-align:center;padding:5px;">${Math.round(s.camas)}</td>
           <td style="text-align:center;padding:5px;">${Math.round(s.dias_paciente).toLocaleString('es-MX')}</td>
           <td style="text-align:center;padding:5px;font-weight:700;color:${s.ocupacion>100?'#dc2626':'#374151'};">${s.ocupacion!=null?s.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</td>
@@ -4412,7 +4412,7 @@ function renderConsumoDDD(){
       const vals=ejes.map(e=>dd?Math.round((dd.por_aware_pct[e]||0)*10)/10:0);
       return `<div style="display:grid;grid-template-columns:14px 1fr 34px 34px 34px;align-items:center;gap:4px;font-size:.66rem;padding:2px 0;">
         <span style="width:9px;height:9px;border-radius:2px;background:${colHosp[h]||'#94a3b8'};display:inline-block;"></span>
-        <span style="color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${getHospitalDisplayName(h)}</span>
+        <span style="color:#000;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${getHospitalDisplayName(h)}</span>
         ${vals.map(v=>`<span style="text-align:right;font-weight:800;color:#1e293b;">${v}%</span>`).join('')}
       </div>`;
     }).join('');
@@ -4503,7 +4503,7 @@ function renderConsumoDDD(){
       return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2"/>${circles}`;
     }).join('');
     const xLabels=periodosConConsumo.map((p,i)=>`<text x="${padL+i*xStep}" y="${H-4}" text-anchor="middle" font-size="9" fill="#94a3b8">${MESES_ABBR[p.slice(5)]}</text>`).join('');
-    const legendTraz=topGrupos.map((g,gi)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${GRUPO_COLORS[g]||PALETTE[gi]};display:inline-block;"></span>${g}</div>`).join('');
+    const legendTraz=topGrupos.map((g,gi)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${GRUPO_COLORS[g]||PALETTE[gi]};display:inline-block;"></span>${g}</div>`).join('');
     trazadoresHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📉 Tendencia de grupos trazadores</div>
       <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">ΣDDD por grupo farmacológico, mes a mes (top 5 grupos) — solo meses con CONSABI cargado</div>
@@ -4556,7 +4556,7 @@ function renderConsumoDDD(){
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🌈 Composición AWaRe — comparativo entre hospitales</div>
         ${awareStackHtml}
-        <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">${['Access','Watch','Reserve'].map(k=>`<div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${AWARE_COLORS[k]};display:inline-block;"></span>${k}</div>`).join('')}</div>
+        <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">${['Access','Watch','Reserve'].map(k=>`<div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${AWARE_COLORS[k]};display:inline-block;"></span>${k}</div>`).join('')}</div>
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">⚠️ Antibióticos de mayor riesgo</div>
@@ -4814,7 +4814,7 @@ function renderCobertura(){
     const {c}=coberturaColor(pct);
     const tid=registerTip(`<div style="font-weight:700;">${abxName}</div><div>Cobertura ponderada: ${pct}%</div><div>Aislamientos con antibiograma: ${n}</div>`);
     return `<div data-tipid="${tid}" style="margin-bottom:10px;cursor:pointer;">
-      <div style="display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:3px;"><span style="font-weight:700;color:#374151;">${awareBadge(row?row.c:'?')}${abxName}</span><span style="font-weight:800;color:${c};">${pct}% <span style="color:#94a3b8;font-weight:600;">(n=${n})</span></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:3px;"><span style="font-weight:700;color:#000;">${awareBadge(row?row.c:'?')}${abxName}</span><span style="font-weight:800;color:${c};">${pct}% <span style="color:#94a3b8;font-weight:600;">(n=${n})</span></span></div>
       <div style="background:#f1f5f9;border-radius:6px;height:12px;"><div style="width:${pct}%;background:${c};height:12px;border-radius:6px;transition:width .3s;"></div></div>
     </div>`;
   }).join('') || `<div style="color:#94a3b8;font-size:.78rem;">Selecciona antibióticos arriba.</div>`;
@@ -4835,7 +4835,7 @@ function renderCobertura(){
         const filas=items.map(x=>{
           const tid=registerTip(`<div style="font-weight:700;">${c}</div><div>${x.abx}: ${x.pct}% S (n=${x.n})</div>`);
           return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:150px 1fr 45px;align-items:center;gap:6px;cursor:pointer;">
-            <span style="font-size:.7rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${x.abx}</span>
+            <span style="font-size:.7rem;color:#000;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${x.abx}</span>
             <div style="background:#f1f5f9;border-radius:5px;height:10px;"><div style="width:${x.pct}%;background:${x.color};height:10px;border-radius:5px;transition:width .3s;"></div></div>
             <span style="font-size:.68rem;font-weight:700;color:#1e293b;text-align:right;">${x.pct}%</span>
           </div>`;
@@ -4845,7 +4845,7 @@ function renderCobertura(){
           <div style="display:flex;flex-direction:column;gap:5px;">${filas}</div>
         </div>`;
       }).join('');
-      const legendAbx=abxSelSorted.map((abx,ai)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${PALETTE[ai%PALETTE.length]};display:inline-block;"></span>${abx}</div>`).join('');
+      const legendAbx=abxSelSorted.map((abx,ai)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${PALETTE[ai%PALETTE.length]};display:inline-block;"></span>${abx}</div>`).join('');
       crossCultivoHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🔬 Cobertura por ${dimCfg.label.toLowerCase()}</div>
         <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Útil para ver en qué focos infecciosos conviene cada antibiótico seleccionado · clic en un bloque para cambiar</div>
@@ -4882,10 +4882,10 @@ function renderCobertura(){
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🌡️ Mapa de calor — Sensibilidad global · ${_coberturaCultivo}</div>
       <div style="font-size:.68rem;color:#94a3b8;margin-bottom:8px;">Todos los microorganismos frecuentes × todos los antibióticos con datos. El color de cada celda es el %S — eso es lo que hace que sea un mapa de calor (no es una tabla común).</div>
       <div style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#dcfce7;border:1px solid #bbf7d0;display:inline-block;"></span>≥80% (buena cobertura)</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#fef3c7;border:1px solid #fde68a;display:inline-block;"></span>60–79% (intermedia)</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#fee2e2;border:1px solid #fecaca;display:inline-block;"></span>&lt;60% (baja cobertura)</div>
-        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#f8fafc;border:1px solid #e2e8f0;display:inline-block;"></span>· sin datos (n&lt;1)</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#000;"><span style="width:14px;height:14px;border-radius:3px;background:#dcfce7;border:1px solid #bbf7d0;display:inline-block;"></span>≥80% (buena cobertura)</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#000;"><span style="width:14px;height:14px;border-radius:3px;background:#fef3c7;border:1px solid #fde68a;display:inline-block;"></span>60–79% (intermedia)</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#000;"><span style="width:14px;height:14px;border-radius:3px;background:#fee2e2;border:1px solid #fecaca;display:inline-block;"></span>&lt;60% (baja cobertura)</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#000;"><span style="width:14px;height:14px;border-radius:3px;background:#f8fafc;border:1px solid #e2e8f0;display:inline-block;"></span>· sin datos (n&lt;1)</div>
       </div>
       <table style="border-collapse:collapse;font-size:.7rem;width:100%;">
         <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);"><th style="padding:6px 8px;color:#fff;text-align:left;">Microorganismo</th>${heatHead}</tr></thead>
@@ -4923,7 +4923,7 @@ function renderCobertura(){
       }).join('');
       const legendTrend=seriesPorAbx.map(s=>{
         const rowMeta=sriCultivo.find(r=>r.a===s.abx);
-        return `<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${s.color};display:inline-block;"></span>${awareBadge(rowMeta?rowMeta.c:'?')}${s.abx}</div>`;
+        return `<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${s.color};display:inline-block;"></span>${awareBadge(rowMeta?rowMeta.c:'?')}${s.abx}</div>`;
       }).join('');
       trendSensHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📈 Tendencia de sensibilidad · ${_coberturaCultivo}</div>
@@ -4993,7 +4993,7 @@ function renderCobertura(){
     else if(pct<60) insights.push(`⚠️ ${awareBadge(aware)}<b>${abxName}</b> sólo cubre <b>${pct}%</b> (n=${row.t}) — no se recomienda como esquema empírico en ${_coberturaCultivo.toLowerCase()}; reservar para uso dirigido por antibiograma.`);
     else insights.push(`◦ ${awareBadge(aware)}<b>${abxName}</b> cubre <b>${pct}%</b> (n=${row.t}) — zona intermedia, valorar uso dirigido.`);
   });
-  const insightsHtml=insights.length?insights.map(t=>`<div style="padding:8px 12px;background:#f8fafc;border-left:3px solid #154f39;border-radius:0 8px 8px 0;font-size:.76rem;color:#374151;line-height:1.5;">${t}</div>`).join(''):`<div style="color:#94a3b8;font-size:.78rem;">Selecciona antibióticos para ver la lectura automática.</div>`;
+  const insightsHtml=insights.length?insights.map(t=>`<div style="padding:8px 12px;background:#f8fafc;border-left:3px solid #154f39;border-radius:0 8px 8px 0;font-size:.76rem;color:#000;line-height:1.5;">${t}</div>`).join(''):`<div style="color:#94a3b8;font-size:.78rem;">Selecciona antibióticos para ver la lectura automática.</div>`;
 
   inner.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-top:14px;">
@@ -5121,7 +5121,7 @@ function renderRankingAntibioticos(){
   const barsTop15=top15.map(d=>{
     const tid=registerTip(`<div style="font-weight:700;">${d.antibiotico}</div><div>${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas (${totalVista?Math.round(d.piezas/totalVista*1000)/10:0}%)</div>`);
     return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:210px 1fr 60px;align-items:center;gap:10px;cursor:pointer;">
-      <span style="font-size:.74rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${awareBadge(d.aware)}${d.antibiotico}</span>
+      <span style="font-size:.74rem;color:#000;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${awareBadge(d.aware)}${d.antibiotico}</span>
       <div style="background:#f1f5f9;border-radius:5px;height:14px;"><div style="width:${(d.piezas/maxPiezas*100).toFixed(1)}%;background:${AWARE_COLORS[d.aware]||'#94a3b8'};height:14px;border-radius:5px;"></div></div>
       <span style="font-size:.72rem;font-weight:700;color:#1e293b;text-align:right;">${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
     </div>`;
@@ -5151,10 +5151,10 @@ function renderRankingAntibioticos(){
     }).join('');
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
       <div style="display:flex;align-items:flex-end;gap:3px;height:80px;">${barsHosp}</div>
-      <div style="font-size:.6rem;color:#374151;font-weight:700;text-align:center;max-width:110px;">${awareBadge(d.aware)}${d.antibiotico}</div>
+      <div style="font-size:.6rem;color:#000;font-weight:700;text-align:center;max-width:110px;">${awareBadge(d.aware)}${d.antibiotico}</div>
     </div>`;
   }).join('');
-  const legendHospComp=ids.map((h,hi)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${hospColors[hi]};display:inline-block;"></span>${getHospitalDisplayName(h)}</div>`).join('');
+  const legendHospComp=ids.map((h,hi)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${hospColors[hi]};display:inline-block;"></span>${getHospitalDisplayName(h)}</div>`).join('');
 
   inner.innerHTML=`
     <div>
