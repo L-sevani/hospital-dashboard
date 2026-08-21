@@ -3868,6 +3868,7 @@ let CONSUMO_DATA={};
 let ESPECIALIDAD_DATA=null;
 let _especialidadUnidad=null;
 let _especialidadPeriodo=null;
+let _especialidadAwareFiltro=null; // null = todos; o 'Access'/'Watch'/'Reserve' al hacer clic en la leyenda del donut
 
 let _awareFilter='all';
 
@@ -4774,8 +4775,15 @@ function renderCobertura(){
       .slice(0,8);
   }
 
-  // Antibióticos elegibles (con n>=3 en este cultivo), filtrados por Cuadro Básico si aplica, mayor a menor
-  const abxChecks = abxOptions.map(r=>{
+  // Antibióticos elegibles (con n>=3 en este cultivo), filtrados por Cuadro Básico si aplica.
+  // Los botones se muestran por grupo AWaRe (A, luego W, luego R) y alfabético dentro de cada grupo.
+  const ordenAware={A:0,W:1,R:2};
+  const abxParaBotones = abxOptions.slice().sort((a,b)=>{
+    const oa=ordenAware[a.c]!=null?ordenAware[a.c]:3, ob=ordenAware[b.c]!=null?ordenAware[b.c]:3;
+    if(oa!==ob) return oa-ob;
+    return a.a.localeCompare(b.a);
+  });
+  const abxChecks = abxParaBotones.map(r=>{
     const sel=_coberturaAbxSel.includes(r.a);
     const tid=registerTip(`<div style="font-weight:700;">${r.a}</div><div>%S global en ${_coberturaCultivo}: ${Math.round(r.pS*100)}% (n=${r.t})</div>`);
     return `<button data-tipid="${tid}" onclick="toggleCoberturaAbx('${r.a.replace(/'/g,"\\'")}')" style="padding:5px 11px;border-radius:14px;font-size:.7rem;font-weight:700;cursor:pointer;border:1.5px solid ${sel?'#154f39':'#e2e8f0'};background:${sel?'#ecfdf5':'#fff'};color:${sel?'#154f39':'#6b7280'};">${awareBadge(r.c)}${r.a}</button>`;
@@ -5223,6 +5231,12 @@ function _normalizarEspecialidadJS(txt){
 
 function setEspecialidadUnidad(u){
   _especialidadUnidad=u;
+  _especialidadAwareFiltro=null;
+  renderConsumoEspecialidad();
+}
+
+function toggleEspecialidadAwareFiltro(cat){
+  _especialidadAwareFiltro = (_especialidadAwareFiltro===cat) ? null : cat;
   renderConsumoEspecialidad();
 }
 
@@ -5247,8 +5261,16 @@ function renderConsumoEspecialidad(){
     return;
   }
   const unidadesOrdenadas=unidades
-    .map(u=>({u,total:porUnidad[u].especialidades.reduce((s,f)=>s+f.piezas,0)}))
-    .sort((a,b)=>b.total-a.total)
+    .map(u=>({
+      u,
+      esHospital: !!porUnidad[u].hospital_id,
+      numUmf: (u.match(/UMF\s*(\d+)/i)||[])[1] ? parseInt((u.match(/UMF\s*(\d+)/i)||[])[1],10) : 9999,
+    }))
+    .sort((a,b)=>{
+      if(a.esHospital!==b.esHospital) return a.esHospital?-1:1; // hospitales primero
+      if(a.esHospital && b.esHospital) return a.u.localeCompare(b.u); // hospitales entre si: alfabetico
+      return a.numUmf-b.numUmf; // UMF: numerico ascendente
+    })
     .map(x=>x.u);
   if(!_especialidadUnidad || !unidades.includes(_especialidadUnidad)) _especialidadUnidad=unidadesOrdenadas[0];
 
@@ -5328,7 +5350,105 @@ function renderConsumoEspecialidad(){
   let acc=0; const stops=[];
   segsOrden.forEach(k=>{const p=awareAggPct[k]||0; if(p<=0) return; stops.push(`${AWARE_COLORS[k]||'#94a3b8'} ${acc}% ${acc+p}%`); acc+=p;});
   const donutCss=stops.length?stops.join(', '):'#e2e8f0 0% 100%';
-  const legendDonut=segsOrden.filter(k=>awareAggPct[k]>0).map(k=>`<div style="display:flex;align-items:center;gap:6px;font-size:.76rem;"><span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;"></span><span style="color:#000;">${k}</span><span style="margin-left:auto;font-weight:700;color:#1e293b;">${awareAggPct[k]}%</span></div>`).join('');
+  const legendDonut=segsOrden.filter(k=>awareAggPct[k]>0).map(k=>{
+    const activo=_especialidadAwareFiltro===k;
+    const dimmed=_especialidadAwareFiltro && !activo;
+    const tid=registerTip(`<div style="font-weight:700;">${k}</div><div>${awareAggPct[k]}% (${(awareAgg[k]||0).toLocaleString('es-MX',{maximumFractionDigits:0})} piezas)</div><div style="color:#94a3b8;font-size:.66rem;">clic para filtrar la tabla de antibióticos</div>`);
+    return `<div data-tipid="${tid}" onclick="toggleEspecialidadAwareFiltro('${k}')" style="display:flex;align-items:center;gap:6px;font-size:.76rem;cursor:pointer;opacity:${dimmed?.4:1};padding:3px 4px;border-radius:6px;background:${activo?'#f0fdf4':'transparent'};border:1px solid ${activo?'#bbf7d0':'transparent'};">
+      <span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;"></span>
+      <span style="color:#000;">${k}</span>
+      <span style="margin-left:auto;font-weight:700;color:#1e293b;">${awareAggPct[k]}%</span>
+    </div>`;
+  }).join('');
+  const filtroHint=_especialidadAwareFiltro?`<div style="font-size:.64rem;color:#154f39;margin-top:6px;">Filtro activo: ${_especialidadAwareFiltro} — <span style="text-decoration:underline;cursor:pointer;" onclick="_especialidadAwareFiltro=null;renderConsumoEspecialidad();">quitar filtro</span></div>`:'';
+
+  // Tabla "Antibióticos más recetados" — usa el desglose por antibiótico (independiente
+  // de especialidad), filtrable por AWaRe con el clic en la leyenda del donut de arriba.
+  const listaAntibioticos=(infoUnidad.antibioticos||[])
+    .filter(a=>!_especialidadAwareFiltro || a.aware===_especialidadAwareFiltro)
+    .slice()
+    .sort((a,b)=>b.piezas-a.piezas);
+  const totalFiltrado=listaAntibioticos.reduce((s,a)=>s+a.piezas,0);
+  const maxAb=Math.max(...listaAntibioticos.map(a=>a.piezas),1);
+  const filasAbHtml=listaAntibioticos.slice(0,15).map(a=>{
+    const pct=totalUnidad?Math.round(a.piezas/totalUnidad*1000)/10:0;
+    const tid=registerTip(`<div style="font-weight:700;">${a.antibiotico}</div><div>${a.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas (${pct}% de ${_especialidadUnidad})</div><div>AWaRe: ${a.aware}</div>`);
+    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:170px 1fr 55px;align-items:center;gap:8px;cursor:pointer;">
+      <span style="font-size:.72rem;color:#000;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${awareBadge(a.aware)}${a.antibiotico}</span>
+      <div style="background:#f1f5f9;border-radius:5px;height:13px;"><div style="width:${(a.piezas/maxAb*100).toFixed(1)}%;background:${AWARE_COLORS[a.aware]||'#94a3b8'};height:13px;border-radius:5px;"></div></div>
+      <span style="font-size:.7rem;font-weight:700;color:#000;text-align:right;">${a.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+    </div>`;
+  }).join('') || `<div style="color:#94a3b8;font-size:.78rem;padding:10px 0;">Sin antibióticos en el filtro seleccionado.</div>`;
+
+  // "Algo más útil": resumen ejecutivo automático — el antibiótico dominante y si es de
+  // categoría Watch/Reserve pero acapara gran parte del consumo (señal de alerta simple).
+  const top1=listaAntibioticos[0];
+  let alertaHtml='';
+  if(top1){
+    const pctTop1=totalUnidad?Math.round(top1.piezas/totalUnidad*100):0;
+    const esPreocupante=(top1.aware==='Watch'||top1.aware==='Reserve') && pctTop1>=25;
+    alertaHtml=`<div style="background:${esPreocupante?'#fef2f2':'#f0fdf4'};border:1px solid ${esPreocupante?'#fecaca':'#bbf7d0'};border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:.74rem;color:#374151;">
+      ${esPreocupante?'⚠️':'ℹ️'} <b>${top1.antibiotico}</b>${awareBadge(top1.aware)} concentra el <b>${pctTop1}%</b> de las piezas de esta unidad${esPreocupante?' — vale la pena revisar si el uso está justificado, por ser categoría '+top1.aware:''}.
+    </div>`;
+  }
+
+  // 🧮 DDD estimado por especialidad — ESTIMACIÓN DERIVADA, no un dato oficial de CONSABI.
+  // Metodología: CONSABI reporta, por antibiótico, tanto el DDD como las piezas (ambos
+  // a nivel hospital completo). De ahí se saca el factor implícito DDD÷pieza para cada
+  // antibiótico de ESE hospital y mes. Ese mismo factor se aplica a las piezas que la
+  // Plantilla de Recetas ya tiene desglosadas por especialidad, para estimar cuántos DDD
+  // corresponderían a cada una. Solo aplica a los 3 hospitales que sí están en CONSABI
+  // (las UMF no tienen CONSABI, por eso no aparece esta sección para ellas).
+  let dddEstimadoHtml='';
+  if(hospitalId && CONSUMO_DATA[hospitalId]){
+    const perCons=CONSUMO_DATA[hospitalId].periodos[_especialidadPeriodo];
+    if(perCons && perCons.consumo_cargado && perCons.top_antibioticos && perCons.top_antibioticos.length){
+      const nombresConsabi=perCons.top_antibioticos.map(a=>a.antibiotico);
+      const factorPorNombreConsabi={};
+      perCons.top_antibioticos.forEach(a=>{
+        if(a.piezas && a.piezas>0) factorPorNombreConsabi[a.antibiotico]=a.ddd/a.piezas;
+      });
+      const filasEstimado=filas.map(f=>{
+        let dddEst=0, huboMatch=false;
+        Object.entries(f.por_antibiotico||{}).forEach(([nombreAb,piezasAb])=>{
+          const match=matchConsumoName(nombreAb,nombresConsabi);
+          if(match && factorPorNombreConsabi[match]!=null){
+            dddEst+=piezasAb*factorPorNombreConsabi[match];
+            huboMatch=true;
+          }
+        });
+        return {especialidad:f.especialidad,piezas:f.piezas,dddEst,huboMatch};
+      }).filter(x=>x.huboMatch).sort((a,b)=>b.dddEst-a.dddEst);
+      const totalDddEst=filasEstimado.reduce((s,x)=>s+x.dddEst,0);
+      if(filasEstimado.length){
+        const filasHtml=filasEstimado.slice(0,12).map(x=>{
+          const pct=totalDddEst?Math.round(x.dddEst/totalDddEst*1000)/10:0;
+          const tid=registerTip(`<div style="font-weight:700;">${x.especialidad}</div><div>DDD estimado: ${x.dddEst.toLocaleString('es-MX',{maximumFractionDigits:1})} (${pct}%)</div><div>Piezas: ${x.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</div>`);
+          return `<tr data-tipid="${tid}" style="cursor:pointer;">
+            <td style="padding:5px 10px;font-weight:700;color:#000;">${x.especialidad}</td>
+            <td style="text-align:center;padding:5px 6px;color:#000;">${x.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+            <td style="text-align:center;padding:5px 6px;font-weight:800;color:#000;">${x.dddEst.toLocaleString('es-MX',{maximumFractionDigits:1})}</td>
+            <td style="text-align:center;padding:5px 6px;color:#000;">${pct}%</td>
+          </tr>`;
+        }).join('');
+        dddEstimadoHtml=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:16px 18px;margin-top:14px;">
+          <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:6px;">🧮 DDD estimado por especialidad <span style="font-size:.68rem;font-weight:700;color:#92400e;background:#fef3c7;padding:2px 8px;border-radius:10px;">ESTIMACIÓN DERIVADA — NO ES DATO OFICIAL DE CONSABI</span></div>
+          <p style="font-size:.72rem;color:#374151;line-height:1.6;margin:0 0 12px;">
+            CONSABI reporta, por cada antibiótico, tanto el <b>DDD</b> como las <b>piezas</b> consumidas — pero a nivel de todo el hospital, sin desglose por especialidad. Aquí se calcula el factor implícito <b>DDD ÷ pieza</b> de cada antibiótico usando esos dos números oficiales de CONSABI (${_especialidadPeriodo}), y ese mismo factor se aplica a las piezas que la Plantilla de Recetas sí tiene desglosadas por especialidad. Así se estima cuántos DDD le corresponderían a cada especialidad, asumiendo que la presentación/dosis del medicamento es la misma sin importar quién lo recete. <b>Es una aproximación razonable, no una cifra que CONSABI calcule ni certifique.</b> Solo se muestran especialidades donde al menos un antibiótico coincidió por nombre entre ambas fuentes.
+          </p>
+          <table style="width:100%;border-collapse:collapse;font-size:.74rem;">
+            <thead><tr style="background:linear-gradient(135deg,#92400e,#b45309);">
+              <th style="text-align:left;padding:6px 10px;color:#fff;">Especialidad</th>
+              <th style="padding:6px 6px;color:#fff;">Piezas</th>
+              <th style="padding:6px 6px;color:#fff;">DDD estimado</th>
+              <th style="padding:6px 6px;color:#fff;">%</th>
+            </tr></thead>
+            <tbody>${filasHtml}</tbody>
+          </table>
+        </div>`;
+      }
+    }
+  }
 
   inner.innerHTML=`
     <div style="padding-top:14px;">
@@ -5350,14 +5470,23 @@ function renderConsumoEspecialidad(){
           <div style="width:110px;height:110px;border-radius:50%;background:conic-gradient(${donutCss});flex-shrink:0;position:relative;">
             <div style="position:absolute;inset:15px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;color:#154f39;text-align:center;">${totalUnidad.toLocaleString('es-MX',{maximumFractionDigits:0})}<br><span style="font-size:.53rem;font-weight:600;color:#94a3b8;">PIEZAS</span></div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px;flex:1;">${legendDonut}</div>
+          <div style="display:flex;flex-direction:column;gap:6px;flex:1;">${legendDonut}${filtroHint}</div>
         </div>
       </div>
     </div>
-    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;margin-top:14px;">
-      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Top especialidades por piezas — ${_especialidadUnidad}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}</div>
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">💊 Antibióticos más recetados — ${_especialidadUnidad}</div>
+        <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${_especialidadAwareFiltro?`Filtrado a categoría ${_especialidadAwareFiltro} (${totalFiltrado.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas) · `:''}Clic en la leyenda AWaRe de la izquierda para filtrar</div>
+        ${alertaHtml}
+        <div style="display:flex;flex-direction:column;gap:8px;">${filasAbHtml}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Top especialidades por piezas — ${_especialidadUnidad}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}</div>
+      </div>
     </div>
+    ${dddEstimadoHtml}
   `;
   wireTips(inner);
 }
