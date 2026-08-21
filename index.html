@@ -3416,6 +3416,26 @@ async function fetchConsumoData(){
   throw lastErr||new Error('No se pudo cargar consumo_data.json');
 }
 
+async function fetchEspecialidadData(){
+  const stamp='?ts='+Date.now();
+  const basePath=(window.location.pathname||'').replace(/[^/]*$/, '');
+  const tries=[
+    basePath+'consumo_especialidad_data.json'+stamp,
+    'consumo_especialidad_data.json'+stamp,
+    './consumo_especialidad_data.json'+stamp,
+    '/consumo_especialidad_data.json'+stamp
+  ];
+  let lastErr=null;
+  for(const url of [...new Set(tries)]){
+    try{
+      const resp=await fetch(url,{cache:'no-store'});
+      if(!resp.ok) throw new Error(`HTTP ${resp.status} @ ${url}`);
+      return await resp.json();
+    }catch(err){ lastErr=err; }
+  }
+  throw lastErr||new Error('No se pudo cargar consumo_especialidad_data.json');
+}
+
 async function initDashboard(){
   let loadFailed=false;
   try {
@@ -3461,6 +3481,12 @@ async function initDashboard(){
   } catch (e) {
     console.warn('No se pudo cargar consumo_data.json (el módulo de Consumo/Cobertura Empírica quedará vacío hasta que exista ese archivo):', e);
     CONSUMO_DATA = {};
+  }
+  try {
+    ESPECIALIDAD_DATA = await fetchEspecialidadData();
+  } catch (e) {
+    console.warn('No se pudo cargar consumo_especialidad_data.json (el módulo de Consumo por Especialidad quedará vacío hasta que exista ese archivo):', e);
+    ESPECIALIDAD_DATA = null;
   }
   if(activeSection==='consumo') renderConsumo();
 }
@@ -3839,6 +3865,9 @@ const AWARE_DATA=[
   {n:'Tinidazol + Diloxanida',e:'Tinidazole + diloxanide',c:'N'}
 ];
 let CONSUMO_DATA={};
+let ESPECIALIDAD_DATA=null;
+let _especialidadUnidad=null;
+let _especialidadPeriodo=null;
 
 let _awareFilter='all';
 
@@ -4010,16 +4039,18 @@ function renderConsumo(){
       <h2 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin:0 0 4px;">💉 Consumo de Antimicrobianos</h2>
       <p style="font-size:.75rem;color:#64748b;margin:0;">Fuente: CONSABI (consumo, AWaRe) + PARTE II (camas, días paciente) + antibiogramas (sensibilidad).</p>
     </div>
-    <div style="display:flex;gap:4px;border-bottom:2px solid #154f39;margin-top:6px;">
+    <div style="display:flex;gap:4px;border-bottom:2px solid #154f39;margin-top:6px;flex-wrap:wrap;">
       ${tabBtn('ddd','📊 DDD / 100 camas')}
       ${tabBtn('cobertura','🎯 Cobertura Empírica')}
       ${tabBtn('ranking','🏆 Ranking de Antibióticos')}
+      ${tabBtn('especialidad','🩺 Consumo por Especialidad')}
     </div>
     <div id="consumo-inner"></div>
   `;
   if(_consumoView==='ddd') renderConsumoDDD();
   else if(_consumoView==='cobertura') renderCobertura();
-  else renderRankingAntibioticos();
+  else if(_consumoView==='ranking') renderRankingAntibioticos();
+  else renderConsumoEspecialidad();
 }
 
 function toggleAwareFilter(cat){
@@ -5184,6 +5215,152 @@ function renderRankingAntibioticos(){
   wireTips(inner);
 }
 
+
+/* ─── CONSUMO POR ESPECIALIDAD (cruce Recetas × Catálogo de Personal) ── */
+function _normalizarEspecialidadJS(txt){
+  return (txt||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim().replace(/\s+/g,' ');
+}
+
+function setEspecialidadUnidad(u){
+  _especialidadUnidad=u;
+  renderConsumoEspecialidad();
+}
+
+function renderConsumoEspecialidad(){
+  const inner=document.getElementById('consumo-inner');
+  if(!inner) return;
+  _tipRegistry={};
+  if(!ESPECIALIDAD_DATA || !ESPECIALIDAD_DATA.periodos || !Object.keys(ESPECIALIDAD_DATA.periodos).length){
+    inner.innerHTML=`<div style="padding:40px;text-align:center;color:#94a3b8;">Aún no hay datos de consumo por especialidad cargados.<br><span style="font-size:.78rem;">Genera <code>consumo_especialidad_data.json</code> con <code>consumo_por_especialidad.py --anual</code> y colócalo junto a <code>index.html</code>.</span></div>`;
+    return;
+  }
+  const periodosEsp=Object.keys(ESPECIALIDAD_DATA.periodos).sort();
+  if(!_especialidadPeriodo || !ESPECIALIDAD_DATA.periodos[_especialidadPeriodo]) _especialidadPeriodo=periodosEsp[periodosEsp.length-1];
+  const datosDelPeriodo=ESPECIALIDAD_DATA.periodos[_especialidadPeriodo];
+
+  const periodoTabs=periodosEsp.map(p=>`<button onclick="_especialidadPeriodo='${p}';_especialidadUnidad=null;renderConsumoEspecialidad();" style="padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid ${p===_especialidadPeriodo?'#154f39':'#e2e8f0'};background:${p===_especialidadPeriodo?'#ecfdf5':'#fff'};color:${p===_especialidadPeriodo?'#154f39':'#6b7280'};">${p}</button>`).join('');
+
+  const porUnidad=datosDelPeriodo.por_unidad||{};
+  const unidades=Object.keys(porUnidad);
+  if(!unidades.length){
+    inner.innerHTML=`<div style="padding-top:14px;">${periodoTabs}</div><div style="padding:40px;text-align:center;color:#94a3b8;">Sin datos para ${_especialidadPeriodo}.</div>`;
+    return;
+  }
+  const unidadesOrdenadas=unidades
+    .map(u=>({u,total:porUnidad[u].especialidades.reduce((s,f)=>s+f.piezas,0)}))
+    .sort((a,b)=>b.total-a.total)
+    .map(x=>x.u);
+  if(!_especialidadUnidad || !unidades.includes(_especialidadUnidad)) _especialidadUnidad=unidadesOrdenadas[0];
+
+  const unidadTabs=unidadesOrdenadas.map(u=>{
+    const total=porUnidad[u].especialidades.reduce((s,f)=>s+f.piezas,0);
+    const tid=registerTip(`<div style="font-weight:700;">${u}</div><div>${total.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas</div>`);
+    return `<button data-tipid="${tid}" onclick="setEspecialidadUnidad('${u.replace(/'/g,"\\'")}')" style="padding:6px 13px;border-radius:18px;font-size:.72rem;font-weight:700;cursor:pointer;border:1.5px solid ${u===_especialidadUnidad?'#154f39':'#e2e8f0'};background:${u===_especialidadUnidad?'#154f39':'#fff'};color:${u===_especialidadUnidad?'#fff':'#000'};">${u}</button>`;
+  }).join('');
+
+  const infoUnidad=porUnidad[_especialidadUnidad];
+  const filas=infoUnidad.especialidades.slice().sort((a,b)=>b.piezas-a.piezas);
+  const totalUnidad=filas.reduce((s,f)=>s+f.piezas,0);
+
+  const hospitalId=infoUnidad.hospital_id;
+  const serviciosNormalizados={};
+  if(hospitalId && CONSUMO_DATA[hospitalId] && _consumoPeriodo){
+    const per=CONSUMO_DATA[hospitalId].periodos[_consumoPeriodo];
+    if(per && per.servicios){
+      Object.entries(per.servicios).forEach(([serv,info2])=>{
+        serviciosNormalizados[_normalizarEspecialidadJS(serv)]=info2;
+      });
+    }
+  }
+
+  const kpis=[
+    {label:'Total piezas antibiótico (OOAD)',val:datosDelPeriodo.total_piezas_antibioticos.toLocaleString('es-MX',{maximumFractionDigits:0})},
+    {label:'Sin médico registrado en receta',val:datosDelPeriodo.piezas_sin_medico_registrado.toLocaleString('es-MX',{maximumFractionDigits:0})},
+    {label:'Médico sin catálogo',val:`${datosDelPeriodo.piezas_medico_sin_catalogo.toLocaleString('es-MX',{maximumFractionDigits:0})} (${datosDelPeriodo.matriculas_prescriptoras_sin_catalogo} matrículas)`},
+    {label:`Piezas en ${_especialidadUnidad}`,val:totalUnidad.toLocaleString('es-MX',{maximumFractionDigits:0})},
+  ];
+  const kpiHtml=kpis.map(k=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;flex:1;min-width:170px;"><div style="font-size:.64rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.03em;">${k.label}</div><div style="font-size:1.1rem;font-weight:800;color:#154f39;margin-top:2px;">${k.val}</div></div>`).join('');
+
+  const filasTabla=filas.map(f=>{
+    const entradasAware=Object.entries(f.por_aware||{}).sort((a,b)=>b[1]-a[1]);
+    const dominante=entradasAware[0];
+    const cruzada=serviciosNormalizados[f.especialidad_normalizada];
+    const piezasPorCama=(cruzada && cruzada.camas)?Math.round(f.piezas/cruzada.camas*10)/10:null;
+    const tid=registerTip(`<div style="font-weight:700;">${f.especialidad}</div><div>${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas · ${f.num_medicos} médico(s)</div>${entradasAware.map(([k,v])=>`<div>${k}: ${v.toLocaleString('es-MX',{maximumFractionDigits:0})} (${f.por_aware_pct[k]}%)</div>`).join('')}`);
+    return `<tr data-tipid="${tid}" style="cursor:pointer;">
+      <td style="padding:5px 10px;font-weight:700;color:#000;">${f.especialidad}</td>
+      <td style="text-align:center;padding:5px 6px;font-weight:800;color:#000;">${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
+      <td style="text-align:center;padding:5px 6px;color:#000;">${f.num_medicos||'—'}</td>
+      <td style="text-align:center;padding:5px 6px;">${dominante?`${awareBadge(dominante[0])}<span style="color:#000;">${Math.round(f.por_aware_pct[dominante[0]]||0)}%</span>`:'—'}</td>
+      <td style="text-align:center;padding:5px 6px;color:#000;">${piezasPorCama!=null?piezasPorCama:'<span style="color:#cbd5e1;">N/D</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  const tablaHtml=`<table style="width:100%;border-collapse:collapse;font-size:.76rem;">
+    <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
+      <th style="text-align:left;padding:7px 10px;color:#fff;">Especialidad</th>
+      <th style="padding:7px 6px;color:#fff;">Piezas</th>
+      <th style="padding:7px 6px;color:#fff;">Médicos</th>
+      <th style="padding:7px 6px;color:#fff;">AWaRe dominante</th>
+      <th style="padding:7px 6px;color:#fff;">Piezas/cama</th>
+    </tr></thead>
+    <tbody>${filasTabla}</tbody>
+  </table>`;
+
+  const top12=filas.slice(0,12);
+  const maxPiezas=Math.max(...top12.map(f=>f.piezas),1);
+  const barsHtml=top12.map(f=>{
+    const dominante=Object.entries(f.por_aware||{}).sort((a,b)=>b[1]-a[1])[0];
+    const color=dominante?(AWARE_COLORS[dominante[0]]||'#94a3b8'):'#94a3b8';
+    const tid=registerTip(`<div style="font-weight:700;">${f.especialidad}</div><div>${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas</div>`);
+    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:190px 1fr 55px;align-items:center;gap:8px;cursor:pointer;">
+      <span style="font-size:.72rem;color:#000;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.especialidad}</span>
+      <div style="background:#f1f5f9;border-radius:5px;height:13px;"><div style="width:${(f.piezas/maxPiezas*100).toFixed(1)}%;background:${color};height:13px;border-radius:5px;"></div></div>
+      <span style="font-size:.7rem;font-weight:700;color:#000;text-align:right;">${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+    </div>`;
+  }).join('');
+
+  const awareAgg={};
+  filas.forEach(f=>Object.entries(f.por_aware||{}).forEach(([k,v])=>{awareAgg[k]=(awareAgg[k]||0)+v;}));
+  const awareAggPct={};
+  Object.entries(awareAgg).forEach(([k,v])=>{awareAggPct[k]=totalUnidad?Math.round(v/totalUnidad*1000)/10:0;});
+  const segsOrden=Object.keys(awareAggPct).sort((a,b)=>awareAggPct[b]-awareAggPct[a]);
+  let acc=0; const stops=[];
+  segsOrden.forEach(k=>{const p=awareAggPct[k]||0; if(p<=0) return; stops.push(`${AWARE_COLORS[k]||'#94a3b8'} ${acc}% ${acc+p}%`); acc+=p;});
+  const donutCss=stops.length?stops.join(', '):'#e2e8f0 0% 100%';
+  const legendDonut=segsOrden.filter(k=>awareAggPct[k]>0).map(k=>`<div style="display:flex;align-items:center;gap:6px;font-size:.76rem;"><span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;"></span><span style="color:#000;">${k}</span><span style="margin-left:auto;font-weight:700;color:#1e293b;">${awareAggPct[k]}%</span></div>`).join('');
+
+  inner.innerHTML=`
+    <div style="padding-top:14px;">
+      <h3 style="font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 4px;">🩺 Consumo de Antibióticos por Especialidad Médica</h3>
+      <p style="font-size:.72rem;color:#64748b;margin:0;">Cruce Plantilla de Recetas (matrícula del médico prescriptor) × Catálogo de Especialidades/Personal. Piezas dispensadas (no DDD). La clasificación AWaRe viene directo de la propia Plantilla de Recetas, sin usar CONSABI.</p>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:10px;"><span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Mes:</span>${periodoTabs}</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;">${kpiHtml}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:14px;">${unidadTabs}</div>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">📋 Especialidades — ${_especialidadUnidad}</div>
+        <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${hospitalId?`Piezas/cama cruzado con PARTE II donde el nombre de especialidad coincide exacto (período ${_consumoPeriodo||'—'}). Sin match = N/D, no se fuerza el emparejamiento.`:'Esta unidad no tiene equivalente en PARTE II (solo cubre los 3 hospitales, no UMF), por eso no hay piezas/cama aquí.'}</div>
+        ${tablaHtml}
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">🌐 Clasificación AWaRe — ${_especialidadUnidad}</div>
+        <div style="display:flex;align-items:center;gap:18px;">
+          <div style="width:110px;height:110px;border-radius:50%;background:conic-gradient(${donutCss});flex-shrink:0;position:relative;">
+            <div style="position:absolute;inset:15px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;color:#154f39;text-align:center;">${totalUnidad.toLocaleString('es-MX',{maximumFractionDigits:0})}<br><span style="font-size:.53rem;font-weight:600;color:#94a3b8;">PIEZAS</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;flex:1;">${legendDonut}</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;margin-top:14px;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Top especialidades por piezas — ${_especialidadUnidad}</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}</div>
+    </div>
+  `;
+  wireTips(inner);
+}
 
 function buildAwareFilters(){
   const box=document.getElementById('aware-filters'); if(!box) return;
