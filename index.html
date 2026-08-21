@@ -3976,11 +3976,13 @@ function renderConsumo(){
     <div style="display:flex;gap:4px;border-bottom:2px solid #154f39;margin-top:6px;">
       ${tabBtn('ddd','📊 DDD / 100 camas')}
       ${tabBtn('cobertura','🎯 Cobertura Empírica')}
+      ${tabBtn('ranking','🏆 Ranking de Antibióticos')}
     </div>
     <div id="consumo-inner"></div>
   `;
   if(_consumoView==='ddd') renderConsumoDDD();
-  else renderCobertura();
+  else if(_consumoView==='cobertura') renderCobertura();
+  else renderRankingAntibioticos();
 }
 
 function toggleAwareFilter(cat){
@@ -4880,6 +4882,129 @@ function renderCobertura(){
         <div style="display:flex;flex-direction:column;gap:8px;">${insightsHtml}</div>
       </div>
       ${bubbleHtml}
+    </div>
+  `;
+  wireTips(inner);
+}
+
+/* ─── RANKING DE ANTIBIÓTICOS (hoja "Análisis" de CONSABI, por piezas) ── */
+function renderRankingAntibioticos(){
+  const inner=document.getElementById('consumo-inner');
+  if(!inner) return;
+  _tipRegistry={};
+  const ids=consumoHospIds();
+  const periodosMap=CONSUMO_DATA[_consumoHospital].periodos;
+  const periodos=Object.keys(periodosMap).sort();
+  const periodosConConsumo=periodos.filter(p=>periodosMap[p].consumo_cargado);
+  if(!_consumoPeriodo || !periodosMap[_consumoPeriodo]) _consumoPeriodo=periodosConConsumo[periodosConConsumo.length-1]||periodos[periodos.length-1];
+
+  const perActual=periodosMap[_consumoPeriodo]&&periodosMap[_consumoPeriodo].consumo_cargado?_consumoPeriodo:null;
+  if(!perActual){
+    inner.innerHTML=`<div style="padding:40px;text-align:center;color:#94a3b8;">Selecciona (en la pestaña DDD/100 camas) un mes con consumo cargado para ver el ranking.</div>`;
+    return;
+  }
+
+  const datosPorHosp={};
+  ids.forEach(h=>{
+    const dd=consumoParaHospital(h,perActual,_consumoModo);
+    datosPorHosp[h]=(dd&&dd.top_antibioticos)?dd.top_antibioticos:[];
+  });
+
+  // Consolidado Delegación (OOAD): suma piezas y ddd por antibiótico entre los hospitales
+  const delegacion={};
+  ids.forEach(h=>{
+    datosPorHosp[h].forEach(a=>{
+      if(!delegacion[a.antibiotico]) delegacion[a.antibiotico]={antibiotico:a.antibiotico,piezas:0,ddd:0,aware:a.aware};
+      delegacion[a.antibiotico].piezas+=a.piezas||0;
+      delegacion[a.antibiotico].ddd+=a.ddd||0;
+    });
+  });
+  const delegacionArr=Object.values(delegacion).sort((a,b)=>b.piezas-a.piezas);
+  const totalPiezasDeleg=delegacionArr.reduce((s,x)=>s+x.piezas,0);
+  const totalesPorHosp={};
+  ids.forEach(h=>{totalesPorHosp[h]=datosPorHosp[h].reduce((s,x)=>s+(x.piezas||0),0);});
+
+  const awareAbrev={Access:'A',Watch:'W',Reserve:'R','Sin clasificar':'?'};
+  const filasTabla=delegacionArr.map(d=>{
+    const pctDeleg=totalPiezasDeleg?Math.round(d.piezas/totalPiezasDeleg*1000)/10:0;
+    const cellsHosp=ids.map(h=>{
+      const entry=datosPorHosp[h].find(x=>x.antibiotico===d.antibiotico);
+      const piezasH=entry?entry.piezas:0;
+      const pctH=totalesPorHosp[h]?Math.round(piezasH/totalesPorHosp[h]*1000)/10:0;
+      return `<td style="text-align:center;padding:5px 6px;">${piezasH?piezasH.toLocaleString('es-MX',{maximumFractionDigits:0}):'—'}<div style="font-size:.6rem;color:#94a3b8;">${piezasH?pctH+'%':''}</div></td>`;
+    }).join('');
+    const tid=registerTip(`<div style="font-weight:700;">${d.antibiotico}</div><div>AWaRe: ${d.aware}</div><div>Piezas delegación: ${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} (${pctDeleg}%)</div>`);
+    return `<tr data-tipid="${tid}" style="cursor:pointer;">
+      <td style="padding:5px 10px;font-weight:700;color:#154f39;">${d.antibiotico} <span style="font-size:.62rem;font-weight:700;color:${AWARE_COLORS[d.aware]||'#94a3b8'};">(${awareAbrev[d.aware]||'?'})</span></td>
+      <td style="text-align:center;padding:5px 6px;font-weight:800;color:#1e293b;">${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}<div style="font-size:.62rem;color:#94a3b8;font-weight:600;">${pctDeleg}%</div></td>
+      ${cellsHosp}
+    </tr>`;
+  }).join('');
+  const headerHosp=ids.map(h=>`<th style="padding:7px 6px;color:#fff;">${getHospitalDisplayName(h)}</th>`).join('');
+  const tablaHtml=`<table style="width:100%;border-collapse:collapse;font-size:.74rem;">
+    <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
+      <th style="text-align:left;padding:7px 10px;color:#fff;">Antibiótico</th>
+      <th style="padding:7px 6px;color:#fff;">Delegación</th>
+      ${headerHosp}
+    </tr></thead>
+    <tbody>${filasTabla}</tbody>
+  </table>`;
+
+  // Gráfica: Top 15 delegación (piezas), coloreado por AWaRe
+  const top15=delegacionArr.slice(0,15);
+  const maxPiezas=Math.max(...top15.map(d=>d.piezas),1);
+  const barsTop15=top15.map(d=>{
+    const tid=registerTip(`<div style="font-weight:700;">${d.antibiotico}</div><div>${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas (${totalPiezasDeleg?Math.round(d.piezas/totalPiezasDeleg*1000)/10:0}%)</div>`);
+    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:150px 1fr 55px;align-items:center;gap:8px;cursor:pointer;">
+      <span style="font-size:.72rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.antibiotico}</span>
+      <div style="background:#f1f5f9;border-radius:5px;height:13px;"><div style="width:${(d.piezas/maxPiezas*100).toFixed(1)}%;background:${AWARE_COLORS[d.aware]||'#94a3b8'};height:13px;border-radius:5px;"></div></div>
+      <span style="font-size:.7rem;font-weight:700;color:#1e293b;text-align:right;">${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+    </div>`;
+  }).join('');
+
+  // Gráfica: comparativo top 6 antibióticos entre hospitales
+  const top6=delegacionArr.slice(0,6);
+  const maxHosp=Math.max(...top6.flatMap(d=>ids.map(h=>{
+    const e=datosPorHosp[h].find(x=>x.antibiotico===d.antibiotico);
+    return e?e.piezas:0;
+  })),1);
+  const hospColors=['#154f39','#2563eb','#d97706'];
+  const compGrupoHtml=top6.map(d=>{
+    const barsHosp=ids.map((h,hi)=>{
+      const e=datosPorHosp[h].find(x=>x.antibiotico===d.antibiotico);
+      const val=e?e.piezas:0;
+      const tid=registerTip(`<div style="font-weight:700;">${getHospitalDisplayName(h)}</div><div>${d.antibiotico}: ${val.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas</div>`);
+      return `<div data-tipid="${tid}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;min-width:20px;">
+        <div style="font-size:.58rem;font-weight:700;color:${hospColors[hi]||'#94a3b8'};">${val?val.toLocaleString('es-MX',{maximumFractionDigits:0}):''}</div>
+        <div style="width:100%;max-width:20px;background:${hospColors[hi]||'#94a3b8'};border-radius:3px 3px 0 0;height:${Math.max(2,val/maxHosp*70)}px;"></div>
+      </div>`;
+    }).join('');
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div style="display:flex;align-items:flex-end;gap:3px;height:80px;">${barsHosp}</div>
+      <div style="font-size:.6rem;color:#374151;font-weight:700;text-align:center;max-width:90px;">${d.antibiotico}</div>
+    </div>`;
+  }).join('');
+  const legendHospComp=ids.map((h,hi)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${hospColors[hi]};display:inline-block;"></span>${getHospitalDisplayName(h)}</div>`).join('');
+
+  inner.innerHTML=`
+    <div style="padding-top:14px;">
+      <h3 style="font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 4px;">🏆 Ranking de Antibióticos por Piezas Consumidas · ${perActual}${_consumoModo==='acumulado'?' (acumulado)':''}</h3>
+      <p style="font-size:.72rem;color:#64748b;margin:0;">Reproduce la tabla "Etiquetas de fila" de la hoja "Análisis" de CONSABI. A diferencia del resto del dashboard, esta vista usa <b>piezas consumidas</b> (unidades físicas dispensadas, columna "Consumo real de piezas"), no DDD — es la métrica que usa esa hoja específica del Excel.</p>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;margin-top:14px;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">📋 Comparativo Delegación vs. Hospitales</div>
+      ${tablaHtml}
+    </div>
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Top 15 antibióticos — Delegación (piezas)</div>
+        <div style="display:flex;flex-direction:column;gap:7px;">${barsTop15}</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">⚖️ Top 6 — comparativo entre hospitales</div>
+        <div style="display:flex;gap:8px;justify-content:space-around;flex-wrap:wrap;">${compGrupoHtml}</div>
+        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">${legendHospComp}</div>
+      </div>
     </div>
   `;
   wireTips(inner);
