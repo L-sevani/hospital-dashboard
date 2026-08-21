@@ -3868,7 +3868,7 @@ let CONSUMO_DATA={};
 let ESPECIALIDAD_DATA=null;
 let _especialidadUnidad=null;
 let _especialidadPeriodo=null;
-let _especialidadAwareFiltro=null; // null = todos; o 'Access'/'Watch'/'Reserve' al hacer clic en la leyenda del donut
+let _especialidadAwareFiltro=null; // null = todos; o un Set con las categorías activas (selección múltiple)
 
 let _awareFilter='all';
 
@@ -5236,7 +5236,11 @@ function setEspecialidadUnidad(u){
 }
 
 function toggleEspecialidadAwareFiltro(cat){
-  _especialidadAwareFiltro = (_especialidadAwareFiltro===cat) ? null : cat;
+  if(!_especialidadAwareFiltro) _especialidadAwareFiltro=new Set();
+  else _especialidadAwareFiltro=new Set(_especialidadAwareFiltro); // copia, no mutar el estado previo directo
+  if(_especialidadAwareFiltro.has(cat)) _especialidadAwareFiltro.delete(cat);
+  else _especialidadAwareFiltro.add(cat);
+  if(_especialidadAwareFiltro.size===0) _especialidadAwareFiltro=null;
   renderConsumoEspecialidad();
 }
 
@@ -5314,7 +5318,7 @@ function renderConsumoEspecialidad(){
   // de especialidades y la lectura automática solo muestran las que sí tienen consumo en
   // esa categoría. El donut en sí sigue mostrando la distribución completa (es el control).
   const filasFiltradas=_especialidadAwareFiltro
-    ? filas.filter(f=>(f.por_aware && f.por_aware[_especialidadAwareFiltro]>0))
+    ? filas.filter(f=>f._domCat && _especialidadAwareFiltro.has(f._domCat))
     : filas;
 
   const filasTabla=filasFiltradas.map(f=>{
@@ -5371,7 +5375,7 @@ function renderConsumoEspecialidad(){
   segsOrden.forEach(k=>{const p=awareAggPct[k]||0; if(p<=0) return; stops.push(`${AWARE_COLORS[k]||'#94a3b8'} ${acc}% ${acc+p}%`); acc+=p;});
   const donutCss=stops.length?stops.join(', '):'#e2e8f0 0% 100%';
   const legendDonut=segsOrden.filter(k=>awareAggPct[k]>0).map(k=>{
-    const activo=_especialidadAwareFiltro===k;
+    const activo=_especialidadAwareFiltro && _especialidadAwareFiltro.has(k);
     const dimmed=_especialidadAwareFiltro && !activo;
     const tid=registerTip(`<div style="font-weight:700;">${k}</div><div>${awareAggPct[k]}% (${(awareAgg[k]||0).toLocaleString('es-MX',{maximumFractionDigits:0})} piezas)</div><div style="color:#94a3b8;font-size:.66rem;">clic para filtrar la tabla de antibióticos</div>`);
     return `<div data-tipid="${tid}" onclick="toggleEspecialidadAwareFiltro('${k}')" style="display:flex;align-items:center;gap:6px;font-size:.76rem;cursor:pointer;opacity:${dimmed?.4:1};padding:3px 4px;border-radius:6px;background:${activo?'#f0fdf4':'transparent'};border:1px solid ${activo?'#bbf7d0':'transparent'};">
@@ -5380,12 +5384,12 @@ function renderConsumoEspecialidad(){
       <span style="margin-left:auto;font-weight:700;color:#1e293b;">${awareAggPct[k]}%</span>
     </div>`;
   }).join('');
-  const filtroHint=_especialidadAwareFiltro?`<div style="font-size:.64rem;color:#154f39;margin-top:6px;">Filtro activo: ${_especialidadAwareFiltro} — <span style="text-decoration:underline;cursor:pointer;" onclick="_especialidadAwareFiltro=null;renderConsumoEspecialidad();">quitar filtro</span></div>`:'';
+  const filtroHint=_especialidadAwareFiltro?`<div style="font-size:.64rem;color:#154f39;margin-top:6px;">Filtro activo: ${[..._especialidadAwareFiltro].join(', ')} — <span style="text-decoration:underline;cursor:pointer;" onclick="_especialidadAwareFiltro=null;renderConsumoEspecialidad();">quitar filtro</span></div>`:'';
 
   // Tabla "Antibióticos más recetados" — usa el desglose por antibiótico (independiente
   // de especialidad), filtrable por AWaRe con el clic en la leyenda del donut de arriba.
   const listaAntibioticos=(infoUnidad.antibioticos||[])
-    .filter(a=>!_especialidadAwareFiltro || a.aware===_especialidadAwareFiltro)
+    .filter(a=>!_especialidadAwareFiltro || _especialidadAwareFiltro.has(a.aware))
     .slice()
     .sort((a,b)=>b.piezas-a.piezas);
   const totalFiltrado=listaAntibioticos.reduce((s,a)=>s+a.piezas,0);
@@ -5523,7 +5527,7 @@ function renderConsumoEspecialidad(){
     <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">📋 Especialidades — ${_especialidadUnidad} <span style="font-size:.62rem;color:#94a3b8;font-weight:600;">· ordenado por % AWaRe dominante</span></div>
-        ${_especialidadAwareFiltro?`<div style="font-size:.68rem;color:#154f39;font-weight:700;margin-bottom:4px;">Filtrado a especialidades con consumo ${_especialidadAwareFiltro} (${filasFiltradas.length} de ${filas.length})</div>`:''}
+        ${_especialidadAwareFiltro?`<div style="font-size:.68rem;color:#154f39;font-weight:700;margin-bottom:4px;">Filtrado a especialidades con AWaRe dominante ${[..._especialidadAwareFiltro].join(' o ')} (${filasFiltradas.length} de ${filas.length})</div>`:''}
         <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${hospitalId?`Días Paciente, piezas/cama y piezas/100 días paciente cruzados con PARTE II donde el nombre de especialidad coincide exacto (período ${_consumoPeriodo||'—'}). Sin match = N/D, no se fuerza el emparejamiento.`:'Esta unidad no tiene equivalente en PARTE II (solo cubre los 3 hospitales, no UMF), por eso no hay días paciente ni piezas/cama aquí.'}</div>
         ${tablaHtml}
       </div>
@@ -5544,7 +5548,7 @@ function renderConsumoEspecialidad(){
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">💊 Antibióticos más recetados — ${_especialidadUnidad}</div>
-        <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${_especialidadAwareFiltro?`Filtrado a categoría ${_especialidadAwareFiltro} (${totalFiltrado.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas) · `:''}Clic en la leyenda AWaRe de la izquierda para filtrar</div>
+        <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${_especialidadAwareFiltro?`Filtrado a categoría(s) ${[..._especialidadAwareFiltro].join(', ')} (${totalFiltrado.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas) · `:''}Clic en la leyenda AWaRe de la izquierda para filtrar (puedes seleccionar varias)</div>
         ${alertaHtml}
         <div style="display:flex;flex-direction:column;gap:8px;">${filasAbHtml}</div>
       </div>
