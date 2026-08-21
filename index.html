@@ -4160,35 +4160,33 @@ function renderConsumoDDD(){
     </div>`;
   }).join('');
 
-  // Consolidado OOAD Tlaxcala — con antibióticos orales incluidos (vista informativa,
-  // replica exactamente la hoja "Analisis"/CONCENTRADO OOAD de CONSABI; NO sustituye
-  // el indicador oficial de arriba, que es solo endovenosos por hospital).
+  // Consolidado OOAD Tlaxcala — replica exactamente la hoja "Sin AB orales
+  // CONCENTRADO OOAD" de CONSABI (verificado número por número contra el Excel).
+  // Es la suma de los 3 hospitales usando el mismo criterio oficial (endovenosos)
+  // que ya usa el indicador principal — NO incluye antibióticos orales.
   let ooadHtml='';
   {
     const perActual=mesActualCargado?_consumoPeriodo:null;
-    const conOralesTodos=perActual?ids.map(h=>CONSUMO_DATA[h].periodos[perActual]&&CONSUMO_DATA[h].periodos[perActual].con_orales).filter(Boolean):[];
-    if(conOralesTodos.length===ids.length && conOralesTodos.length>0){
-      const ddSum=conOralesTodos.reduce((s,x)=>s+x.ddd_total,0);
+    const datosTodos=perActual?ids.map(h=>CONSUMO_DATA[h].periodos[perActual]).filter(x=>x&&x.consumo_cargado):[];
+    if(datosTodos.length===ids.length && datosTodos.length>0){
+      const ddSum=datosTodos.reduce((s,x)=>s+(x.ddd_total||0),0);
       const awareSum={};
-      conOralesTodos.forEach(x=>Object.entries(x.por_aware||{}).forEach(([k,v])=>{awareSum[k]=(awareSum[k]||0)+v;}));
+      datosTodos.forEach(x=>Object.entries(x.por_aware||{}).forEach(([k,v])=>{awareSum[k]=(awareSum[k]||0)+v;}));
       const awarePct={};
       Object.entries(awareSum).forEach(([k,v])=>{awarePct[k]=ddSum?Math.round(v/ddSum*1000)/10:0;});
       const segsOrden=Object.keys(awarePct).sort((a,b)=>awarePct[b]-awarePct[a]);
       const legendOoad=segsOrden.map(k=>{
         const tid=registerTip(`<div style="font-weight:700;">${k}</div><div>${awarePct[k]}% (${(awareSum[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD)</div>`);
-        return `<div data-tipid="${tid}" style="display:flex;align-items:center;gap:6px;font-size:.76rem;cursor:pointer;"><span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;"></span><span style="color:#374151;">${k}</span><span style="margin-left:auto;font-weight:700;color:#1e293b;">${awarePct[k]}%</span></div>`;
+        return `<div data-tipid="${tid}" style="display:flex;align-items:center;gap:6px;font-size:.76rem;cursor:pointer;"><span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;"></span><span style="color:#374151;">${k}</span><span style="margin-left:auto;font-weight:700;color:#1e293b;">${awarePct[k]}% <span style="color:#94a3b8;font-weight:600;">(${(awareSum[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})})</span></span></div>`;
       }).join('');
-      let acc=0; const stops=[];
-      segsOrden.forEach(k=>{const p=awarePct[k]||0; if(p<=0) return; stops.push(`${AWARE_COLORS[k]||'#94a3b8'} ${acc}% ${acc+p}%`); acc+=p;});
-      const donutCssOoad=stops.length?stops.join(', '):'#e2e8f0 0% 100%';
+      const segsPie=segsOrden.filter(k=>awarePct[k]>0).map(k=>({label:k,pct:awarePct[k],color:AWARE_COLORS[k]||'#94a3b8'}));
+      const pieSvg=build3DPie(segsPie);
       ooadHtml=`<div style="background:linear-gradient(135deg,#f0f9ff,#eff6ff);border:1px solid #bfdbfe;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🌐 Consolidado OOAD Tlaxcala · ${perActual}</div>
-        <div style="font-size:.68rem;color:#64748b;margin-bottom:10px;">Los 3 hospitales sumados, <b>incluyendo antibióticos orales</b> (hoja "Con AB orales" de CONSABI) — vista informativa aparte del indicador oficial de arriba, que solo cuenta endovenosos por hospital.</div>
-        <div style="display:flex;align-items:center;gap:18px;">
-          <div style="width:100px;height:100px;border-radius:50%;background:conic-gradient(${donutCssOoad});flex-shrink:0;position:relative;">
-            <div style="position:absolute;inset:14px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:#154f39;text-align:center;">${ddSum.toLocaleString('es-MX',{maximumFractionDigits:0})}<br><span style="font-size:.55rem;font-weight:600;color:#94a3b8;">DDD TOTAL</span></div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px;flex:1;">${legendOoad}</div>
+        <div style="font-size:.68rem;color:#64748b;margin-bottom:10px;">Los 3 hospitales sumados, mismo criterio oficial que arriba (solo endovenosos) — replica exacto la hoja "Sin AB orales CONCENTRADO OOAD" de CONSABI. ΣDDD total: <b>${ddSum.toLocaleString('es-MX',{maximumFractionDigits:1})}</b>.</div>
+        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+          ${pieSvg}
+          <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px;">${legendOoad}</div>
         </div>
       </div>`;
     }
@@ -4426,6 +4424,7 @@ function renderConsumoDDD(){
     ${_consumoModo==='acumulado'?`<div style="font-size:.7rem;color:#154f39;font-weight:700;padding-top:6px;">📊 Acumulado ${d.meses?MESES_ABBR[d.meses[0].slice(5)]+'–'+MESES_ABBR[d.meses[d.meses.length-1].slice(5)]:''} ${_consumoPeriodo.slice(0,4)} (${d.meses?d.meses.length:0} mes${d.meses&&d.meses.length===1?'':'es'} con consumo cargado)</div>`:(!mesActualCargado?`<div style="font-size:.7rem;color:#92400e;font-weight:700;padding-top:6px;">○ ${_consumoPeriodo}: aún no se ha cargado CONSABI de este mes — solo se muestran camas y días paciente de PARTE II.</div>`:(mesActualPreliminar?`<div style="font-size:.7rem;color:#d97706;font-weight:700;padding-top:6px;">~ ${_consumoPeriodo}: mes con estatus "Abierto" en PARTE II — dato PRELIMINAR, puede cambiar cuando IMSS lo cierre oficialmente.</div>`:''))}
     <div style="padding-top:14px;">${resumenHtml}</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;">${kpiHtml}</div>
+    ${ooadHtml?`<div style="padding-top:14px;">${ooadHtml}</div>`:''}
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Antimicrobianos con mayor consumo (ΣDDD)</div>
@@ -4468,7 +4467,6 @@ function renderConsumoDDD(){
       ${ocupHtml||'<div></div>'}
     </div>
     ${servicioTablaHtml?`<div style="padding-top:14px;">${servicioTablaHtml}</div>`:''}
-    ${ooadHtml?`<div style="padding-top:14px;">${ooadHtml}</div>`:''}
     <div style="padding-top:14px;">${trendHtml}</div>
     <div style="padding-top:14px;">${trazadoresHtml}</div>
   `;
@@ -4487,6 +4485,49 @@ function matchConsumoName(sriName, consumoNames){
     if(len>bestLen&&len>=5){bestLen=len;best=cn;}
   });
   return best;
+}
+
+/* ─── Gráfico circular 3D (SVG puro, sin librerías) ────────────── */
+function _darkenHex(hex,amt){
+  const c=(hex||'#94a3b8').replace('#','');
+  const r=parseInt(c.substr(0,2),16)||148, g=parseInt(c.substr(2,2),16)||163, b=parseInt(c.substr(4,2),16)||184;
+  const nr=Math.round(r*(1-amt)), ng=Math.round(g*(1-amt)), nb=Math.round(b*(1-amt));
+  return `rgb(${nr},${ng},${nb})`;
+}
+function build3DPie(segs){
+  // segs: [{label,pct,color}] con pct 0-100, ya ordenados. Estilo pastel 3D (tipo Excel).
+  const cx=110,cy=62,rx=88,ry=44,depth=24;
+  const pt=(angleDeg)=>{const a=angleDeg*Math.PI/180; return [cx+rx*Math.cos(a), cy+ry*Math.sin(a)];};
+  let acc=0;
+  const slices=(segs||[]).map(s=>{
+    const start=acc, sweep=Math.max(0,s.pct)*3.6, end=acc+sweep;
+    acc=end;
+    return {...s,start,end};
+  });
+  // Paredes laterales: solo en el arco frontal visible (0°=derecha … 180°=izquierda, pasando por abajo)
+  let wallsHtml='';
+  slices.forEach(s=>{
+    const s0=Math.max(s.start,0), s1=Math.min(s.end,180);
+    if(s1<=s0) return;
+    const [x0,y0]=pt(s0), [x1,y1]=pt(s1);
+    const large=(s1-s0)>180?1:0;
+    const path=`M ${x0.toFixed(1)},${y0.toFixed(1)} A ${rx},${ry} 0 ${large},1 ${x1.toFixed(1)},${y1.toFixed(1)} L ${x1.toFixed(1)},${(y1+depth).toFixed(1)} A ${rx},${ry} 0 ${large},0 ${x0.toFixed(1)},${(y0+depth).toFixed(1)} Z`;
+    wallsHtml+=`<path d="${path}" fill="${_darkenHex(s.color,0.32)}"/>`;
+  });
+  // Tapa superior (las rebanadas, con degradado sutil para efecto de volumen)
+  let topHtml='';
+  slices.forEach((s,i)=>{
+    const [x0,y0]=pt(s.start), [x1,y1]=pt(s.end);
+    const large=(s.end-s.start)>180?1:0;
+    const gid=`pie3dGrad${i}_${Math.round(s.start)}`;
+    const path = s.pct>=99.9
+      ? `M ${cx-rx},${cy} A ${rx},${ry} 0 1,1 ${(cx+rx).toFixed(1)},${cy} A ${rx},${ry} 0 1,1 ${cx-rx},${cy} Z`
+      : `M ${cx},${cy} L ${x0.toFixed(1)},${y0.toFixed(1)} A ${rx},${ry} 0 ${large},1 ${x1.toFixed(1)},${y1.toFixed(1)} Z`;
+    topHtml+=`<defs><radialGradient id="${gid}" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="${s.color}" stop-opacity=".65"/><stop offset="100%" stop-color="${s.color}"/></radialGradient></defs><path d="${path}" fill="url(#${gid})" stroke="#fff" stroke-width="1.2"/>`;
+  });
+  return `<svg viewBox="0 0 220 ${cy+ry+depth+14}" style="width:100%;max-width:250px;flex-shrink:0;filter:drop-shadow(0 3px 4px rgba(0,0,0,.12));">
+    ${wallsHtml}${topHtml}
+  </svg>`;
 }
 
 function coberturaColor(pct){
