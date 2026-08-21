@@ -4166,6 +4166,8 @@ function renderConsumoDDD(){
   // CONCENTRADO OOAD" de CONSABI (verificado número por número contra el Excel).
   // Es la suma de los 3 hospitales usando el mismo criterio oficial (endovenosos)
   // que ya usa el indicador principal — NO incluye antibióticos orales.
+  // Incluye la "Tabla 1" tal como aparece en la hoja Análisis: Clasificación ×
+  // (OOAD, HGZ1, HGZ2, HGSMF8), cada uno con Sumatoria y Porcentaje por grupo.
   let ooadHtml='';
   {
     const perActual=mesActualCargado?_consumoPeriodo:null;
@@ -4179,17 +4181,43 @@ function renderConsumoDDD(){
       const segsOrden=Object.keys(awarePct).sort((a,b)=>awarePct[b]-awarePct[a]);
       const legendOoad=segsOrden.map(k=>{
         const tid=registerTip(`<div style="font-weight:700;">${k}</div><div>${awarePct[k]}% (${(awareSum[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD)</div>`);
-        return `<div data-tipid="${tid}" style="display:flex;align-items:center;gap:6px;font-size:.76rem;cursor:pointer;"><span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;"></span><span style="color:#374151;">${k}</span><span style="margin-left:auto;font-weight:700;color:#1e293b;">${awarePct[k]}% <span style="color:#94a3b8;font-weight:600;">(${(awareSum[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})})</span></span></div>`;
+        return `<div data-tipid="${tid}" style="display:flex;align-items:baseline;gap:8px;font-size:.76rem;cursor:pointer;padding:2px 0;">
+          <span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;flex-shrink:0;"></span>
+          <span style="color:#374151;font-weight:600;">${k}</span>
+          <span style="font-weight:800;color:#1e293b;">${awarePct[k]}%</span>
+          <span style="color:#94a3b8;font-size:.66rem;">(${(awareSum[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})})</span>
+        </div>`;
       }).join('');
       const segsPie=segsOrden.filter(k=>awarePct[k]>0).map(k=>({label:k,pct:awarePct[k],color:AWARE_COLORS[k]||'#94a3b8'}));
       const pieSvg=build3DPie(segsPie);
+
+      // Tabla 1: Clasificación de Antibióticos esencial — OOAD + 3 hospitales
+      const awareOrderFijo=['Access','Watch','Reserve'];
+      const filasT1=awareOrderFijo.map(k=>{
+        const cols=[{sum:awareSum[k]||0,pct:awarePct[k]||0}, ...ids.map(h=>{
+          const dh=CONSUMO_DATA[h].periodos[perActual];
+          return {sum:(dh&&dh.por_aware&&dh.por_aware[k])||0, pct:(dh&&dh.por_aware_pct&&dh.por_aware_pct[k])||0};
+        })];
+        return `<tr><td style="padding:5px 10px;font-weight:700;color:${AWARE_COLORS[k]};">∑DDD ${k}</td>${cols.map(c=>`<td style="text-align:center;padding:5px 6px;">${c.sum.toLocaleString('es-MX',{maximumFractionDigits:1})}<div style="font-size:.6rem;color:#94a3b8;">${c.pct}%</div></td>`).join('')}</tr>`;
+      }).join('');
+      const totalesT1=[{sum:ddSum},...ids.map(h=>({sum:(CONSUMO_DATA[h].periodos[perActual]&&CONSUMO_DATA[h].periodos[perActual].ddd_total)||0}))];
+      const filaTotalT1=`<tr style="border-top:1.5px solid #cbd5e1;"><td style="padding:5px 10px;font-weight:800;color:#154f39;">∑ Total DDD</td>${totalesT1.map(c=>`<td style="text-align:center;padding:5px 6px;font-weight:800;color:#154f39;">${c.sum.toLocaleString('es-MX',{maximumFractionDigits:1})}</td>`).join('')}</tr>`;
+      const headerT1=`<th style="padding:6px 6px;color:#fff;">OOAD</th>${ids.map(h=>`<th style="padding:6px 6px;color:#fff;">${getHospitalDisplayName(h)}</th>`).join('')}`;
+      const tablaT1Html=`<table style="width:100%;border-collapse:collapse;font-size:.72rem;margin-top:14px;">
+        <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
+          <th style="text-align:left;padding:6px 10px;color:#fff;">Clasificación</th>${headerT1}
+        </tr></thead>
+        <tbody>${filasT1}${filaTotalT1}</tbody>
+      </table>`;
+
       ooadHtml=`<div style="background:linear-gradient(135deg,#f0f9ff,#eff6ff);border:1px solid #bfdbfe;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🌐 Consolidado OOAD Tlaxcala · ${perActual}</div>
-        <div style="font-size:.68rem;color:#64748b;margin-bottom:10px;">Los 3 hospitales sumados, mismo criterio oficial que arriba (solo endovenosos) — replica exacto la hoja "Sin AB orales CONCENTRADO OOAD" de CONSABI. ΣDDD total: <b>${ddSum.toLocaleString('es-MX',{maximumFractionDigits:1})}</b>.</div>
-        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+        <div style="font-size:.68rem;color:#64748b;margin-bottom:12px;">Los 3 hospitales sumados, mismo criterio oficial que arriba (solo endovenosos) — replica exacto la hoja "Sin AB orales CONCENTRADO OOAD" de CONSABI. ΣDDD total: <b>${ddSum.toLocaleString('es-MX',{maximumFractionDigits:1})}</b>.</div>
+        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
           ${pieSvg}
-          <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px;">${legendOoad}</div>
+          <div style="display:flex;flex-direction:column;gap:2px;">${legendOoad}</div>
         </div>
+        ${tablaT1Html}
       </div>`;
     }
   }
@@ -4298,32 +4326,54 @@ function renderConsumoDDD(){
   {
     const ejes=['Access','Watch','Reserve'];
     const angulos=[-90,30,150]; // grados, 3 ejes a 120°
-    const cx=90,cy=90,rMax=68;
+    const cx=100,cy=92,rMax=62;
     const colHosp={'HGZ 1 TLAXCALA':'#2563eb','HGZMF 2 APIZACO':'#16a34a','HGSMF 8 TLAXCALA':'#d97706'};
     const pt=(ang,r)=>{const rad=ang*Math.PI/180;return [cx+r*Math.cos(rad),cy+r*Math.sin(rad)];};
     const gridPolys=[0.25,0.5,0.75,1].map(f=>{
       const pts=angulos.map(a=>pt(a,rMax*f).join(',')).join(' ');
       return `<polygon points="${pts}" fill="none" stroke="#e2e8f0" stroke-width="1"/>`;
     }).join('');
-    const axisLines=angulos.map((a,i)=>{const [x,y]=pt(a,rMax);return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;}).join('');
-    const axisLabels=angulos.map((a,i)=>{const [x,y]=pt(a,rMax+16);return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#374151">${ejes[i]}</text>`;}).join('');
+    const ringLabels=[0.25,0.5,0.75,1].map(f=>{
+      const [x,y]=pt(-90,rMax*f);
+      return `<text x="${x+3}" y="${y-1}" font-size="7" fill="#cbd5e1" font-weight="700">${Math.round(f*100)}</text>`;
+    }).join('');
+    const axisLines=angulos.map(a=>{const [x,y]=pt(a,rMax);return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;}).join('');
+    const axisLabels=angulos.map((a,i)=>{const [x,y]=pt(a,rMax+18);return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="10.5" font-weight="800" fill="#374151">${ejes[i]}</text>`;}).join('');
+    let vertexDots='';
     const hospPolys=ids.map(h=>{
       const perKC=Object.keys(CONSUMO_DATA[h].periodos).filter(p=>CONSUMO_DATA[h].periodos[p].consumo_cargado).sort();
       const per=CONSUMO_DATA[h].periodos[_consumoPeriodo]&&CONSUMO_DATA[h].periodos[_consumoPeriodo].consumo_cargado?_consumoPeriodo:perKC[perKC.length-1];
       const dd=per?consumoParaHospital(h,per,_consumoModo):null;
       if(!dd) return '';
-      const pts=ejes.map((e,i)=>{const val=(dd.por_aware_pct[e]||0)/100*rMax;return pt(angulos[i],val);});
+      const vals=ejes.map(e=>dd.por_aware_pct[e]||0);
+      const pts=ejes.map((e,i)=>pt(angulos[i],vals[i]/100*rMax));
       const ptsStr=pts.map(p=>p.join(',')).join(' ');
       const color=colHosp[h]||'#94a3b8';
+      pts.forEach(([x,y],i)=>{
+        const tid=registerTip(`<div style="font-weight:700;">${getHospitalDisplayName(h)}</div><div>${ejes[i]}: ${vals[i]}%</div>`);
+        vertexDots+=`<circle data-tipid="${tid}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${color}" stroke="#fff" stroke-width="1.5" style="cursor:pointer;"/>`;
+      });
       return `<polygon points="${ptsStr}" fill="${color}" fill-opacity="0.15" stroke="${color}" stroke-width="2"/>`;
     }).join('');
-    const legendHosp=ids.map(h=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${colHosp[h]||'#94a3b8'};display:inline-block;"></span>${getHospitalDisplayName(h)}</div>`).join('');
+    const filasValores=ids.map(h=>{
+      const perKC=Object.keys(CONSUMO_DATA[h].periodos).filter(p=>CONSUMO_DATA[h].periodos[p].consumo_cargado).sort();
+      const per=CONSUMO_DATA[h].periodos[_consumoPeriodo]&&CONSUMO_DATA[h].periodos[_consumoPeriodo].consumo_cargado?_consumoPeriodo:perKC[perKC.length-1];
+      const dd=per?consumoParaHospital(h,per,_consumoModo):null;
+      const vals=ejes.map(e=>dd?Math.round((dd.por_aware_pct[e]||0)*10)/10:0);
+      return `<div style="display:grid;grid-template-columns:14px 1fr 34px 34px 34px;align-items:center;gap:4px;font-size:.66rem;padding:2px 0;">
+        <span style="width:9px;height:9px;border-radius:2px;background:${colHosp[h]||'#94a3b8'};display:inline-block;"></span>
+        <span style="color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${getHospitalDisplayName(h)}</span>
+        ${vals.map(v=>`<span style="text-align:right;font-weight:800;color:#1e293b;">${v}%</span>`).join('')}
+      </div>`;
+    }).join('');
     radarHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">🕸️ Perfil AWaRe comparativo</div>
-      <svg viewBox="0 0 180 190" style="width:100%;max-width:220px;display:block;margin:0 auto;">
-        ${gridPolys}${axisLines}${hospPolys}${axisLabels}
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🕸️ Perfil AWaRe comparativo</div>
+      <div style="font-size:.66rem;color:#94a3b8;margin-bottom:6px;">% del consumo en cada categoría, por hospital · pasa el cursor sobre un punto</div>
+      <svg viewBox="0 0 200 185" style="width:100%;max-width:230px;display:block;margin:0 auto;">
+        ${gridPolys}${ringLabels}${axisLines}${hospPolys}${vertexDots}${axisLabels}
       </svg>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;">${legendHosp}</div>
+      <div style="display:grid;grid-template-columns:14px 1fr 34px 34px 34px;gap:4px;margin:8px 0 2px;font-size:.58rem;color:#94a3b8;font-weight:800;"><span></span><span></span><span style="text-align:right;">ACC</span><span style="text-align:right;">WAT</span><span style="text-align:right;">RES</span></div>
+      <div style="display:flex;flex-direction:column;">${filasValores}</div>
     </div>`;
   }
 
@@ -4427,7 +4477,7 @@ function renderConsumoDDD(){
     <div style="padding-top:14px;">${resumenHtml}</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;">${kpiHtml}</div>
     ${ooadHtml?`<div style="padding-top:14px;">${ooadHtml}</div>`:''}
-    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Antimicrobianos con mayor consumo (ΣDDD)</div>
         <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}</div>
@@ -4442,7 +4492,7 @@ function renderConsumoDDD(){
         </div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🧪 Consumo por grupo farmacológico</div>
         <div style="display:flex;flex-direction:column;gap:8px;">${gruposHtml}</div>
@@ -4452,7 +4502,7 @@ function renderConsumoDDD(){
         <div style="display:flex;flex-direction:column;gap:10px;">${compHtml}</div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🌈 Composición AWaRe — comparativo entre hospitales</div>
         ${awareStackHtml}
@@ -4464,7 +4514,7 @@ function renderConsumoDDD(){
         <div style="display:flex;flex-direction:column;gap:6px;">${riesgoHtml}</div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
       ${radarHtml}
       ${ocupHtml||'<div></div>'}
     </div>
@@ -4527,7 +4577,7 @@ function build3DPie(segs){
       : `M ${cx},${cy} L ${x0.toFixed(1)},${y0.toFixed(1)} A ${rx},${ry} 0 ${large},1 ${x1.toFixed(1)},${y1.toFixed(1)} Z`;
     topHtml+=`<defs><radialGradient id="${gid}" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="${s.color}" stop-opacity=".65"/><stop offset="100%" stop-color="${s.color}"/></radialGradient></defs><path d="${path}" fill="url(#${gid})" stroke="#fff" stroke-width="1.2"/>`;
   });
-  return `<svg viewBox="0 0 220 ${cy+ry+depth+14}" style="width:100%;max-width:250px;flex-shrink:0;filter:drop-shadow(0 3px 4px rgba(0,0,0,.12));">
+  return `<svg viewBox="0 0 220 ${cy+ry+depth+14}" style="width:210px;flex-shrink:0;filter:drop-shadow(0 3px 4px rgba(0,0,0,.12));">
     ${wallsHtml}${topHtml}
   </svg>`;
 }
