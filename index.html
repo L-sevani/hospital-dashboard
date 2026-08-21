@@ -4181,8 +4181,8 @@ function renderConsumoDDD(){
       const segsOrden=Object.keys(awarePct).sort((a,b)=>awarePct[b]-awarePct[a]);
       const legendOoad=segsOrden.map(k=>{
         const tid=registerTip(`<div style="font-weight:700;">${k}</div><div>${awarePct[k]}% (${(awareSum[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD)</div>`);
-        return `<div data-tipid="${tid}" style="display:flex;align-items:baseline;gap:8px;font-size:.76rem;cursor:pointer;padding:2px 0;">
-          <span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;flex-shrink:0;"></span>
+        return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:10px 62px 42px 68px;align-items:center;gap:7px;font-size:.75rem;cursor:pointer;padding:2px 0;">
+          <span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;"></span>
           <span style="color:#374151;font-weight:600;">${k}</span>
           <span style="font-weight:800;color:#1e293b;">${awarePct[k]}%</span>
           <span style="color:#94a3b8;font-size:.66rem;">(${(awareSum[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})})</span>
@@ -4213,9 +4213,9 @@ function renderConsumoDDD(){
       ooadHtml=`<div style="background:linear-gradient(135deg,#f0f9ff,#eff6ff);border:1px solid #bfdbfe;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🌐 Consolidado OOAD Tlaxcala · ${perActual}</div>
         <div style="font-size:.68rem;color:#64748b;margin-bottom:12px;">Los 3 hospitales sumados, mismo criterio oficial que arriba (solo endovenosos) — replica exacto la hoja "Sin AB orales CONCENTRADO OOAD" de CONSABI. ΣDDD total: <b>${ddSum.toLocaleString('es-MX',{maximumFractionDigits:1})}</b>.</div>
-        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:16px;">
           ${pieSvg}
-          <div style="display:flex;flex-direction:column;gap:2px;">${legendOoad}</div>
+          <div style="display:flex;flex-direction:column;gap:1px;">${legendOoad}</div>
         </div>
         ${tablaT1Html}
       </div>`;
@@ -4339,8 +4339,8 @@ function renderConsumoDDD(){
     }).join('');
     const axisLines=angulos.map(a=>{const [x,y]=pt(a,rMax);return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;}).join('');
     const axisLabels=angulos.map((a,i)=>{const [x,y]=pt(a,rMax+18);return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="10.5" font-weight="800" fill="#374151">${ejes[i]}</text>`;}).join('');
-    let vertexDots='';
-    const hospPolys=ids.map(h=>{
+    let vertexDots='', vertexLabels='';
+    const hospPolys=ids.map((h,hi)=>{
       const perKC=Object.keys(CONSUMO_DATA[h].periodos).filter(p=>CONSUMO_DATA[h].periodos[p].consumo_cargado).sort();
       const per=CONSUMO_DATA[h].periodos[_consumoPeriodo]&&CONSUMO_DATA[h].periodos[_consumoPeriodo].consumo_cargado?_consumoPeriodo:perKC[perKC.length-1];
       const dd=per?consumoParaHospital(h,per,_consumoModo):null;
@@ -4352,6 +4352,12 @@ function renderConsumoDDD(){
       pts.forEach(([x,y],i)=>{
         const tid=registerTip(`<div style="font-weight:700;">${getHospitalDisplayName(h)}</div><div>${ejes[i]}: ${vals[i]}%</div>`);
         vertexDots+=`<circle data-tipid="${tid}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${color}" stroke="#fff" stroke-width="1.5" style="cursor:pointer;"/>`;
+        // etiqueta de % visible junto al punto (sin necesidad de pasar el cursor)
+        const rad=angulos[i]*Math.PI/180;
+        const tx=-Math.sin(rad), ty=Math.cos(rad);
+        const off=(hi-1)*10;
+        const lx=x+tx*off, ly=y+ty*off-7;
+        vertexLabels+=`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="7.5" font-weight="800" fill="${color}" text-anchor="middle">${vals[i]}%</text>`;
       });
       return `<polygon points="${ptsStr}" fill="${color}" fill-opacity="0.15" stroke="${color}" stroke-width="2"/>`;
     }).join('');
@@ -4370,7 +4376,7 @@ function renderConsumoDDD(){
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🕸️ Perfil AWaRe comparativo</div>
       <div style="font-size:.66rem;color:#94a3b8;margin-bottom:6px;">% del consumo en cada categoría, por hospital · pasa el cursor sobre un punto</div>
       <svg viewBox="0 0 200 185" style="width:100%;max-width:230px;display:block;margin:0 auto;">
-        ${gridPolys}${ringLabels}${axisLines}${hospPolys}${vertexDots}${axisLabels}
+        ${gridPolys}${ringLabels}${axisLines}${hospPolys}${vertexDots}${vertexLabels}${axisLabels}
       </svg>
       <div style="display:grid;grid-template-columns:14px 1fr 34px 34px 34px;gap:4px;margin:8px 0 2px;font-size:.58rem;color:#94a3b8;font-weight:800;"><span></span><span></span><span style="text-align:right;">ACC</span><span style="text-align:right;">WAT</span><span style="text-align:right;">RES</span></div>
       <div style="display:flex;flex-direction:column;">${filasValores}</div>
@@ -4478,9 +4484,9 @@ function renderConsumoDDD(){
     <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;">${kpiHtml}</div>
     ${ooadHtml?`<div style="padding-top:14px;">${ooadHtml}</div>`:''}
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;padding-top:14px;">
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Antimicrobianos con mayor consumo (ΣDDD)</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1;justify-content:space-between;">${barsHtml}</div>
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🌐 Clasificación AWaRe del consumo <span style="font-size:.64rem;color:#94a3b8;font-weight:600;">· clic para filtrar</span></div>
@@ -4493,25 +4499,25 @@ function renderConsumoDDD(){
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🧪 Consumo por grupo farmacológico</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">${gruposHtml}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1;justify-content:space-between;">${gruposHtml}</div>
       </div>
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">⚖️ Comparativo entre hospitales <span style="font-size:.64rem;color:#94a3b8;font-weight:600;">· clic para cambiar</span></div>
-        <div style="display:flex;flex-direction:column;gap:10px;">${compHtml}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;flex:1;justify-content:space-between;">${compHtml}</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🌈 Composición AWaRe — comparativo entre hospitales</div>
-        ${awareStackHtml}
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">${awareStackHtml}</div>
         <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">${['Access','Watch','Reserve'].map(k=>`<div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${AWARE_COLORS[k]};display:inline-block;"></span>${k}</div>`).join('')}</div>
       </div>
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">⚠️ Antibióticos de mayor riesgo</div>
         <div style="font-size:.66rem;color:#94a3b8;margin-bottom:10px;">Alto consumo + baja sensibilidad hospital-wide — candidatos a revisar en el COA</div>
-        <div style="display:flex;flex-direction:column;gap:6px;">${riesgoHtml}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1;justify-content:space-between;">${riesgoHtml}</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
@@ -4547,8 +4553,8 @@ function _darkenHex(hex,amt){
   return `rgb(${nr},${ng},${nb})`;
 }
 function build3DPie(segs){
-  // segs: [{label,pct,color}] con pct 0-100, ya ordenados. Estilo pastel 3D (tipo Excel).
-  const cx=110,cy=62,rx=88,ry=44,depth=24;
+  // segs: [{label,pct,color}] con pct 0-100, ya ordenados. Estilo pastel 3D (tipo Excel), compacto.
+  const cx=78,cy=50,rx=68,ry=34,depth=18;
   const pt=(angleDeg)=>{const a=angleDeg*Math.PI/180; return [cx+rx*Math.cos(a), cy+ry*Math.sin(a)];};
   let acc=0;
   const slices=(segs||[]).map(s=>{
@@ -4577,7 +4583,7 @@ function build3DPie(segs){
       : `M ${cx},${cy} L ${x0.toFixed(1)},${y0.toFixed(1)} A ${rx},${ry} 0 ${large},1 ${x1.toFixed(1)},${y1.toFixed(1)} Z`;
     topHtml+=`<defs><radialGradient id="${gid}" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="${s.color}" stop-opacity=".65"/><stop offset="100%" stop-color="${s.color}"/></radialGradient></defs><path d="${path}" fill="url(#${gid})" stroke="#fff" stroke-width="1.2"/>`;
   });
-  return `<svg viewBox="0 0 220 ${cy+ry+depth+14}" style="width:210px;flex-shrink:0;filter:drop-shadow(0 3px 4px rgba(0,0,0,.12));">
+  return `<svg viewBox="0 0 156 ${cy+ry+depth+10}" style="width:170px;flex-shrink:0;filter:drop-shadow(0 3px 4px rgba(0,0,0,.12));">
     ${wallsHtml}${topHtml}
   </svg>`;
 }
@@ -5000,26 +5006,26 @@ function renderRankingAntibioticos(){
     <tbody>${filasTabla}</tbody>
   </table>`;
 
-  // Gráfica: Top 15 delegación (piezas), coloreado por AWaRe
+  // Gráfica: Top 15 delegación (piezas), coloreado por AWaRe — ya viene ordenado de mayor a menor
   const top15=delegacionArr.slice(0,15);
   const maxPiezas=Math.max(...top15.map(d=>d.piezas),1);
   const barsTop15=top15.map(d=>{
     const tid=registerTip(`<div style="font-weight:700;">${d.antibiotico}</div><div>${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas (${totalPiezasDeleg?Math.round(d.piezas/totalPiezasDeleg*1000)/10:0}%)</div>`);
-    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:150px 1fr 55px;align-items:center;gap:8px;cursor:pointer;">
-      <span style="font-size:.72rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.antibiotico}</span>
-      <div style="background:#f1f5f9;border-radius:5px;height:13px;"><div style="width:${(d.piezas/maxPiezas*100).toFixed(1)}%;background:${AWARE_COLORS[d.aware]||'#94a3b8'};height:13px;border-radius:5px;"></div></div>
-      <span style="font-size:.7rem;font-weight:700;color:#1e293b;text-align:right;">${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:180px 1fr 60px;align-items:center;gap:10px;cursor:pointer;">
+      <span style="font-size:.74rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.antibiotico}</span>
+      <div style="background:#f1f5f9;border-radius:5px;height:14px;"><div style="width:${(d.piezas/maxPiezas*100).toFixed(1)}%;background:${AWARE_COLORS[d.aware]||'#94a3b8'};height:14px;border-radius:5px;"></div></div>
+      <span style="font-size:.72rem;font-weight:700;color:#1e293b;text-align:right;">${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
     </div>`;
   }).join('');
 
-  // Gráfica: comparativo top 6 antibióticos entre hospitales
-  const top6=delegacionArr.slice(0,6);
-  const maxHosp=Math.max(...top6.flatMap(d=>ids.map(h=>{
+  // Gráfica: comparativo de los antibióticos con mayor consumo entre hospitales
+  const topComp=delegacionArr.slice(0,6);
+  const maxHosp=Math.max(...topComp.flatMap(d=>ids.map(h=>{
     const e=datosPorHosp[h].find(x=>x.antibiotico===d.antibiotico);
     return e?e.piezas:0;
   })),1);
   const hospColors=['#154f39','#2563eb','#d97706'];
-  const compGrupoHtml=top6.map(d=>{
+  const compGrupoHtml=topComp.map(d=>{
     const barsHosp=ids.map((h,hi)=>{
       const e=datosPorHosp[h].find(x=>x.antibiotico===d.antibiotico);
       const val=e?e.piezas:0;
@@ -5045,13 +5051,13 @@ function renderRankingAntibioticos(){
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">📋 Comparativo Delegación vs. Hospitales</div>
       ${tablaHtml}
     </div>
-    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Top 15 antibióticos — Delegación (piezas)</div>
-        <div style="display:flex;flex-direction:column;gap:7px;">${barsTop15}</div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Antibióticos con mayor consumo — Delegación (piezas), mayor a menor</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">${barsTop15}</div>
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">⚖️ Top 6 — comparativo entre hospitales</div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">⚖️ Comparativo entre hospitales</div>
         <div style="display:flex;gap:8px;justify-content:space-around;flex-wrap:wrap;">${compGrupoHtml}</div>
         <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">${legendHospComp}</div>
       </div>
