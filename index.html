@@ -4502,7 +4502,7 @@ function renderConsumoDDD(){
     <div style="padding-top:14px;">${resumenHtml}</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;">${kpiHtml}</div>
     ${ooadHtml?`<div style="padding-top:14px;">${ooadHtml}</div>`:''}
-    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;padding-top:14px;">
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Antimicrobianos con mayor consumo (ΣDDD)</div>
         <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}</div>
@@ -4517,7 +4517,7 @@ function renderConsumoDDD(){
         </div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🧪 Consumo por grupo farmacológico</div>
         <div style="display:flex;flex-direction:column;gap:8px;">${gruposHtml}</div>
@@ -4527,7 +4527,7 @@ function renderConsumoDDD(){
         <div style="display:flex;flex-direction:column;gap:10px;">${compHtml}</div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🌈 Composición AWaRe — comparativo entre hospitales</div>
         ${awareStackHtml}
@@ -4539,7 +4539,7 @@ function renderConsumoDDD(){
         <div style="display:flex;flex-direction:column;gap:6px;">${riesgoHtml}</div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       ${radarHtml}
       ${ocupHtml||'<div></div>'}
     </div>
