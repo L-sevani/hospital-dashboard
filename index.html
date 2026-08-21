@@ -4832,25 +4832,39 @@ function renderCobertura(){
     </div>`;
   }
 
-  // Tendencia de sensibilidad por año (antibiótico principal, mayor cobertura)
+  // Tendencia de sensibilidad por año — TODOS los antibióticos seleccionados, no solo el principal
   let trendSensHtml='';
   const años=(hd.años||[]).slice().sort();
-  if(abxSelSorted[0] && años.length>1){
-    const abx0=abxSelSorted[0];
-    const pts=años.map(y=>{
-      const rows=sriForPeriod(cultivoObj,String(y))||[];
-      const row=rows.find(r=>r.a===abx0);
-      return {y,pct:row?Math.round(row.pS*100):null,n:row?row.t:0};
-    }).filter(p=>p.pct!==null && p.n>=3);
-    if(pts.length>1){
+  if(abxSelSorted.length && años.length>1){
+    const seriesPorAbx=abxSelSorted.map((abx,ai)=>{
+      const pts=años.map(y=>{
+        const rows=sriForPeriod(cultivoObj,String(y))||[];
+        const row=rows.find(r=>r.a===abx);
+        return {y,pct:row?Math.round(row.pS*100):null,n:row?row.t:0};
+      }).filter(p=>p.pct!==null && p.n>=3);
+      return {abx,pts,color:PALETTE[ai%PALETTE.length]};
+    }).filter(s=>s.pts.length>1);
+    if(seriesPorAbx.length){
+      const W=560,H=170,padL=30,padB=20,padT=10,padR=10;
+      const xStep=años.length>1?(W-padL-padR)/(años.length-1):0;
+      const xIndex={}; años.forEach((y,i)=>{xIndex[y]=i;});
+      const yScale=v=>padT+(H-padT-padB)*(1-v/100);
+      const gridLines=[0,25,50,75,100].map(v=>`<line x1="${padL}" y1="${yScale(v)}" x2="${W-padR}" y2="${yScale(v)}" stroke="#f1f5f9" stroke-width="1"/><text x="${padL-4}" y="${yScale(v)+3}" text-anchor="end" font-size="8" fill="#cbd5e1">${v}</text>`).join('');
+      const xLabels=años.map((y,i)=>`<text x="${padL+i*xStep}" y="${H-4}" text-anchor="middle" font-size="9" fill="#94a3b8">${y}</text>`).join('');
+      const linesHtml=seriesPorAbx.map(s=>{
+        const pts=s.pts.map(p=>`${padL+xIndex[p.y]*xStep},${yScale(p.pct)}`).join(' ');
+        const circles=s.pts.map(p=>{
+          const tid=registerTip(`<div style="font-weight:700;">${s.abx}</div><div>${p.y}: ${p.pct}% S (n=${p.n})</div>`);
+          return `<circle data-tipid="${tid}" cx="${padL+xIndex[p.y]*xStep}" cy="${yScale(p.pct)}" r="3.5" fill="${s.color}" style="cursor:pointer;"/>`;
+        }).join('');
+        return `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>${circles}`;
+      }).join('');
+      const legendTrend=seriesPorAbx.map(s=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${s.color};display:inline-block;"></span>${s.abx}</div>`).join('');
       trendSensHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">📈 Tendencia de sensibilidad · ${abx0} en ${_coberturaCultivo}</div>
-        <div style="display:flex;align-items:flex-end;gap:10px;height:110px;">
-          ${pts.map(p=>{
-            const tid=registerTip(`<div style="font-weight:700;">${p.y}</div><div>${abx0}: ${p.pct}% S (n=${p.n})</div>`);
-            return `<div data-tipid="${tid}" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;cursor:pointer;"><div style="font-size:.66rem;font-weight:700;color:#154f39;">${p.pct}%</div><div style="width:100%;max-width:32px;background:linear-gradient(180deg,#1a6347,#154f39);border-radius:4px 4px 0 0;height:${Math.max(4,p.pct*0.85)}px;transition:height .3s;"></div><div style="font-size:.64rem;color:#94a3b8;">${p.y}</div></div>`;
-          }).join('')}
-        </div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📈 Tendencia de sensibilidad · ${_coberturaCultivo}</div>
+        <div style="font-size:.66rem;color:#94a3b8;margin-bottom:8px;">%S por año, un antibiótico seleccionado = una línea</div>
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;">${gridLines}${linesHtml}${xLabels}</svg>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">${legendTrend}</div>
       </div>`;
     }
   }
