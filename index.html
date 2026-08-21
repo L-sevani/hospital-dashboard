@@ -676,7 +676,7 @@ function buildFreqFromNewFormat(hd){
     target.stacks[row][col]=(target.stacks[row][col]||0)+n;
     target.totals[row]=(target.totals[row]||0)+n;
   };
-  const freq={chart1:{TODOS:makeFreq()},chart2:{TODOS:makeFreq()},chart3:{TODOS:makeFreq()},chart4:{TODOS:makeFreq()}};
+  const freq={chart1:{TODOS:makeFreq()},chart2:{TODOS:makeFreq()},chart3:{TODOS:makeFreq()},chart4:{TODOS:makeFreq()},chart5:{TODOS:makeFreq()}};
 
   // chart1: Microorg. en Servicios — row=micro, col=servicio
   Object.entries(hd.micros_svc||{}).forEach(([sg,micros])=>{
@@ -696,6 +696,11 @@ function buildFreqFromNewFormat(hd){
   // chart4: Microorg. en Cultivos — row=micro, col=cultivo
   Object.entries(hd.micros_cul||{}).forEach(([sg,micros])=>{
     Object.entries(micros).forEach(([micro,count])=>addStack(freq.chart4['TODOS'],micro,sg,count));
+  });
+
+  // chart5: Microorg. en Infecciones — row=micro, col=infeccion
+  Object.entries(hd.micros_inf||{}).forEach(([sg,micros])=>{
+    Object.entries(micros).forEach(([micro,count])=>addStack(freq.chart5['TODOS'],micro,sg,count));
   });
 
   Object.values(freq).forEach(k=>Object.values(k).forEach(f=>{if(f&&f.totals)finishFreq(f);}));
@@ -4104,8 +4109,8 @@ function renderConsumoDDD(){
   const barsHtml=top.map(a=>{
     const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${a.antibiotico}</div><div>ΣDDD: ${a.ddd.toLocaleString('es-MX',{maximumFractionDigits:2})}</div><div>Clasificación AWaRe: ${a.aware}</div><div>Grupo: ${grupoFarmacologico(a.antibiotico)}</div>`);
     return `
-    <div data-tipid="${tid}" style="display:grid;grid-template-columns:170px 1fr 60px;align-items:center;gap:8px;cursor:pointer;">
-      <span style="font-size:.74rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.antibiotico}</span>
+    <div data-tipid="${tid}" style="display:grid;grid-template-columns:190px 1fr 60px;align-items:center;gap:8px;cursor:pointer;">
+      <span style="font-size:.74rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.antibiotico}${awareBadge(a.aware)}</span>
       <div style="background:#f1f5f9;border-radius:5px;height:14px;position:relative;">
         <div style="width:${(a.ddd/maxDdd*100).toFixed(1)}%;background:${AWARE_COLORS[a.aware]||'#94a3b8'};height:14px;border-radius:5px;transition:width .3s;"></div>
       </div>
@@ -4262,7 +4267,7 @@ function renderConsumoDDD(){
           const {c:col,bg}=coberturaColor(c.pct);
           const tid=registerTip(`<div style="font-weight:700;">${c.abx}</div><div>%Sensibilidad (todo el hospital): ${c.pct}% (n=${c.n})</div><div>ΣDDD: ${c.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})}</div><div>AWaRe: ${c.aware}</div>`);
           return `<div data-tipid="${tid}" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;background:${bg};border-radius:8px;cursor:pointer;">
-            <span style="font-weight:700;color:${col};font-size:.76rem;">${c.abx}</span>
+            <span style="font-weight:700;color:${col};font-size:.76rem;">${c.abx}${awareBadge(c.aware)}</span>
             <span style="font-size:.68rem;color:#374151;">%S ${c.pct}% · ΣDDD ${c.ddd.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
           </div>`;
         }).join('');
@@ -4601,6 +4606,18 @@ function build3DPie(segs){
   </svg>`;
 }
 
+// Insignia de clasificación AWaRe: fondo sólido de color + letra en blanco, para que
+// siempre se distinga bien (texto de color sobre blanco a veces no contrasta lo suficiente,
+// sobre todo el verde de Access). Acepta tanto nombres completos (Access/Watch/Reserve, como
+// vienen en CONSABI) como letras sueltas (A/W/R, como vienen en ABX_META de antibiogramas).
+function awareBadge(aware){
+  const map={Access:'A',Watch:'W',Reserve:'R',A:'A',W:'W',R:'R'};
+  const letter=map[aware]||'?';
+  const colorMap={A:'#16a34a',W:'#d97706',R:'#dc2626'};
+  const color=colorMap[letter]||'#94a3b8';
+  return `<span style="display:inline-block;padding:1px 5px;border-radius:4px;background:${color};color:#fff;font-size:.6rem;font-weight:800;margin-left:5px;vertical-align:middle;line-height:1.4;">${letter}</span>`;
+}
+
 function coberturaColor(pct){
   if(pct>=80) return {c:'#15803d',bg:'#dcfce7'};
   if(pct>=60) return {c:'#92400e',bg:'#fef3c7'};
@@ -4639,11 +4656,14 @@ function renderCobertura(){
   const hd=getHospRawData(_consumoHospital);
   const dimCfg = _coberturaDim==='servicios'
     ? {obj:(hd&&hd.servicios), chartKey:'chart1', label:'Servicio', icon:'🏢'}
+    : _coberturaDim==='infecciones'
+    ? {obj:(hd&&hd.infecciones), chartKey:'chart5', label:'Infección', icon:'🦠'}
     : {obj:(hd&&hd.cultivos), chartKey:'chart4', label:'Cultivo', icon:'🧫'};
-  const dimToggle=`<div style="display:flex;gap:4px;align-items:center;">
+  const dimToggle=`<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
     <span style="font-size:.7rem;color:#94a3b8;font-weight:600;margin-right:2px;">Ver por:</span>
     <button onclick="toggleCoberturaDim('cultivos')" style="padding:5px 12px;border-radius:8px 0 0 8px;font-size:.72rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;background:${_coberturaDim==='cultivos'?'#154f39':'#fff'};color:${_coberturaDim==='cultivos'?'#fff':'#154f39'};">🧫 Cultivo</button>
-    <button onclick="toggleCoberturaDim('servicios')" style="padding:5px 12px;border-radius:0 8px 8px 0;font-size:.72rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;border-left:none;background:${_coberturaDim==='servicios'?'#154f39':'#fff'};color:${_coberturaDim==='servicios'?'#fff':'#154f39'};">🏢 Servicio</button>
+    <button onclick="toggleCoberturaDim('servicios')" style="padding:5px 12px;font-size:.72rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;border-left:none;background:${_coberturaDim==='servicios'?'#154f39':'#fff'};color:${_coberturaDim==='servicios'?'#fff':'#154f39'};">🏢 Servicio</button>
+    <button onclick="toggleCoberturaDim('infecciones')" style="padding:5px 12px;border-radius:0 8px 8px 0;font-size:.72rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;border-left:none;background:${_coberturaDim==='infecciones'?'#154f39':'#fff'};color:${_coberturaDim==='infecciones'?'#fff':'#154f39'};">🦠 Infección</button>
   </div>`;
   if(!hd || !dimCfg.obj || !dimCfg.obj.subgrupos || !dimCfg.obj.subgrupos.length){
     inner.innerHTML=`<div style="padding-top:14px;">${dimToggle}</div><div style="padding:40px;text-align:center;color:#94a3b8;">No hay datos de ${dimCfg.label.toLowerCase()} cargados para esta unidad todavía.</div>`;
@@ -4698,7 +4718,7 @@ function renderCobertura(){
   const abxChecks = abxOptions.map(r=>{
     const sel=_coberturaAbxSel.includes(r.a);
     const tid=registerTip(`<div style="font-weight:700;">${r.a}</div><div>%S global en ${_coberturaCultivo}: ${Math.round(r.pS*100)}% (n=${r.t})</div>`);
-    return `<button data-tipid="${tid}" onclick="toggleCoberturaAbx('${r.a.replace(/'/g,"\\'")}')" style="padding:5px 11px;border-radius:14px;font-size:.7rem;font-weight:700;cursor:pointer;border:1.5px solid ${sel?'#154f39':'#e2e8f0'};background:${sel?'#ecfdf5':'#fff'};color:${sel?'#154f39':'#6b7280'};">${r.a}</button>`;
+    return `<button data-tipid="${tid}" onclick="toggleCoberturaAbx('${r.a.replace(/'/g,"\\'")}')" style="padding:5px 11px;border-radius:14px;font-size:.7rem;font-weight:700;cursor:pointer;border:1.5px solid ${sel?'#154f39':'#e2e8f0'};background:${sel?'#ecfdf5':'#fff'};color:${sel?'#154f39':'#6b7280'};">${r.a}${awareBadge(r.c)}</button>`;
   }).join('');
 
   // Tabla: microorganismos × antibióticos seleccionados (ordenable por columna, clic en encabezado)
@@ -4732,7 +4752,10 @@ function renderCobertura(){
     }
 
     const sortIcon=(col)=> _coberturaSortCol===col ? ' ▾' : '';
-    const headerCols=_coberturaAbxSel.map(a=>`<th onclick="sortCoberturaBy('${a.replace(/'/g,"\\'")}')" style="padding:8px 6px;color:#fff;text-align:center;cursor:pointer;user-select:none;" title="Clic para ordenar por ${a}">${a}${sortIcon(a)}</th>`).join('');
+    const headerCols=_coberturaAbxSel.map(a=>{
+      const rowMeta=sriCultivo.find(r=>r.a===a);
+      return `<th onclick="sortCoberturaBy('${a.replace(/'/g,"\\'")}')" style="padding:8px 6px;color:#fff;text-align:center;cursor:pointer;user-select:none;" title="Clic para ordenar por ${a}">${a}${awareBadge(rowMeta?rowMeta.c:'?')}${sortIcon(a)}</th>`;
+    }).join('');
     const rows=microRowsData.map(({micro,n,vals})=>{
       const cells=_coberturaAbxSel.map(abxName=>{
         const v=vals[abxName];
@@ -4762,35 +4785,43 @@ function renderCobertura(){
     const {c}=coberturaColor(pct);
     const tid=registerTip(`<div style="font-weight:700;">${abxName}</div><div>Cobertura ponderada: ${pct}%</div><div>Aislamientos con antibiograma: ${n}</div>`);
     return `<div data-tipid="${tid}" style="margin-bottom:10px;cursor:pointer;">
-      <div style="display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:3px;"><span style="font-weight:700;color:#374151;">${abxName}</span><span style="font-weight:800;color:${c};">${pct}% <span style="color:#94a3b8;font-weight:600;">(n=${n})</span></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:3px;"><span style="font-weight:700;color:#374151;">${abxName}${awareBadge(row?row.c:'?')}</span><span style="font-weight:800;color:${c};">${pct}% <span style="color:#94a3b8;font-weight:600;">(n=${n})</span></span></div>
       <div style="background:#f1f5f9;border-radius:6px;height:12px;"><div style="width:${pct}%;background:${c};height:12px;border-radius:6px;transition:width .3s;"></div></div>
     </div>`;
   }).join('') || `<div style="color:#94a3b8;font-size:.78rem;">Selecciona antibióticos arriba.</div>`;
 
-  // Cobertura del antibiótico principal en TODAS las categorías de la dimensión actual
+  // Cobertura de TODOS los antibióticos seleccionados en cada categoría de la dimensión actual
   let crossCultivoHtml='';
-  if(abxSelSorted[0]){
-    const abx0=abxSelSorted[0];
-    const porCultivo=cultivosOrdenados.map(c=>{
+  if(abxSelSorted.length){
+    const porCultivoPorAbx=cultivosOrdenados.map(c=>{
       const rows=sriForPeriod(dimCfg.obj.data[c],'TODOS')||[];
-      const row=rows.find(r=>r.a===abx0);
-      return {c,pct:row?Math.round(row.pS*100):null,n:row?row.t:0};
-    }).filter(x=>x.pct!==null && x.n>=3).sort((a,b)=>b.pct-a.pct);
-    if(porCultivo.length>1){
-      crossCultivoHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🔬 ${abx0} — cobertura por ${dimCfg.label.toLowerCase()}</div>
-        <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Útil para ver en qué focos infecciosos conviene este antibiótico · clic para cambiar</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-        ${porCultivo.map(x=>{
-          const {c:col}=coberturaColor(x.pct);
-          const tid=registerTip(`<div style="font-weight:700;">${x.c}</div><div>${abx0}: ${x.pct}% S (n=${x.n})</div>`);
-          return `<div data-tipid="${tid}" onclick="_coberturaCultivo='${x.c.replace(/'/g,"\\'")}';_coberturaSortCol=null;renderCobertura();" style="display:grid;grid-template-columns:150px 1fr 50px;align-items:center;gap:8px;cursor:pointer;">
-            <span style="font-size:.72rem;font-weight:${x.c===_coberturaCultivo?800:600};color:${x.c===_coberturaCultivo?'#154f39':'#374151'};">${x.c}</span>
-            <div style="background:#f1f5f9;border-radius:5px;height:12px;"><div style="width:${x.pct}%;background:${col};height:12px;border-radius:5px;transition:width .3s;"></div></div>
-            <span style="font-size:.7rem;font-weight:700;color:#1e293b;text-align:right;">${x.pct}%</span>
+      const items=abxSelSorted.map((abx,ai)=>{
+        const row=rows.find(r=>r.a===abx);
+        return {abx,pct:row?Math.round(row.pS*100):null,n:row?row.t:0,color:PALETTE[ai%PALETTE.length]};
+      }).filter(x=>x.pct!==null && x.n>=3);
+      return {c,items};
+    }).filter(x=>x.items.length);
+    if(porCultivoPorAbx.length){
+      const bloques=porCultivoPorAbx.map(({c,items})=>{
+        const filas=items.map(x=>{
+          const tid=registerTip(`<div style="font-weight:700;">${c}</div><div>${x.abx}: ${x.pct}% S (n=${x.n})</div>`);
+          return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:150px 1fr 45px;align-items:center;gap:6px;cursor:pointer;">
+            <span style="font-size:.7rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${x.abx}</span>
+            <div style="background:#f1f5f9;border-radius:5px;height:10px;"><div style="width:${x.pct}%;background:${x.color};height:10px;border-radius:5px;transition:width .3s;"></div></div>
+            <span style="font-size:.68rem;font-weight:700;color:#1e293b;text-align:right;">${x.pct}%</span>
           </div>`;
-        }).join('')}
-        </div>
+        }).join('');
+        return `<div onclick="_coberturaCultivo='${c.replace(/'/g,"\\'")}';_coberturaSortCol=null;renderCobertura();" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:${c===_coberturaCultivo?'#ecfdf5':'#f8fafc'};border:1px solid ${c===_coberturaCultivo?'#bbf7d0':'#f1f5f9'};">
+          <div style="font-size:.72rem;font-weight:800;color:${c===_coberturaCultivo?'#154f39':'#374151'};margin-bottom:6px;">${c}</div>
+          <div style="display:flex;flex-direction:column;gap:5px;">${filas}</div>
+        </div>`;
+      }).join('');
+      const legendAbx=abxSelSorted.map((abx,ai)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${PALETTE[ai%PALETTE.length]};display:inline-block;"></span>${abx}</div>`).join('');
+      crossCultivoHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🔬 Cobertura por ${dimCfg.label.toLowerCase()}</div>
+        <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Útil para ver en qué focos infecciosos conviene cada antibiótico seleccionado · clic en un bloque para cambiar</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">${bloques}</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;">${legendAbx}</div>
       </div>`;
     }
   }
@@ -4802,7 +4833,15 @@ function renderCobertura(){
   let heatmapHtml='';
   if(topMicros.length && abxOptions.length){
     const heatAbx=abxOptions; // ya no se recorta a 10 — se muestran todos los que tengan datos (n>=3)
-    const heatHead=heatAbx.map(r=>`<th style="padding:6px 4px;color:#fff;text-align:center;font-size:.6rem;font-weight:700;writing-mode:vertical-rl;transform:rotate(180deg);max-height:90px;">${r.a}</th>`).join('');
+    const heatHead=heatAbx.map(r=>{
+      const colorAware={A:'#4ade80',W:'#fbbf24',R:'#f87171'}[r.c]||'#cbd5e1';
+      return `<th style="padding:8px 4px;color:#fff;text-align:center;font-size:.62rem;font-weight:700;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;">
+        <span style="display:inline-flex;align-items:center;gap:3px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:${colorAware};border:1px solid #fff;display:inline-block;flex-shrink:0;"></span>
+          ${r.a}
+        </span>
+      </th>`;
+    }).join('');
     const heatRows=topMicros.map(({micro})=>{
       const microObj=hd.micros && hd.micros.data ? hd.micros.data[micro] : null;
       const sriMicro=microObj?(sriForPeriod(microObj,'TODOS')||[]):[];
@@ -4824,6 +4863,7 @@ function renderCobertura(){
         <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#fef3c7;border:1px solid #fde68a;display:inline-block;"></span>60–79% (intermedia)</div>
         <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#fee2e2;border:1px solid #fecaca;display:inline-block;"></span>&lt;60% (baja cobertura)</div>
         <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:14px;height:14px;border-radius:3px;background:#f8fafc;border:1px solid #e2e8f0;display:inline-block;"></span>· sin datos (n&lt;1)</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;border-left:1px solid #e2e8f0;padding-left:14px;"><span style="width:9px;height:9px;border-radius:50%;background:#16a34a;display:inline-block;"></span>Access &nbsp;<span style="width:9px;height:9px;border-radius:50%;background:#d97706;display:inline-block;"></span>Watch &nbsp;<span style="width:9px;height:9px;border-radius:50%;background:#dc2626;display:inline-block;"></span>Reserve &nbsp;<span style="color:#94a3b8;">(punto junto al antibiótico)</span></div>
       </div>
       <table style="border-collapse:collapse;font-size:.7rem;">
         <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);"><th style="padding:6px 8px;color:#fff;text-align:left;">Microorganismo</th>${heatHead}</tr></thead>
@@ -4859,7 +4899,10 @@ function renderCobertura(){
         }).join('');
         return `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>${circles}`;
       }).join('');
-      const legendTrend=seriesPorAbx.map(s=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${s.color};display:inline-block;"></span>${s.abx}</div>`).join('');
+      const legendTrend=seriesPorAbx.map(s=>{
+        const rowMeta=sriCultivo.find(r=>r.a===s.abx);
+        return `<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${s.color};display:inline-block;"></span>${s.abx}${awareBadge(rowMeta?rowMeta.c:'?')}</div>`;
+      }).join('');
       trendSensHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📈 Tendencia de sensibilidad · ${_coberturaCultivo}</div>
         <div style="font-size:.66rem;color:#94a3b8;margin-bottom:8px;">%S por año, un antibiótico seleccionado = una línea</div>
@@ -4924,9 +4967,9 @@ function renderCobertura(){
     const pct=Math.round(row.pS*100);
     const meta=ABX_META[abxName];
     const aware=meta?meta.c:'?';
-    if(pct>=80) insights.push(`✓ <b>${abxName}</b> cubre el <b>${pct}%</b> de los aislamientos de ${_coberturaCultivo.toLowerCase()} (n=${row.t}) — buena opción empírica${aware==='A'?' y es Access':''}.`);
-    else if(pct<60) insights.push(`⚠️ <b>${abxName}</b> sólo cubre <b>${pct}%</b> (n=${row.t}) — no se recomienda como esquema empírico en ${_coberturaCultivo.toLowerCase()}; reservar para uso dirigido por antibiograma.`);
-    else insights.push(`◦ <b>${abxName}</b> cubre <b>${pct}%</b> (n=${row.t}) — zona intermedia, valorar uso dirigido.`);
+    if(pct>=80) insights.push(`✓ <b>${abxName}</b>${awareBadge(aware)} cubre el <b>${pct}%</b> de los aislamientos de ${_coberturaCultivo.toLowerCase()} (n=${row.t}) — buena opción empírica${aware==='A'?' y es Access':''}.`);
+    else if(pct<60) insights.push(`⚠️ <b>${abxName}</b>${awareBadge(aware)} sólo cubre <b>${pct}%</b> (n=${row.t}) — no se recomienda como esquema empírico en ${_coberturaCultivo.toLowerCase()}; reservar para uso dirigido por antibiograma.`);
+    else insights.push(`◦ <b>${abxName}</b>${awareBadge(aware)} cubre <b>${pct}%</b> (n=${row.t}) — zona intermedia, valorar uso dirigido.`);
   });
   const insightsHtml=insights.length?insights.map(t=>`<div style="padding:8px 12px;background:#f8fafc;border-left:3px solid #154f39;border-radius:0 8px 8px 0;font-size:.76rem;color:#374151;line-height:1.5;">${t}</div>`).join(''):`<div style="color:#94a3b8;font-size:.78rem;">Selecciona antibióticos para ver la lectura automática.</div>`;
 
@@ -5007,7 +5050,6 @@ function renderRankingAntibioticos(){
   const totalesPorHosp={};
   ids.forEach(h=>{totalesPorHosp[h]=datosPorHosp[h].reduce((s,x)=>s+(x.piezas||0),0);});
 
-  const awareAbrev={Access:'A',Watch:'W',Reserve:'R','Sin clasificar':'?'};
   const filasTabla=delegacionArr.map(d=>{
     const pctDeleg=totalPiezasDeleg?Math.round(d.piezas/totalPiezasDeleg*1000)/10:0;
     const cellsHosp=ids.map(h=>{
@@ -5018,7 +5060,7 @@ function renderRankingAntibioticos(){
     }).join('');
     const tid=registerTip(`<div style="font-weight:700;">${d.antibiotico}</div><div>AWaRe: ${d.aware}</div><div>Piezas delegación: ${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} (${pctDeleg}%)</div>`);
     return `<tr data-tipid="${tid}" style="cursor:pointer;">
-      <td style="padding:5px 10px;font-weight:700;color:#154f39;">${d.antibiotico} <span style="font-size:.62rem;font-weight:700;color:${AWARE_COLORS[d.aware]||'#94a3b8'};">(${awareAbrev[d.aware]||'?'})</span></td>
+      <td style="padding:5px 10px;font-weight:700;color:#154f39;">${d.antibiotico}${awareBadge(d.aware)}</td>
       <td style="text-align:center;padding:5px 6px;font-weight:800;color:#1e293b;">${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}<div style="font-size:.62rem;color:#94a3b8;font-weight:600;">${pctDeleg}%</div></td>
       ${cellsHosp}
     </tr>`;
@@ -5038,8 +5080,8 @@ function renderRankingAntibioticos(){
   const maxPiezas=Math.max(...top15.map(d=>d.piezas),1);
   const barsTop15=top15.map(d=>{
     const tid=registerTip(`<div style="font-weight:700;">${d.antibiotico}</div><div>${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas (${totalPiezasDeleg?Math.round(d.piezas/totalPiezasDeleg*1000)/10:0}%)</div>`);
-    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:180px 1fr 60px;align-items:center;gap:10px;cursor:pointer;">
-      <span style="font-size:.74rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.antibiotico}</span>
+    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:210px 1fr 60px;align-items:center;gap:10px;cursor:pointer;">
+      <span style="font-size:.74rem;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.antibiotico}${awareBadge(d.aware)}</span>
       <div style="background:#f1f5f9;border-radius:5px;height:14px;"><div style="width:${(d.piezas/maxPiezas*100).toFixed(1)}%;background:${AWARE_COLORS[d.aware]||'#94a3b8'};height:14px;border-radius:5px;"></div></div>
       <span style="font-size:.72rem;font-weight:700;color:#1e293b;text-align:right;">${d.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
     </div>`;
@@ -5069,7 +5111,7 @@ function renderRankingAntibioticos(){
     }).join('');
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
       <div style="display:flex;align-items:flex-end;gap:3px;height:80px;">${barsHosp}</div>
-      <div style="font-size:.6rem;color:#374151;font-weight:700;text-align:center;max-width:90px;">${d.antibiotico}</div>
+      <div style="font-size:.6rem;color:#374151;font-weight:700;text-align:center;max-width:110px;">${d.antibiotico}${awareBadge(d.aware)}</div>
     </div>`;
   }).join('');
   const legendHospComp=ids.map((h,hi)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${hospColors[hi]};display:inline-block;"></span>${getHospitalDisplayName(h)}</div>`).join('');
