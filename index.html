@@ -4801,7 +4801,7 @@ function renderCobertura(){
   // Mapa de calor completo: TODOS los microorganismos frecuentes × TODOS los antibióticos elegibles
   let heatmapHtml='';
   if(topMicros.length && abxOptions.length){
-    const heatAbx=abxOptions.slice(0,10);
+    const heatAbx=abxOptions; // ya no se recorta a 10 — se muestran todos los que tengan datos (n>=3)
     const heatHead=heatAbx.map(r=>`<th style="padding:6px 4px;color:#fff;text-align:center;font-size:.6rem;font-weight:700;writing-mode:vertical-rl;transform:rotate(180deg);max-height:90px;">${r.a}</th>`).join('');
     const heatRows=topMicros.map(({micro})=>{
       const microObj=hd.micros && hd.micros.data ? hd.micros.data[micro] : null;
