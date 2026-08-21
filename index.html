@@ -4160,6 +4160,40 @@ function renderConsumoDDD(){
     </div>`;
   }).join('');
 
+  // Consolidado OOAD Tlaxcala — con antibióticos orales incluidos (vista informativa,
+  // replica exactamente la hoja "Analisis"/CONCENTRADO OOAD de CONSABI; NO sustituye
+  // el indicador oficial de arriba, que es solo endovenosos por hospital).
+  let ooadHtml='';
+  {
+    const perActual=mesActualCargado?_consumoPeriodo:null;
+    const conOralesTodos=perActual?ids.map(h=>CONSUMO_DATA[h].periodos[perActual]&&CONSUMO_DATA[h].periodos[perActual].con_orales).filter(Boolean):[];
+    if(conOralesTodos.length===ids.length && conOralesTodos.length>0){
+      const ddSum=conOralesTodos.reduce((s,x)=>s+x.ddd_total,0);
+      const awareSum={};
+      conOralesTodos.forEach(x=>Object.entries(x.por_aware||{}).forEach(([k,v])=>{awareSum[k]=(awareSum[k]||0)+v;}));
+      const awarePct={};
+      Object.entries(awareSum).forEach(([k,v])=>{awarePct[k]=ddSum?Math.round(v/ddSum*1000)/10:0;});
+      const segsOrden=Object.keys(awarePct).sort((a,b)=>awarePct[b]-awarePct[a]);
+      const legendOoad=segsOrden.map(k=>{
+        const tid=registerTip(`<div style="font-weight:700;">${k}</div><div>${awarePct[k]}% (${(awareSum[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD)</div>`);
+        return `<div data-tipid="${tid}" style="display:flex;align-items:center;gap:6px;font-size:.76rem;cursor:pointer;"><span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;"></span><span style="color:#374151;">${k}</span><span style="margin-left:auto;font-weight:700;color:#1e293b;">${awarePct[k]}%</span></div>`;
+      }).join('');
+      let acc=0; const stops=[];
+      segsOrden.forEach(k=>{const p=awarePct[k]||0; if(p<=0) return; stops.push(`${AWARE_COLORS[k]||'#94a3b8'} ${acc}% ${acc+p}%`); acc+=p;});
+      const donutCssOoad=stops.length?stops.join(', '):'#e2e8f0 0% 100%';
+      ooadHtml=`<div style="background:linear-gradient(135deg,#f0f9ff,#eff6ff);border:1px solid #bfdbfe;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🌐 Consolidado OOAD Tlaxcala · ${perActual}</div>
+        <div style="font-size:.68rem;color:#64748b;margin-bottom:10px;">Los 3 hospitales sumados, <b>incluyendo antibióticos orales</b> (hoja "Con AB orales" de CONSABI) — vista informativa aparte del indicador oficial de arriba, que solo cuenta endovenosos por hospital.</div>
+        <div style="display:flex;align-items:center;gap:18px;">
+          <div style="width:100px;height:100px;border-radius:50%;background:conic-gradient(${donutCssOoad});flex-shrink:0;position:relative;">
+            <div style="position:absolute;inset:14px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:#154f39;text-align:center;">${ddSum.toLocaleString('es-MX',{maximumFractionDigits:0})}<br><span style="font-size:.55rem;font-weight:600;color:#94a3b8;">DDD TOTAL</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;flex:1;">${legendOoad}</div>
+        </div>
+      </div>`;
+    }
+  }
+
   // Antibióticos de mayor riesgo (alto consumo + baja sensibilidad), a nivel hospital completo
   const hdRisk=getHospRawData(_consumoHospital);
   let riesgoHtml='';
@@ -4434,6 +4468,7 @@ function renderConsumoDDD(){
       ${ocupHtml||'<div></div>'}
     </div>
     ${servicioTablaHtml?`<div style="padding-top:14px;">${servicioTablaHtml}</div>`:''}
+    ${ooadHtml?`<div style="padding-top:14px;">${ooadHtml}</div>`:''}
     <div style="padding-top:14px;">${trendHtml}</div>
     <div style="padding-top:14px;">${trazadoresHtml}</div>
   `;
