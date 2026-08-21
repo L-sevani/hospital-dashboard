@@ -3901,6 +3901,12 @@ function grupoFarmacologico(nombre){
 }
 
 let _consumoHospital=null, _consumoPeriodo=null, _consumoView='ddd', _consumoModo='mensual';
+let _ooadPieSel=null; // null = Consolidado OOAD; o el id de un hospital para ver su parte individual en el gráfico 3D
+
+function setOoadPieSel(sel){
+  _ooadPieSel = (_ooadPieSel===sel) ? null : sel;
+  renderConsumoDDD();
+}
 let _coberturaCultivo=null, _coberturaAbxSel=null, _coberturaSortCol=null, _coberturaDim='cultivos', _coberturaFiltroCB='todos';
 let _consumoAwareFilter=null; // Set de categorías activas, null = todas
 
@@ -4168,6 +4174,8 @@ function renderConsumoDDD(){
   // que ya usa el indicador principal — NO incluye antibióticos orales.
   // Incluye la "Tabla 1" tal como aparece en la hoja Análisis: Clasificación ×
   // (OOAD, HGZ1, HGZ2, HGSMF8), cada uno con Sumatoria y Porcentaje por grupo.
+  // Clic en el encabezado de la tabla (OOAD o cualquier hospital) actualiza el
+  // gráfico 3D para mostrar los datos de esa columna específica.
   let ooadHtml='';
   {
     const perActual=mesActualCargado?_consumoPeriodo:null;
@@ -4178,20 +4186,29 @@ function renderConsumoDDD(){
       datosTodos.forEach(x=>Object.entries(x.por_aware||{}).forEach(([k,v])=>{awareSum[k]=(awareSum[k]||0)+v;}));
       const awarePct={};
       Object.entries(awareSum).forEach(([k,v])=>{awarePct[k]=ddSum?Math.round(v/ddSum*1000)/10:0;});
-      const segsOrden=Object.keys(awarePct).sort((a,b)=>awarePct[b]-awarePct[a]);
-      const legendOoad=segsOrden.map(k=>{
-        const tid=registerTip(`<div style="font-weight:700;">${k}</div><div>${awarePct[k]}% (${(awareSum[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD)</div>`);
+
+      // Datos activos para el gráfico 3D: OOAD consolidado, o el hospital seleccionado
+      const selValido=_ooadPieSel && ids.includes(_ooadPieSel);
+      const dSel=selValido?CONSUMO_DATA[_ooadPieSel].periodos[perActual]:null;
+      const awareSumActivo=selValido?(dSel.por_aware||{}):awareSum;
+      const awarePctActivo=selValido?(dSel.por_aware_pct||{}):awarePct;
+      const ddSumActivo=selValido?(dSel.ddd_total||0):ddSum;
+      const tituloActivo=selValido?getHospitalDisplayName(_ooadPieSel):'Consolidado OOAD Tlaxcala';
+
+      const segsOrdenActivo=Object.keys(awarePctActivo).sort((a,b)=>awarePctActivo[b]-awarePctActivo[a]);
+      const legendOoad=segsOrdenActivo.map(k=>{
+        const tid=registerTip(`<div style="font-weight:700;">${k}</div><div>${awarePctActivo[k]}% (${(awareSumActivo[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD)</div>`);
         return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:10px 62px 42px 68px;align-items:center;gap:7px;font-size:.75rem;cursor:pointer;padding:2px 0;">
           <span style="width:10px;height:10px;border-radius:3px;background:${AWARE_COLORS[k]||'#94a3b8'};display:inline-block;"></span>
           <span style="color:#374151;font-weight:600;">${k}</span>
-          <span style="font-weight:800;color:#1e293b;">${awarePct[k]}%</span>
-          <span style="color:#94a3b8;font-size:.66rem;">(${(awareSum[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})})</span>
+          <span style="font-weight:800;color:#1e293b;">${awarePctActivo[k]}%</span>
+          <span style="color:#94a3b8;font-size:.66rem;">(${(awareSumActivo[k]||0).toLocaleString('es-MX',{maximumFractionDigits:1})})</span>
         </div>`;
       }).join('');
-      const segsPie=segsOrden.filter(k=>awarePct[k]>0).map(k=>({label:k,pct:awarePct[k],color:AWARE_COLORS[k]||'#94a3b8'}));
+      const segsPie=segsOrdenActivo.filter(k=>awarePctActivo[k]>0).map(k=>({label:k,pct:awarePctActivo[k],color:AWARE_COLORS[k]||'#94a3b8'}));
       const pieSvg=build3DPie(segsPie);
 
-      // Tabla 1: Clasificación de Antibióticos esencial — OOAD + 3 hospitales
+      // Tabla 1: Clasificación de Antibióticos esencial — OOAD + 3 hospitales (encabezados clicables)
       const awareOrderFijo=['Access','Watch','Reserve'];
       const filasT1=awareOrderFijo.map(k=>{
         const cols=[{sum:awareSum[k]||0,pct:awarePct[k]||0}, ...ids.map(h=>{
@@ -4202,17 +4219,19 @@ function renderConsumoDDD(){
       }).join('');
       const totalesT1=[{sum:ddSum},...ids.map(h=>({sum:(CONSUMO_DATA[h].periodos[perActual]&&CONSUMO_DATA[h].periodos[perActual].ddd_total)||0}))];
       const filaTotalT1=`<tr style="border-top:1.5px solid #cbd5e1;"><td style="padding:5px 10px;font-weight:800;color:#154f39;">∑ Total DDD</td>${totalesT1.map(c=>`<td style="text-align:center;padding:5px 6px;font-weight:800;color:#154f39;">${c.sum.toLocaleString('es-MX',{maximumFractionDigits:1})}</td>`).join('')}</tr>`;
-      const headerT1=`<th style="padding:6px 6px;color:#fff;">OOAD</th>${ids.map(h=>`<th style="padding:6px 6px;color:#fff;">${getHospitalDisplayName(h)}</th>`).join('')}`;
+      const thStyle=(activo)=>`padding:6px 6px;color:#fff;cursor:pointer;user-select:none;${activo?'background:rgba(255,255,255,.22);border-radius:4px;':''}`;
+      const headerT1=`<th onclick="setOoadPieSel(null)" style="${thStyle(!selValido)}" title="Clic para ver en el gráfico">OOAD</th>${ids.map(h=>`<th onclick="setOoadPieSel('${h}')" style="${thStyle(_ooadPieSel===h)}" title="Clic para ver en el gráfico">${getHospitalDisplayName(h)}</th>`).join('')}`;
       const tablaT1Html=`<table style="width:100%;border-collapse:collapse;font-size:.72rem;margin-top:14px;">
         <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
           <th style="text-align:left;padding:6px 10px;color:#fff;">Clasificación</th>${headerT1}
         </tr></thead>
         <tbody>${filasT1}${filaTotalT1}</tbody>
-      </table>`;
+      </table>
+      <div style="font-size:.62rem;color:#94a3b8;margin-top:5px;">Clic en un encabezado (OOAD o un hospital) para ver esos datos en el gráfico de arriba.</div>`;
 
       ooadHtml=`<div style="background:linear-gradient(135deg,#f0f9ff,#eff6ff);border:1px solid #bfdbfe;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🌐 Consolidado OOAD Tlaxcala · ${perActual}</div>
-        <div style="font-size:.68rem;color:#64748b;margin-bottom:12px;">Los 3 hospitales sumados, mismo criterio oficial que arriba (solo endovenosos) — replica exacto la hoja "Sin AB orales CONCENTRADO OOAD" de CONSABI. ΣDDD total: <b>${ddSum.toLocaleString('es-MX',{maximumFractionDigits:1})}</b>.</div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🌐 ${tituloActivo} · ${perActual}</div>
+        <div style="font-size:.68rem;color:#64748b;margin-bottom:12px;">${selValido?`Datos de ${tituloActivo} (mismo criterio oficial, solo endovenosos).`:'Los 3 hospitales sumados, mismo criterio oficial que arriba (solo endovenosos) — replica exacto la hoja "Sin AB orales CONCENTRADO OOAD" de CONSABI.'} ΣDDD: <b>${ddSumActivo.toLocaleString('es-MX',{maximumFractionDigits:1})}</b>.</div>
         <div style="display:flex;align-items:center;gap:16px;">
           ${pieSvg}
           <div style="display:flex;flex-direction:column;gap:1px;">${legendOoad}</div>
@@ -4484,9 +4503,9 @@ function renderConsumoDDD(){
     <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;">${kpiHtml}</div>
     ${ooadHtml?`<div style="padding-top:14px;">${ooadHtml}</div>`:''}
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;padding-top:14px;">
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Antimicrobianos con mayor consumo (ΣDDD)</div>
-        <div style="display:flex;flex-direction:column;gap:8px;flex:1;justify-content:space-between;">${barsHtml}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}</div>
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🌐 Clasificación AWaRe del consumo <span style="font-size:.64rem;color:#94a3b8;font-weight:600;">· clic para filtrar</span></div>
@@ -4499,25 +4518,25 @@ function renderConsumoDDD(){
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🧪 Consumo por grupo farmacológico</div>
-        <div style="display:flex;flex-direction:column;gap:8px;flex:1;justify-content:space-between;">${gruposHtml}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">${gruposHtml}</div>
       </div>
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">⚖️ Comparativo entre hospitales <span style="font-size:.64rem;color:#94a3b8;font-weight:600;">· clic para cambiar</span></div>
-        <div style="display:flex;flex-direction:column;gap:10px;flex:1;justify-content:space-between;">${compHtml}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">${compHtml}</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🌈 Composición AWaRe — comparativo entre hospitales</div>
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">${awareStackHtml}</div>
+        ${awareStackHtml}
         <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">${['Access','Watch','Reserve'].map(k=>`<div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#374151;"><span style="width:9px;height:9px;border-radius:2px;background:${AWARE_COLORS[k]};display:inline-block;"></span>${k}</div>`).join('')}</div>
       </div>
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">⚠️ Antibióticos de mayor riesgo</div>
         <div style="font-size:.66rem;color:#94a3b8;margin-bottom:10px;">Alto consumo + baja sensibilidad hospital-wide — candidatos a revisar en el COA</div>
-        <div style="display:flex;flex-direction:column;gap:6px;flex:1;justify-content:space-between;">${riesgoHtml}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">${riesgoHtml}</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding-top:14px;">
