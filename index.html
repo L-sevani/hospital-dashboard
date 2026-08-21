@@ -5310,7 +5310,14 @@ function renderConsumoEspecialidad(){
   ];
   const kpiHtml=kpis.map(k=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;flex:1;min-width:170px;"><div style="font-size:.64rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.03em;">${k.label}</div><div style="font-size:1.1rem;font-weight:800;color:#154f39;margin-top:2px;">${k.val}</div></div>`).join('');
 
-  const filasTabla=filas.map(f=>{
+  // Si hay un filtro AWaRe activo (clic en la leyenda del donut de la derecha), la tabla
+  // de especialidades y la lectura automática solo muestran las que sí tienen consumo en
+  // esa categoría. El donut en sí sigue mostrando la distribución completa (es el control).
+  const filasFiltradas=_especialidadAwareFiltro
+    ? filas.filter(f=>(f.por_aware && f.por_aware[_especialidadAwareFiltro]>0))
+    : filas;
+
+  const filasTabla=filasFiltradas.map(f=>{
     const entradasAware=Object.entries(f.por_aware||{}).sort((a,b)=>b[1]-a[1]);
     const dominante=entradasAware[0];
     const cruzada=serviciosNormalizados[f.especialidad_normalizada];
@@ -5342,7 +5349,7 @@ function renderConsumoEspecialidad(){
     <tbody>${filasTabla}</tbody>
   </table>`;
 
-  const top12=filas.slice(0,12);
+  const top12=filas.slice().sort((a,b)=>b.piezas-a.piezas).slice(0,12);
   const maxPiezas=Math.max(...top12.map(f=>f.piezas),1);
   const barsHtml=top12.map(f=>{
     const dominante=Object.entries(f.por_aware||{}).sort((a,b)=>b[1]-a[1])[0];
@@ -5419,7 +5426,7 @@ function renderConsumoEspecialidad(){
   const tasasValidas=Object.values(tasasPorEspecialidad);
   const tasaPromedio=tasasValidas.length?Math.round(tasasValidas.reduce((s,v)=>s+v,0)/tasasValidas.length*10)/10:null;
 
-  const lecturaEspecialidadHtml=filas.filter(f=>f.piezas>=10).map(f=>{ // ignora especialidades con muy pocas piezas (poco representativo)
+  const lecturaEspecialidadHtml=filasFiltradas.filter(f=>f.piezas>=10).map(f=>{ // ignora especialidades con muy pocas piezas (poco representativo)
     const cat=f._domCat, pct=Math.round(f._domPct);
     let msg, icono;
     if(cat==='Access' && pct>=70){
@@ -5516,6 +5523,7 @@ function renderConsumoEspecialidad(){
     <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">📋 Especialidades — ${_especialidadUnidad} <span style="font-size:.62rem;color:#94a3b8;font-weight:600;">· ordenado por % AWaRe dominante</span></div>
+        ${_especialidadAwareFiltro?`<div style="font-size:.68rem;color:#154f39;font-weight:700;margin-bottom:4px;">Filtrado a especialidades con consumo ${_especialidadAwareFiltro} (${filasFiltradas.length} de ${filas.length})</div>`:''}
         <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${hospitalId?`Días Paciente, piezas/cama y piezas/100 días paciente cruzados con PARTE II donde el nombre de especialidad coincide exacto (período ${_consumoPeriodo||'—'}). Sin match = N/D, no se fuerza el emparejamiento.`:'Esta unidad no tiene equivalente en PARTE II (solo cubre los 3 hospitales, no UMF), por eso no hay días paciente ni piezas/cama aquí.'}</div>
         ${tablaHtml}
       </div>
