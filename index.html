@@ -4345,7 +4345,7 @@ function renderConsumoDDD(){
   {
     const ejes=['Access','Watch','Reserve'];
     const angulos=[-90,30,150]; // grados, 3 ejes a 120°
-    const cx=100,cy=92,rMax=62;
+    const cx=130,cy=118,rMax=88;
     const colHosp={'HGZ 1 TLAXCALA':'#2563eb','HGZMF 2 APIZACO':'#16a34a','HGSMF 8 TLAXCALA':'#d97706'};
     const pt=(ang,r)=>{const rad=ang*Math.PI/180;return [cx+r*Math.cos(rad),cy+r*Math.sin(rad)];};
     const gridPolys=[0.25,0.5,0.75,1].map(f=>{
@@ -4354,11 +4354,11 @@ function renderConsumoDDD(){
     }).join('');
     const ringLabels=[0.25,0.5,0.75,1].map(f=>{
       const [x,y]=pt(-90,rMax*f);
-      return `<text x="${x+3}" y="${y-1}" font-size="7" fill="#cbd5e1" font-weight="700">${Math.round(f*100)}</text>`;
+      return `<text x="${x+4}" y="${y-1}" font-size="8" fill="#cbd5e1" font-weight="700">${Math.round(f*100)}</text>`;
     }).join('');
     const axisLines=angulos.map(a=>{const [x,y]=pt(a,rMax);return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;}).join('');
-    const axisLabels=angulos.map((a,i)=>{const [x,y]=pt(a,rMax+18);return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="10.5" font-weight="800" fill="#374151">${ejes[i]}</text>`;}).join('');
-    let vertexDots='', vertexLabels='';
+    const axisLabels=angulos.map((a,i)=>{const [x,y]=pt(a,rMax+20);return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="12" font-weight="800" fill="#374151">${ejes[i]}</text>`;}).join('');
+    let vertexDots='';
     const hospPolys=ids.map((h,hi)=>{
       const perKC=Object.keys(CONSUMO_DATA[h].periodos).filter(p=>CONSUMO_DATA[h].periodos[p].consumo_cargado).sort();
       const per=CONSUMO_DATA[h].periodos[_consumoPeriodo]&&CONSUMO_DATA[h].periodos[_consumoPeriodo].consumo_cargado?_consumoPeriodo:perKC[perKC.length-1];
@@ -4370,13 +4370,7 @@ function renderConsumoDDD(){
       const color=colHosp[h]||'#94a3b8';
       pts.forEach(([x,y],i)=>{
         const tid=registerTip(`<div style="font-weight:700;">${getHospitalDisplayName(h)}</div><div>${ejes[i]}: ${vals[i]}%</div>`);
-        vertexDots+=`<circle data-tipid="${tid}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${color}" stroke="#fff" stroke-width="1.5" style="cursor:pointer;"/>`;
-        // etiqueta de % visible junto al punto (sin necesidad de pasar el cursor)
-        const rad=angulos[i]*Math.PI/180;
-        const tx=-Math.sin(rad), ty=Math.cos(rad);
-        const off=(hi-1)*10;
-        const lx=x+tx*off, ly=y+ty*off-7;
-        vertexLabels+=`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="7.5" font-weight="800" fill="${color}" text-anchor="middle">${vals[i]}%</text>`;
+        vertexDots+=`<circle data-tipid="${tid}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="${color}" stroke="#fff" stroke-width="1.5" style="cursor:pointer;"/>`;
       });
       return `<polygon points="${ptsStr}" fill="${color}" fill-opacity="0.15" stroke="${color}" stroke-width="2"/>`;
     }).join('');
@@ -4394,8 +4388,8 @@ function renderConsumoDDD(){
     radarHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🕸️ Perfil AWaRe comparativo</div>
       <div style="font-size:.66rem;color:#94a3b8;margin-bottom:6px;">% del consumo en cada categoría, por hospital · pasa el cursor sobre un punto</div>
-      <svg viewBox="0 0 200 185" style="width:100%;max-width:230px;display:block;margin:0 auto;">
-        ${gridPolys}${ringLabels}${axisLines}${hospPolys}${vertexDots}${vertexLabels}${axisLabels}
+      <svg viewBox="0 0 260 250" style="width:100%;max-width:300px;display:block;margin:0 auto;">
+        ${gridPolys}${ringLabels}${axisLines}${hospPolys}${vertexDots}${axisLabels}
       </svg>
       <div style="display:grid;grid-template-columns:14px 1fr 34px 34px 34px;gap:4px;margin:8px 0 2px;font-size:.58rem;color:#94a3b8;font-weight:800;"><span></span><span></span><span style="text-align:right;">ACC</span><span style="text-align:right;">WAT</span><span style="text-align:right;">RES</span></div>
       <div style="display:flex;flex-direction:column;">${filasValores}</div>
@@ -5044,14 +5038,19 @@ function renderRankingAntibioticos(){
     return e?e.piezas:0;
   })),1);
   const hospColors=['#154f39','#2563eb','#d97706'];
+  const hospColorMap={};
+  ids.forEach((h,hi)=>{hospColorMap[h]=hospColors[hi]||'#94a3b8';});
   const compGrupoHtml=topComp.map(d=>{
-    const barsHosp=ids.map((h,hi)=>{
+    const entradas=ids.map(h=>{
       const e=datosPorHosp[h].find(x=>x.antibiotico===d.antibiotico);
-      const val=e?e.piezas:0;
+      return {h, val:e?e.piezas:0};
+    }).sort((a,b)=>b.val-a.val); // mayor a menor dentro de cada grupo de barras
+    const barsHosp=entradas.map(({h,val})=>{
+      const color=hospColorMap[h];
       const tid=registerTip(`<div style="font-weight:700;">${getHospitalDisplayName(h)}</div><div>${d.antibiotico}: ${val.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas</div>`);
       return `<div data-tipid="${tid}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;min-width:20px;">
-        <div style="font-size:.58rem;font-weight:700;color:${hospColors[hi]||'#94a3b8'};">${val?val.toLocaleString('es-MX',{maximumFractionDigits:0}):''}</div>
-        <div style="width:100%;max-width:20px;background:${hospColors[hi]||'#94a3b8'};border-radius:3px 3px 0 0;height:${Math.max(2,val/maxHosp*70)}px;"></div>
+        <div style="font-size:.58rem;font-weight:700;color:${color};">${val?val.toLocaleString('es-MX',{maximumFractionDigits:0}):''}</div>
+        <div style="width:100%;max-width:20px;background:${color};border-radius:3px 3px 0 0;height:${Math.max(2,val/maxHosp*70)}px;"></div>
       </div>`;
     }).join('');
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
