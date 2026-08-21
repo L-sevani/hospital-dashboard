@@ -3939,27 +3939,47 @@ function mergeConsumoPeriodos(hosp, uptoPeriod){
   if(!per) return null;
   const keys=Object.keys(per).filter(p=>per[p].consumo_cargado && p<=uptoPeriod).sort();
   if(!keys.length) return null;
-  let camasSum=0,dddSum=0,diasSum=0;
+  let camasSum=0,dddSum=0,diasSum=0,ocupSum=0,ocupN=0;
   const awareSum={}, abxSum={};
+  const serviciosAcc={}; // servicio -> {camasSum,diasSum,ocupSum,ocupN,n}
   keys.forEach(k=>{
     const d=per[k];
     camasSum+=d.camas||0;
     diasSum+=d.dias_paciente||0;
     dddSum+=d.ddd_total||0;
+    if(d.ocupacion!=null){ocupSum+=d.ocupacion; ocupN++;}
     Object.entries(d.por_aware||{}).forEach(([a,v])=>{awareSum[a]=(awareSum[a]||0)+v;});
     (d.top_antibioticos||[]).forEach(a=>{
       if(!abxSum[a.antibiotico]) abxSum[a.antibiotico]={antibiotico:a.antibiotico,ddd:0,aware:a.aware};
       abxSum[a.antibiotico].ddd+=a.ddd;
     });
+    Object.entries(d.servicios||{}).forEach(([serv,info])=>{
+      if(!serviciosAcc[serv]) serviciosAcc[serv]={camasSum:0,diasSum:0,ocupSum:0,ocupN:0,n:0,division:info.division};
+      const s=serviciosAcc[serv];
+      s.camasSum+=info.camas||0; s.diasSum+=info.dias_paciente||0;
+      if(info.ocupacion!=null){s.ocupSum+=info.ocupacion; s.ocupN++;}
+      s.n++;
+    });
   });
   const ddd100=camasSum?(dddSum/camasSum*100):null;
   const porAwarePct={};
   Object.entries(awareSum).forEach(([k,v])=>{porAwarePct[k]=dddSum?Math.round(v/dddSum*1000)/10:0;});
+  const servicios={};
+  Object.entries(serviciosAcc).forEach(([serv,s])=>{
+    servicios[serv]={
+      camas:Math.round(s.camasSum/s.n*10)/10,
+      dias_paciente:s.diasSum,
+      ocupacion:s.ocupN?Math.round(s.ocupSum/s.ocupN*10)/10:null,
+      division:s.division,
+    };
+  });
   return {
     camas:Math.round(camasSum/keys.length*10)/10, dias_paciente:diasSum, ddd_total:Math.round(dddSum*100)/100,
     ddd_100_camas: ddd100!==null?Math.round(ddd100*100)/100:null,
+    ocupacion: ocupN?Math.round(ocupSum/ocupN*10)/10:null,
     por_aware:awareSum, por_aware_pct:porAwarePct,
     top_antibioticos:Object.values(abxSum).sort((a,b)=>b.ddd-a.ddd),
+    servicios,
     consumo_cargado:true, meses:keys,
   };
 }
@@ -4487,7 +4507,7 @@ function renderConsumoDDD(){
     trazadoresHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📉 Tendencia de grupos trazadores</div>
       <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">ΣDDD por grupo farmacológico, mes a mes (top 5 grupos) — solo meses con CONSABI cargado</div>
-      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;">${linesHtml}${xLabels}</svg>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:180px;">${linesHtml}${xLabels}</svg>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">${legendTraz}</div>
     </div>`;
   } else {
@@ -4906,7 +4926,7 @@ function renderCobertura(){
       trendSensHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📈 Tendencia de sensibilidad · ${_coberturaCultivo}</div>
         <div style="font-size:.66rem;color:#94a3b8;margin-bottom:8px;">%S por año, un antibiótico seleccionado = una línea</div>
-        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;">${gridLines}${linesHtml}${xLabels}</svg>
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:170px;">${gridLines}${linesHtml}${xLabels}</svg>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">${legendTrend}</div>
       </div>`;
     }
