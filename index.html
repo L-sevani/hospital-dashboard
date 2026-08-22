@@ -4164,15 +4164,17 @@ function renderConsumoDDD(){
   const topFull=d.top_antibioticos.filter(a=>!activeFilt||activeFilt.has(a.aware));
   const top=topFull.slice(0,10);
   const maxDdd=Math.max(...top.map(a=>a.ddd),1);
+  const totalDddTop=topFull.reduce((s,a)=>s+a.ddd,0);
   const barsHtml=top.map(a=>{
-    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${a.antibiotico}</div><div>ΣDDD: ${a.ddd.toLocaleString('es-MX',{maximumFractionDigits:2})}</div><div>Clasificación AWaRe: ${a.aware}</div><div>Grupo: ${grupoFarmacologico(a.antibiotico)}</div>`);
+    const pctA=totalDddTop?Math.round(a.ddd/totalDddTop*1000)/10:0;
+    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${a.antibiotico}</div><div>ΣDDD: ${a.ddd.toLocaleString('es-MX',{maximumFractionDigits:2})} (${pctA}%)</div><div>Clasificación AWaRe: ${a.aware}</div><div>Grupo: ${grupoFarmacologico(a.antibiotico)}</div>`);
     return `
-    <div data-tipid="${tid}" style="display:grid;grid-template-columns:190px 1fr 60px;align-items:center;gap:8px;cursor:pointer;">
+    <div data-tipid="${tid}" style="display:grid;grid-template-columns:190px 1fr 90px;align-items:center;gap:8px;cursor:pointer;">
       <span style="font-size:.74rem;color:#000;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${awareBadge(a.aware)}${a.antibiotico}</span>
       <div style="background:#f1f5f9;border-radius:5px;height:14px;position:relative;">
         <div style="width:${(a.ddd/maxDdd*100).toFixed(1)}%;background:${AWARE_COLORS[a.aware]||'#94a3b8'};height:14px;border-radius:5px;transition:width .3s;"></div>
       </div>
-      <span style="font-size:.72rem;font-weight:700;color:#1e293b;text-align:right;">${a.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})}</span>
+      <span style="font-size:.72rem;font-weight:700;color:#1e293b;text-align:right;">${a.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})} <span style="color:#94a3b8;font-weight:600;">(${pctA}%)</span></span>
     </div>`;
   }).join('') || `<div style="color:#94a3b8;font-size:.78rem;padding:10px 0;">Sin antibióticos en el filtro seleccionado.</div>`;
 
@@ -4186,12 +4188,14 @@ function renderConsumoDDD(){
   });
   const gruposOrdenados=Object.entries(grupoMap).sort((a,b)=>b[1].ddd-a[1].ddd);
   const maxGrupo=Math.max(...gruposOrdenados.map(g=>g[1].ddd),1);
+  const totalGrupos=gruposOrdenados.reduce((s,[,info])=>s+info.ddd,0);
   const gruposHtml=gruposOrdenados.map(([g,info])=>{
-    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${g}</div><div>ΣDDD: ${info.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})}</div><div style="color:#94a3b8;font-size:.66rem;margin-top:2px;">${info.items.join(', ')}</div>`);
-    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:150px 1fr 55px;align-items:center;gap:8px;cursor:pointer;">
+    const pctG=totalGrupos?Math.round(info.ddd/totalGrupos*1000)/10:0;
+    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${g}</div><div>ΣDDD: ${info.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})} (${pctG}%)</div><div style="color:#94a3b8;font-size:.66rem;margin-top:2px;">${info.items.join(', ')}</div>`);
+    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:150px 1fr 85px;align-items:center;gap:8px;cursor:pointer;">
       <span style="font-size:.72rem;color:#000;font-weight:600;">${g}</span>
       <div style="background:#f1f5f9;border-radius:5px;height:12px;"><div style="width:${(info.ddd/maxGrupo*100).toFixed(1)}%;background:${GRUPO_COLORS[g]||'#94a3b8'};height:12px;border-radius:5px;transition:width .3s;"></div></div>
-      <span style="font-size:.7rem;font-weight:700;color:#1e293b;text-align:right;">${info.ddd.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+      <span style="font-size:.7rem;font-weight:700;color:#1e293b;text-align:right;">${info.ddd.toLocaleString('es-MX',{maximumFractionDigits:0})} <span style="color:#94a3b8;font-weight:600;">(${pctG}%)</span></span>
     </div>`;
   }).join('');
 
@@ -4200,15 +4204,16 @@ function renderConsumoDDD(){
     const perKeysConsumo=Object.keys(CONSUMO_DATA[h].periodos).filter(p=>CONSUMO_DATA[h].periodos[p].consumo_cargado).sort();
     const per=CONSUMO_DATA[h].periodos[_consumoPeriodo]&&CONSUMO_DATA[h].periodos[_consumoPeriodo].consumo_cargado?_consumoPeriodo:perKeysConsumo[perKeysConsumo.length-1];
     const dd=per?consumoParaHospital(h,per,_consumoModo):null;
-    return {h,val:dd&&dd.ddd_100_camas!=null?dd.ddd_100_camas:0,per};
+    const val=(dd&&dd.dias_paciente)?Math.round(dd.ddd_total/dd.dias_paciente*100*100)/100:0;
+    return {h,val,per};
   }).sort((a,b)=>b.val-a.val);
   const maxComp=Math.max(...compHosp.map(c=>c.val),1);
   const compHtml=compHosp.map(c=>{
-    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${getHospitalDisplayName(c.h)}</div><div>DDD/100 camas: ${c.val.toLocaleString('es-MX',{maximumFractionDigits:1})}</div><div style="color:#94a3b8;font-size:.66rem;">${_consumoModo==='acumulado'?'Acumulado a':'Período'}: ${c.per||'—'}${c.h===_consumoHospital?' · seleccionado':''}</div>`);
+    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${getHospitalDisplayName(c.h)}</div><div>DDD/100 días paciente: ${c.val.toLocaleString('es-MX',{maximumFractionDigits:1})}</div><div style="color:#94a3b8;font-size:.66rem;">${_consumoModo==='acumulado'?'Acumulado a':'Período'}: ${c.per||'—'}${c.h===_consumoHospital?' · seleccionado':''}</div>`);
     return `<div data-tipid="${tid}" onclick="_consumoHospital='${c.h}';_consumoPeriodo=null;renderConsumoDDD();" style="display:grid;grid-template-columns:150px 1fr 60px;align-items:center;gap:8px;cursor:pointer;">
       <span style="font-size:.74rem;font-weight:700;color:${c.h===_consumoHospital?'#154f39':'#374151'};">${getHospitalDisplayName(c.h)}</span>
       <div style="background:#f1f5f9;border-radius:5px;height:14px;"><div style="width:${(c.val/maxComp*100).toFixed(1)}%;background:${c.h===_consumoHospital?'#154f39':'#94a3b8'};height:14px;border-radius:5px;transition:width .3s;"></div></div>
-      <span style="font-size:.72rem;font-weight:700;color:#1e293b;text-align:right;">${c.val.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+      <span style="font-size:.72rem;font-weight:700;color:#1e293b;text-align:right;">${c.val.toLocaleString('es-MX',{maximumFractionDigits:1})}</span>
     </div>`;
   }).join('');
 
@@ -4399,7 +4404,7 @@ function renderConsumoDDD(){
     let huboAlgunEstimado=false;
     const rows=divisionesOrdenadas.map(({div,items})=>{
       const filasDiv=items.slice().sort((a,b)=>(b.dias_paciente||0)-(a.dias_paciente||0)).map(s=>{
-        const matchEsp=especialidadesRecetasPorNombreNorm[_normalizarEspecialidadJS(s.nombre)];
+        const matchEsp=especialidadesRecetasPorNombreNorm[_aliasEspecialidadJS(_normalizarEspecialidadJS(s.nombre))];
         let dddEst=null, dddPer100=null;
         if(matchEsp && nombresConsabiFactor.length){
           let suma=0, huboMatch=false;
@@ -4614,7 +4619,7 @@ function renderConsumoDDD(){
         <div style="display:flex;flex-direction:column;gap:8px;">${gruposHtml}</div>
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">⚖️ Comparativo entre hospitales <span style="font-size:.64rem;color:#94a3b8;font-weight:600;">· clic para cambiar</span></div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">⚖️ Comparativo entre hospitales (DDD/100 días paciente) <span style="font-size:.64rem;color:#94a3b8;font-weight:600;">· clic para cambiar</span></div>
         <div style="display:flex;flex-direction:column;gap:10px;">${compHtml}</div>
       </div>
     </div>
@@ -5263,6 +5268,20 @@ function _normalizarEspecialidadJS(txt){
   return (txt||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim().replace(/\s+/g,' ');
 }
 
+// Sinónimos verificados manualmente: mismo servicio, nombre distinto entre PARTE II
+// (donde se registran camas/días paciente) y el Catálogo de Especialidades (donde se
+// registra el personal médico). Solo se agregan aquí casos confirmados 1 a 1 — NO se
+// incluyen aquí cosas como "Ginecología"+"Obstetricia" (PARTE II las separa, el
+// catálogo las junta en una sola) porque no hay forma de repartir sin inventar.
+const ESPECIALIDAD_ALIAS_JS={
+  'CIRUGIA MAXILO FACIAL':'CIRUGIA MAXILOFACIAL', // PARTE II con espacio, catálogo sin espacio
+  'UNIDAD DE CUIDADOS INTENSIVOS':'TERAPIA INTENSIVA', // mismo servicio, nombre institucional distinto
+  'PEDIATRIA':'PEDIATRIA MEDICA', // catálogo agrega "Médica" al nombre
+};
+function _aliasEspecialidadJS(normalizado){
+  return ESPECIALIDAD_ALIAS_JS[normalizado] || normalizado;
+}
+
 function setEspecialidadUnidad(u){
   _especialidadUnidad=u;
   _especialidadAwareFiltro=null;
@@ -5335,7 +5354,7 @@ function renderConsumoEspecialidad(){
     const per=CONSUMO_DATA[hospitalId].periodos[_consumoPeriodo];
     if(per && per.servicios){
       Object.entries(per.servicios).forEach(([serv,info2])=>{
-        serviciosNormalizados[_normalizarEspecialidadJS(serv)]=info2;
+        serviciosNormalizados[_aliasEspecialidadJS(_normalizarEspecialidadJS(serv))]=info2;
       });
     }
   }
@@ -5389,14 +5408,16 @@ function renderConsumoEspecialidad(){
 
   const top12=filas.slice().sort((a,b)=>b.piezas-a.piezas).slice(0,12);
   const maxPiezas=Math.max(...top12.map(f=>f.piezas),1);
+  const totalTop12Base=filas.reduce((s,f)=>s+f.piezas,0);
   const barsHtml=top12.map(f=>{
     const dominante=Object.entries(f.por_aware||{}).sort((a,b)=>b[1]-a[1])[0];
     const color=dominante?(AWARE_COLORS[dominante[0]]||'#94a3b8'):'#94a3b8';
-    const tid=registerTip(`<div style="font-weight:700;">${f.especialidad}</div><div>${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas</div>`);
-    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:190px 1fr 55px;align-items:center;gap:8px;cursor:pointer;">
+    const pctF=totalTop12Base?Math.round(f.piezas/totalTop12Base*1000)/10:0;
+    const tid=registerTip(`<div style="font-weight:700;">${f.especialidad}</div><div>${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas (${pctF}%)</div>`);
+    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:190px 1fr 85px;align-items:center;gap:8px;cursor:pointer;">
       <span style="font-size:.72rem;color:#000;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.especialidad}</span>
       <div style="background:#f1f5f9;border-radius:5px;height:13px;"><div style="width:${(f.piezas/maxPiezas*100).toFixed(1)}%;background:${color};height:13px;border-radius:5px;"></div></div>
-      <span style="font-size:.7rem;font-weight:700;color:#000;text-align:right;">${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+      <span style="font-size:.7rem;font-weight:700;color:#000;text-align:right;">${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} <span style="color:#94a3b8;font-weight:600;">(${pctF}%)</span></span>
     </div>`;
   }).join('');
 
@@ -5431,10 +5452,10 @@ function renderConsumoEspecialidad(){
   const filasAbHtml=listaAntibioticos.slice(0,15).map(a=>{
     const pct=totalUnidad?Math.round(a.piezas/totalUnidad*1000)/10:0;
     const tid=registerTip(`<div style="font-weight:700;">${a.antibiotico}</div><div>${a.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas (${pct}% de ${_especialidadUnidad})</div><div>AWaRe: ${a.aware}</div>`);
-    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:170px 1fr 55px;align-items:center;gap:8px;cursor:pointer;">
+    return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:170px 1fr 85px;align-items:center;gap:8px;cursor:pointer;">
       <span style="font-size:.72rem;color:#000;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${awareBadge(a.aware)}${a.antibiotico}</span>
       <div style="background:#f1f5f9;border-radius:5px;height:13px;"><div style="width:${(a.piezas/maxAb*100).toFixed(1)}%;background:${AWARE_COLORS[a.aware]||'#94a3b8'};height:13px;border-radius:5px;"></div></div>
-      <span style="font-size:.7rem;font-weight:700;color:#000;text-align:right;">${a.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</span>
+      <span style="font-size:.7rem;font-weight:700;color:#000;text-align:right;">${a.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})} <span style="color:#94a3b8;font-weight:600;">(${pct}%)</span></span>
     </div>`;
   }).join('') || `<div style="color:#94a3b8;font-size:.78rem;padding:10px 0;">Sin antibióticos en el filtro seleccionado.</div>`;
 
