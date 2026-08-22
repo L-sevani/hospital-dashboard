@@ -4357,11 +4357,34 @@ function renderConsumoDDD(){
 
   // Consumo por servicio (real: camas/días paciente/ocupación de PARTE II a nivel
   // Especialidad — el desglose más fino que trae el reporte — agrupado visualmente
-  // por División. El DDD sí es únicamente a nivel hospital completo: CONSABI no
-  // desglosa el consumo por servicio, así que esa columna se marca honestamente
-  // como no disponible en vez de inventar un reparto).
+  // por División. DDD/100 ahora SÍ se llena cuando hay cruce disponible con el
+  // Catálogo de Especialidades (misma estimación derivada que en la pestaña
+  // "Consumo por Especialidad": factor DDD÷pieza de CONSABI aplicado a las piezas
+  // de la Plantilla de Recetas por especialidad). Donde no hay match de nombre o
+  // no hay datos de Recetas para ese mes, se deja N/D — no se inventa.
   let servicioTablaHtml='';
   if(d.servicios && Object.keys(d.servicios).length){
+    // Factor DDD÷pieza por antibiótico, tomado del mes RAW de CONSABI (no del acumulado,
+    // para no mezclar piezas de distintos meses en un solo factor).
+    const consabiMes=periodosMap[_consumoPeriodo];
+    const factorPorNombreConsabi={};
+    if(consabiMes && consabiMes.consumo_cargado && consabiMes.top_antibioticos){
+      consabiMes.top_antibioticos.forEach(a=>{
+        if(a.piezas && a.piezas>0) factorPorNombreConsabi[a.antibiotico]=a.ddd/a.piezas;
+      });
+    }
+    const nombresConsabiFactor=Object.keys(factorPorNombreConsabi);
+    // Unidad de Recetas (Farmacia) que corresponde a este hospital, para ese mismo mes
+    let especialidadesRecetas=null;
+    if(ESPECIALIDAD_DATA && ESPECIALIDAD_DATA.periodos && ESPECIALIDAD_DATA.periodos[_consumoPeriodo]){
+      const porUnidadEsp=ESPECIALIDAD_DATA.periodos[_consumoPeriodo].por_unidad||{};
+      for(const nombreU in porUnidadEsp){
+        if(porUnidadEsp[nombreU].hospital_id===_consumoHospital){ especialidadesRecetas=porUnidadEsp[nombreU].especialidades; break; }
+      }
+    }
+    const especialidadesRecetasPorNombreNorm={};
+    if(especialidadesRecetas) especialidadesRecetas.forEach(e=>{especialidadesRecetasPorNombreNorm[_normalizarEspecialidadJS(e.especialidad)]=e;});
+
     const filas=Object.entries(d.servicios).map(([nombre,info])=>({nombre,...info}));
     // Agrupar por División, orden de divisiones por total de días paciente (mayor a menor)
     const porDivision={};
@@ -4373,22 +4396,33 @@ function renderConsumoDDD(){
     const divisionesOrdenadas=Object.entries(porDivision)
       .map(([div,items])=>({div,items,total:items.reduce((s,i)=>s+(i.dias_paciente||0),0)}))
       .sort((a,b)=>b.total-a.total);
+    let huboAlgunEstimado=false;
     const rows=divisionesOrdenadas.map(({div,items})=>{
       const filasDiv=items.slice().sort((a,b)=>(b.dias_paciente||0)-(a.dias_paciente||0)).map(s=>{
-        const tid=registerTip(`<div style="font-weight:700;">${s.nombre}</div><div>División: ${div}</div><div>Camas: ${Math.round(s.camas)}</div><div>Días paciente: ${Math.round(s.dias_paciente)}</div><div>Ocupación: ${s.ocupacion!=null?s.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</div>`);
+        const matchEsp=especialidadesRecetasPorNombreNorm[_normalizarEspecialidadJS(s.nombre)];
+        let dddEst=null, dddPer100=null;
+        if(matchEsp && nombresConsabiFactor.length){
+          let suma=0, huboMatch=false;
+          Object.entries(matchEsp.por_antibiotico||{}).forEach(([nombreAb,piezasAb])=>{
+            const matchNombre=matchConsumoName(nombreAb,nombresConsabiFactor);
+            if(matchNombre && factorPorNombreConsabi[matchNombre]!=null){ suma+=piezasAb*factorPorNombreConsabi[matchNombre]; huboMatch=true; }
+          });
+          if(huboMatch){ dddEst=suma; dddPer100=s.camas?Math.round(suma/s.camas*100*10)/10:null; huboAlgunEstimado=true; }
+        }
+        const tid=registerTip(`<div style="font-weight:700;">${s.nombre}</div><div>División: ${div}</div><div>Camas: ${Math.round(s.camas)}</div><div>Días paciente: ${Math.round(s.dias_paciente)}</div><div>Ocupación: ${s.ocupacion!=null?s.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</div>${dddEst!=null?`<div>DDD estimado: ${dddEst.toLocaleString('es-MX',{maximumFractionDigits:1})} (derivado, no oficial)</div>`:''}`);
         return `<tr data-tipid="${tid}" style="cursor:pointer;">
           <td style="padding:5px 10px 5px 22px;color:#000;">${s.nombre}</td>
           <td style="text-align:center;padding:5px;">${Math.round(s.camas)}</td>
           <td style="text-align:center;padding:5px;">${Math.round(s.dias_paciente).toLocaleString('es-MX')}</td>
           <td style="text-align:center;padding:5px;font-weight:700;color:${s.ocupacion>100?'#dc2626':'#374151'};">${s.ocupacion!=null?s.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</td>
-          <td style="text-align:center;padding:5px;color:#cbd5e1;font-size:.68rem;">N/D</td>
+          <td style="text-align:center;padding:5px;">${dddPer100!=null?`<span style="font-weight:700;color:#92400e;">${dddPer100}</span>`:'<span style="color:#cbd5e1;font-size:.68rem;">N/D</span>'}</td>
         </tr>`;
       }).join('');
       return `<tr><td colspan="5" style="padding:8px 10px 2px;font-weight:800;color:#154f39;font-size:.72rem;text-transform:uppercase;letter-spacing:.02em;border-top:1px solid #f1f5f9;">${div}</td></tr>${filasDiv}`;
     }).join('');
     servicioTablaHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🏥 Consumo por servicio</div>
-      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Camas, días paciente y ocupación reales (PARTE II) por especialidad, agrupadas por División. La columna DDD/100 no está disponible a nivel servicio porque CONSABI solo reporta el consumo del hospital completo, no desglosado — se marca N/D en vez de inventar un reparto.</div>
+      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Camas, días paciente y ocupación reales (PARTE II) por especialidad, agrupadas por División. ${huboAlgunEstimado?'DDD/100 en <span style="color:#92400e;font-weight:700;">ámbar</span> es una <b>estimación derivada</b> (factor DDD÷pieza de CONSABI aplicado a las piezas de la Plantilla de Recetas por especialidad) — no un dato oficial de CONSABI. Donde no hubo cruce de nombre queda N/D.':'La columna DDD/100 queda N/D donde no hay cruce con el Catálogo de Especialidades para este mes.'}</div>
       <table style="width:100%;border-collapse:collapse;font-size:.76rem;">
         <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
           <th style="text-align:left;padding:7px 10px;color:#fff;">Servicio / Especialidad</th>
