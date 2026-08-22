@@ -4544,6 +4544,35 @@ function renderConsumoDDD(){
     trendHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;color:#94a3b8;font-size:.78rem;">📈 La tendencia se mostrará automáticamente cuando se carguen más meses de CONSABI para esta unidad (por ahora solo ${periodosConConsumo.length===1?periodosConConsumo[0]:'ninguno'} tiene consumo cargado).</div>`;
   }
 
+  // Tendencia DDD/100 DÍAS PACIENTE (fórmula distinta a la de arriba: ΣDDD÷días paciente×100,
+  // el estándar OMS — no confundir con la de camas, aquí se usa a propósito otro denominador)
+  let trendDiasPacHtml='';
+  if(periodosConConsumo.length>1){
+    const trendPointsDP = _consumoModo==='acumulado'
+      ? periodosConConsumo.map(p=>{
+          const m=mergeConsumoPeriodos(_consumoHospital,p);
+          const v=(m && m.dias_paciente)?Math.round(m.ddd_total/m.dias_paciente*100*100)/100:0;
+          return {p,v};
+        })
+      : periodosConConsumo.map(p=>{
+          const dp=periodosMap[p];
+          const v=(dp && dp.dias_paciente)?Math.round(dp.ddd_total/dp.dias_paciente*100*100)/100:0;
+          return {p,v};
+        });
+    const maxTrendDP=Math.max(...trendPointsDP.map(pt=>pt.v),1);
+    trendDiasPacHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">📈 Tendencia DDD/100 días paciente ${_consumoModo==='acumulado'?'(acumulada)':'(mensual)'}</div>
+      <div style="display:flex;align-items:flex-end;gap:10px;height:120px;">
+        ${trendPointsDP.map(pt=>{
+          const tid=registerTip(`<div style="font-weight:700;">${pt.p}</div><div>DDD/100 días paciente: ${pt.v.toLocaleString('es-MX',{maximumFractionDigits:1})}</div>`);
+          return `<div data-tipid="${tid}" onclick="_consumoPeriodo='${pt.p}';renderConsumoDDD();" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;cursor:pointer;"><div style="font-size:.68rem;font-weight:700;color:#0369a1;">${pt.v.toLocaleString('es-MX',{maximumFractionDigits:0})}</div><div style="width:100%;max-width:36px;background:linear-gradient(180deg,#38bdf8,#0369a1);border-radius:4px 4px 0 0;height:${Math.max(4,pt.v/maxTrendDP*90)}px;transition:height .3s;"></div><div style="font-size:.68rem;color:#94a3b8;">${pt.p.slice(5)}</div></div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  } else {
+    trendDiasPacHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;color:#94a3b8;font-size:.78rem;">📈 La tendencia por días paciente se mostrará automáticamente cuando se carguen más meses de CONSABI.</div>`;
+  }
+
   // Tendencia de grupos trazadores (varias líneas, una por grupo farmacológico)
   let trazadoresHtml='';
   if(periodosConConsumo.length>1){
@@ -4598,6 +4627,8 @@ function renderConsumoDDD(){
     <div style="padding-top:14px;">${resumenHtml}</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;">${kpiHtml}</div>
     ${ooadHtml?`<div style="padding-top:14px;">${ooadHtml}</div>`:''}
+
+    <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">💊 Qué se consume</div>
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Antimicrobianos con mayor consumo (ΣDDD)</div>
@@ -4619,31 +4650,37 @@ function renderConsumoDDD(){
         <div style="display:flex;flex-direction:column;gap:8px;">${gruposHtml}</div>
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">⚠️ Antibióticos de mayor riesgo</div>
+        <div style="font-size:.66rem;color:#94a3b8;margin-bottom:10px;">Alto consumo + baja sensibilidad hospital-wide — candidatos a revisar en el COA</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">${riesgoHtml}</div>
+      </div>
+    </div>
+
+    <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">⚖️ Comparativo entre hospitales</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">⚖️ Comparativo entre hospitales (DDD/100 días paciente) <span style="font-size:.64rem;color:#94a3b8;font-weight:600;">· clic para cambiar</span></div>
         <div style="display:flex;flex-direction:column;gap:10px;">${compHtml}</div>
       </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🌈 Composición AWaRe — comparativo entre hospitales</div>
         ${awareStackHtml}
         <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">${['Access','Watch','Reserve'].map(k=>`<div style="display:flex;align-items:center;gap:5px;font-size:.66rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${AWARE_COLORS[k]};display:inline-block;"></span>${k}</div>`).join('')}</div>
-      </div>
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">⚠️ Antibióticos de mayor riesgo</div>
-        <div style="font-size:.66rem;color:#94a3b8;margin-bottom:10px;">Alto consumo + baja sensibilidad hospital-wide — candidatos a revisar en el COA</div>
-        <div style="display:flex;flex-direction:column;gap:6px;">${riesgoHtml}</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       ${radarHtml}
       ${ocupHtml||'<div></div>'}
     </div>
-    ${servicioTablaHtml?`<div style="padding-top:14px;">${servicioTablaHtml}</div>`:''}
+
+    <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">📈 Tendencias en el tiempo</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       ${trendHtml}
-      ${trazadoresHtml}
+      ${trendDiasPacHtml}
     </div>
+    <div style="padding-top:14px;">${trazadoresHtml}</div>
+
+    ${servicioTablaHtml?`<div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">🏥 Detalle por servicio</div><div style="padding-top:14px;">${servicioTablaHtml}</div>`:''}
   `;
   wireTips(inner);
 }
@@ -5571,6 +5608,83 @@ function renderConsumoEspecialidad(){
     }
   }
 
+  // 📈 Tendencia DDD/100 días paciente por especialidad — cruza CONSABI (factor DDD÷pieza,
+  // mes por mes) + Recetas (piezas por especialidad, mes por mes) + PARTE II (días paciente
+  // del servicio, mes por mes). Es la misma idea que la "Tendencia DDD/100 días paciente"
+  // de la pestaña principal, pero desglosada por especialidad en vez de por hospital.
+  // ESTIMACIÓN DERIVADA igual que la tabla de arriba — no es dato oficial de CONSABI.
+  let tendenciaEspecialidadHtml='';
+  if(hospitalId && CONSUMO_DATA[hospitalId] && ESPECIALIDAD_DATA && ESPECIALIDAD_DATA.periodos){
+    const mesesDisponibles=Object.keys(CONSUMO_DATA[hospitalId].periodos)
+      .filter(m=>CONSUMO_DATA[hospitalId].periodos[m].consumo_cargado && ESPECIALIDAD_DATA.periodos[m])
+      .sort();
+    if(mesesDisponibles.length>1){
+      // Top 5 especialidades del período actual (por piezas), para no saturar la gráfica
+      const top5Nombres=filas.slice().sort((a,b)=>b.piezas-a.piezas).slice(0,5).map(f=>f.especialidad);
+
+      function calcularMes(especialidadNombre, mes){
+        const consabiMes=CONSUMO_DATA[hospitalId].periodos[mes];
+        if(!consabiMes || !consabiMes.top_antibioticos) return null;
+        const factorMap={}; consabiMes.top_antibioticos.forEach(a=>{ if(a.piezas>0) factorMap[a.antibiotico]=a.ddd/a.piezas; });
+        const nombresFactor=Object.keys(factorMap);
+        const espMesData=ESPECIALIDAD_DATA.periodos[mes];
+        let unidadEsp=null;
+        Object.values(espMesData.por_unidad||{}).forEach(u=>{ if(u.hospital_id===hospitalId) unidadEsp=u; });
+        if(!unidadEsp) return null;
+        const esp=unidadEsp.especialidades.find(e=>e.especialidad===especialidadNombre);
+        if(!esp) return null;
+        let dddEst=0, huboMatch=false;
+        Object.entries(esp.por_antibiotico||{}).forEach(([nombreAb,piezasAb])=>{
+          const match=matchConsumoName(nombreAb,nombresFactor);
+          if(match && factorMap[match]!=null){ dddEst+=piezasAb*factorMap[match]; huboMatch=true; }
+        });
+        if(!huboMatch) return null;
+        let diasPac=null;
+        Object.entries(consabiMes.servicios||{}).forEach(([serv,info])=>{
+          if(_aliasEspecialidadJS(_normalizarEspecialidadJS(serv))===_normalizarEspecialidadJS(especialidadNombre)) diasPac=info.dias_paciente;
+        });
+        if(!diasPac) return null;
+        return Math.round(dddEst/diasPac*100*100)/100;
+      }
+
+      const seriesPorEsp=top5Nombres.map((nombre,ei)=>{
+        const pts=mesesDisponibles.map(m=>({m,v:calcularMes(nombre,m)})).filter(p=>p.v!==null);
+        return {nombre,pts,color:PALETTE[ei%PALETTE.length]};
+      }).filter(s=>s.pts.length>1);
+
+      if(seriesPorEsp.length){
+        const W=560,H=180,padL=32,padB=20,padT=10,padR=10;
+        const maxVal=Math.max(...seriesPorEsp.flatMap(s=>s.pts.map(p=>p.v)),1);
+        const xIndex={}; mesesDisponibles.forEach((m,i)=>{xIndex[m]=i;});
+        const xStep=mesesDisponibles.length>1?(W-padL-padR)/(mesesDisponibles.length-1):0;
+        const yScale=v=>padT+(H-padT-padB)*(1-v/maxVal);
+        const gridLines=[0,0.25,0.5,0.75,1].map(f=>{
+          const v=Math.round(maxVal*f);
+          return `<line x1="${padL}" y1="${yScale(v)}" x2="${W-padR}" y2="${yScale(v)}" stroke="#f1f5f9" stroke-width="1"/><text x="${padL-4}" y="${yScale(v)+3}" text-anchor="end" font-size="8" fill="#cbd5e1">${v}</text>`;
+        }).join('');
+        const xLabels=mesesDisponibles.map((m,i)=>`<text x="${padL+i*xStep}" y="${H-4}" text-anchor="middle" font-size="9" fill="#94a3b8">${MESES_ABBR[m.slice(5)]}</text>`).join('');
+        const linesHtml=seriesPorEsp.map(s=>{
+          const pts=s.pts.map(p=>`${padL+xIndex[p.m]*xStep},${yScale(p.v)}`).join(' ');
+          const circles=s.pts.map(p=>{
+            const tid=registerTip(`<div style="font-weight:700;">${s.nombre}</div><div>${p.m}: ${p.v.toLocaleString('es-MX',{maximumFractionDigits:1})} DDD/100 días pac. (estimado)</div>`);
+            return `<circle data-tipid="${tid}" cx="${padL+xIndex[p.m]*xStep}" cy="${yScale(p.v)}" r="3.5" fill="${s.color}" style="cursor:pointer;"/>`;
+          }).join('');
+          return `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>${circles}`;
+        }).join('');
+        const legend=seriesPorEsp.map(s=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${s.color};display:inline-block;"></span>${s.nombre}</div>`).join('');
+        tendenciaEspecialidadHtml=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:16px 18px;margin-top:14px;">
+          <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📈 Tendencia DDD/100 días paciente por especialidad <span style="font-size:.62rem;font-weight:700;color:#92400e;background:#fef3c7;padding:2px 8px;border-radius:10px;">ESTIMACIÓN DERIVADA</span></div>
+          <div style="font-size:.68rem;color:#94a3b8;margin-bottom:8px;">Top 5 especialidades del período actual (por piezas), solo meses con cruce completo CONSABI+Recetas+PARTE II</div>
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:180px;display:block;">${gridLines}${linesHtml}${xLabels}</svg>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">${legend}</div>
+        </div>`;
+      }
+    }
+  }
+  if(!tendenciaEspecialidadHtml && hospitalId){
+    tendenciaEspecialidadHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;margin-top:14px;color:#94a3b8;font-size:.78rem;">📈 La tendencia por especialidad aparecerá cuando haya ≥2 meses con cruce completo (CONSABI + Recetas + PARTE II) para esta unidad.</div>`;
+  }
+
   inner.innerHTML=`
     <div style="padding-top:14px;">
       <h3 style="font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 4px;">🩺 Consumo de Antibióticos por Especialidad Médica</h3>
@@ -5613,6 +5727,7 @@ function renderConsumoEspecialidad(){
       </div>
     </div>
     ${dddEstimadoHtml}
+    ${tendenciaEspecialidadHtml}
   `;
   wireTips(inner);
 }
