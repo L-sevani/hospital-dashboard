@@ -4598,7 +4598,7 @@ function renderConsumoDDD(){
         const legend=seriesPorEsp.map(s=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${s.color};display:inline-block;"></span>${s.nombre}</div>`).join('');
         tendenciaEspecialidadHtml=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:16px 18px;max-width:700px;">
           <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📈 Tendencia DDD/100 días paciente por especialidad <span style="font-size:.62rem;font-weight:700;color:#92400e;background:#fef3c7;padding:2px 8px;border-radius:10px;">ESTIMACIÓN DERIVADA</span></div>
-          <div style="font-size:.68rem;color:#94a3b8;margin-bottom:8px;">Hasta 5 especialidades por piezas, solo entre las que tienen cruce válido con PARTE II en ≥2 meses${seriesPorEsp.length<5?` · esta unidad solo tiene ${seriesPorEsp.length} con cruce suficiente`:''}</div>
+          <div style="font-size:.68rem;color:#94a3b8;margin-bottom:8px;line-height:1.5;">Es estimación porque CONSABI nunca desglosa el DDD por especialidad (solo por hospital completo) — cada punto de la línea se calcula mes por mes con el factor DDD÷pieza de ese mes. Se pide un mínimo de 2 meses (no los 7 completos) porque una línea necesita al menos 2 puntos para dibujarse, y exigir el 100% de los meses descartaría especialidades válidas solo por perder un mes puntual (ej. un antibiótico sin match ese mes) — los meses sin cruce simplemente quedan como hueco en la línea, no invalidan los demás.${seriesPorEsp.length<5?` Esta unidad solo tiene ${seriesPorEsp.length} especialidad(es) con cruce suficiente.`:''}</div>
           <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:160px;display:block;">${gridLines}${linesHtml}${xLabels}</svg>
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">${legend}</div>
         </div>`;
@@ -4762,8 +4762,8 @@ function renderConsumoDDD(){
       ${trendHtml}
       ${trendDiasPacHtml}
     </div>
-    <div style="padding-top:14px;max-width:700px;">${trazadoresHtml}</div>
     <div style="padding-top:14px;">${tendenciaEspecialidadHtml}</div>
+    <div style="padding-top:14px;max-width:700px;">${trazadoresHtml}</div>
 
     ${servicioTablaHtml?`<div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">🏥 Detalle por servicio</div><div style="padding-top:14px;">${servicioTablaHtml}</div>`:''}
   `;
