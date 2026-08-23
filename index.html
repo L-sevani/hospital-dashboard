@@ -4045,13 +4045,15 @@ function renderConsumo(){
       ${tabBtn('cobertura','🎯 Cobertura Empírica')}
       ${tabBtn('ranking','🏆 Ranking de Antibióticos')}
       ${tabBtn('especialidad','🩺 Consumo por Especialidad')}
+      ${tabBtn('indicadores','📐 Indicadores PROA')}
     </div>
     <div id="consumo-inner"></div>
   `;
   if(_consumoView==='ddd') renderConsumoDDD();
   else if(_consumoView==='cobertura') renderCobertura();
   else if(_consumoView==='ranking') renderRankingAntibioticos();
-  else renderConsumoEspecialidad();
+  else if(_consumoView==='especialidad') renderConsumoEspecialidad();
+  else renderIndicadoresPROA();
 }
 
 function toggleAwareFilter(cat){
@@ -5735,6 +5737,70 @@ function renderConsumoEspecialidad(){
       </div>
     </div>
     ${dddEstimadoHtml}
+  `;
+  wireTips(inner);
+}
+
+/* ─── INDICADORES PROA (los que sí son calculables con datos reales) ── */
+function renderIndicadoresPROA(){
+  const inner=document.getElementById('consumo-inner');
+  if(!inner) return;
+  _tipRegistry={};
+  const ids=consumoHospIds();
+  if(!_consumoHospital || !ids.includes(_consumoHospital)) _consumoHospital=ids[0];
+  const periodosMap=CONSUMO_DATA[_consumoHospital].periodos;
+  const meses=Object.keys(periodosMap).filter(m=>periodosMap[m].consumo_cargado).sort();
+
+  const hospTabsInd=ids.map(h=>`<button onclick="_consumoHospital='${h}';renderIndicadoresPROA();" style="padding:6px 14px;border-radius:20px;font-size:.76rem;font-weight:700;cursor:pointer;border:1.5px solid ${h===_consumoHospital?'#154f39':'#e2e8f0'};background:${h===_consumoHospital?'#154f39':'#fff'};color:${h===_consumoHospital?'#fff':'#374151'};">${getHospitalDisplayName(h)}</button>`).join('');
+
+  if(!meses.length){
+    inner.innerHTML=`<div style="padding-top:14px;">${hospTabsInd}</div><div style="padding:40px;text-align:center;color:#94a3b8;">Sin meses con CONSABI cargado para esta unidad.</div>`;
+    return;
+  }
+
+  const filasTabla=meses.map(m=>{
+    const p=periodosMap[m];
+    const dddCamas=p.ddd_100_camas!=null?p.ddd_100_camas:null;
+    const dddDiasPac=p.dias_paciente?Math.round(p.ddd_total/p.dias_paciente*100*100)/100:null;
+    const pAccess=p.por_aware_pct&&p.por_aware_pct.Access!=null?p.por_aware_pct.Access:null;
+    const pWatch=p.por_aware_pct&&p.por_aware_pct.Watch!=null?p.por_aware_pct.Watch:null;
+    const pReserve=p.por_aware_pct&&p.por_aware_pct.Reserve!=null?p.por_aware_pct.Reserve:null;
+    const cumpleMeta=pAccess!=null&&pAccess>=60;
+    const tid=registerTip(`<div style="font-weight:700;">${m}</div><div>DDD/100 camas: ${dddCamas!=null?dddCamas.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</div><div>DDD/100 días paciente: ${dddDiasPac!=null?dddDiasPac.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</div><div>Meta OMS Access ≥60%: ${cumpleMeta?'✅ cumple':'⚠️ no cumple'}</div>`);
+    return `<tr data-tipid="${tid}" style="cursor:pointer;">
+      <td style="padding:6px 10px;font-weight:700;color:#000;">${m}</td>
+      <td style="text-align:center;padding:6px;color:#000;">${dddCamas!=null?dddCamas.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>
+      <td style="text-align:center;padding:6px;color:#000;">${dddDiasPac!=null?dddDiasPac.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>
+      <td style="text-align:center;padding:6px;font-weight:700;color:${cumpleMeta?'#15803d':'#92400e'};">${pAccess!=null?pAccess+'%':'—'}${pAccess!=null?(cumpleMeta?' ✅':' ⚠️'):''}</td>
+      <td style="text-align:center;padding:6px;color:#000;">${pWatch!=null?pWatch+'%':'—'}</td>
+      <td style="text-align:center;padding:6px;color:${pReserve>0?'#991b1b':'#000'};font-weight:${pReserve>0?700:400};">${pReserve!=null?pReserve+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  inner.innerHTML=`
+    <div style="padding-top:14px;">
+      <h3 style="font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 4px;">📐 Indicadores PROA (Programa de Optimización de Antimicrobianos)</h3>
+      <p style="font-size:.72rem;color:#64748b;margin:0;">De los 20 indicadores estándar de un programa PROA, estos 5 son los que se pueden calcular con datos reales de tus fuentes actuales (CONSABI + PARTE II). Los otros 15 necesitan datos que hoy no existen en ningún archivo que manejas — principalmente registro de administración diaria por paciente (DOT), auditoría clínica caso por caso (adecuación de tratamiento, desescalamiento, profilaxis quirúrgica), o desenlace de pacientes (mortalidad). No se inventan ni se aproximan aquí.</p>
+    </div>
+    <div style="padding-top:14px;display:flex;gap:8px;flex-wrap:wrap;">${hospTabsInd}</div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;margin-top:14px;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📊 ${getHospitalDisplayName(_consumoHospital)} — mes a mes</div>
+      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Meta OMS de referencia: Access ≥60% del consumo total</div>
+      <table style="width:100%;border-collapse:collapse;font-size:.78rem;">
+        <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
+          <th style="text-align:left;padding:7px 10px;color:#fff;">Mes</th>
+          <th style="padding:7px 6px;color:#fff;">DDD/100 camas</th>
+          <th style="padding:7px 6px;color:#fff;">DDD/100 días pac.</th>
+          <th style="padding:7px 6px;color:#fff;">% Access</th>
+          <th style="padding:7px 6px;color:#fff;">% Watch</th>
+          <th style="padding:7px 6px;color:#fff;">% Reserve</th>
+        </tr></thead>
+        <tbody>${filasTabla}</tbody>
+      </table>
+    </div>
+    <div style="background:#f0f9ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px 18px;margin-top:14px;font-size:.74rem;color:#374151;line-height:1.6;">
+      <b>📈 % Resistencia antimicrobiana</b> (el indicador #20) ya está disponible en la pestaña <b>🎯 Cobertura Empírica</b> — ahí se calcula por cultivo/servicio/infección y por antibiótico específico (100% − %Sensibilidad), con más detalle del que cabría aquí mezclado con los indicadores mensuales de consumo.
+    </div>
   `;
   wireTips(inner);
 }
