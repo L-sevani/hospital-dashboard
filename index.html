@@ -5747,20 +5747,38 @@ function renderIndicadoresPROA(){
   if(!inner) return;
   _tipRegistry={};
   const ids=consumoHospIds();
-  if(!_consumoHospital || !ids.includes(_consumoHospital)) _consumoHospital=ids[0];
-  const periodosMap=CONSUMO_DATA[_consumoHospital].periodos;
-  const meses=Object.keys(periodosMap).filter(m=>periodosMap[m].consumo_cargado).sort();
 
-  const hospTabsInd=ids.map(h=>`<button onclick="_consumoHospital='${h}';renderIndicadoresPROA();" style="padding:6px 14px;border-radius:20px;font-size:.76rem;font-weight:700;cursor:pointer;border:1.5px solid ${h===_consumoHospital?'#154f39':'#e2e8f0'};background:${h===_consumoHospital?'#154f39':'#fff'};color:${h===_consumoHospital?'#fff':'#374151'};">${getHospitalDisplayName(h)}</button>`).join('');
+  // Meses con CONSABI cargado en AL MENOS un hospital (union), para que la tabla
+  // muestre todo lo que exista aunque algun hospital le falte un mes puntual.
+  const mesesSet=new Set();
+  ids.forEach(h=>Object.keys(CONSUMO_DATA[h].periodos).forEach(m=>{
+    if(CONSUMO_DATA[h].periodos[m].consumo_cargado) mesesSet.add(m);
+  }));
+  const meses=[...mesesSet].sort();
 
   if(!meses.length){
-    inner.innerHTML=`<div style="padding-top:14px;">${hospTabsInd}</div><div style="padding:40px;text-align:center;color:#94a3b8;">Sin meses con CONSABI cargado para esta unidad.</div>`;
+    inner.innerHTML=`<div style="padding:40px;text-align:center;color:#94a3b8;">Sin meses con CONSABI cargado todavia.</div>`;
     return;
   }
 
-  // Semaforo: verde/ambar/rojo. dir='alto_bueno' (mas alto = mejor, ej. Access) o
-  // 'alto_malo' (mas alto = peor, ej. Watch/Reserve). null = sin semaforo (DDD/100 no
-  // tiene un corte universal de "bueno/malo", es comparativo, no se colorea).
+  // Fila "OOAD Tlaxcala (Delegacional)": suma de los 3 hospitales, solo en los meses
+  // donde los 3 tienen CONSABI cargado (mismo criterio que "Consolidado OOAD Tlaxcala").
+  function datosDelegacional(m){
+    const datos=ids.map(h=>CONSUMO_DATA[h].periodos[m]).filter(p=>p&&p.consumo_cargado);
+    if(datos.length!==ids.length) return null;
+    const ddd_total=datos.reduce((s,p)=>s+(p.ddd_total||0),0);
+    const camas=datos.reduce((s,p)=>s+(p.camas||0),0);
+    const dias_paciente=datos.reduce((s,p)=>s+(p.dias_paciente||0),0);
+    const por_aware={};
+    datos.forEach(p=>Object.entries(p.por_aware||{}).forEach(([k,v])=>{por_aware[k]=(por_aware[k]||0)+v;}));
+    return {ddd_total,camas,dias_paciente,por_aware};
+  }
+
+  const filasUnidades=[
+    {id:'__DELEG__',label:'OOAD Tlaxcala (Delegacional)',getP:m=>datosDelegacional(m),destacado:true},
+    ...ids.map(h=>({id:h,label:getHospitalDisplayName(h),getP:m=>CONSUMO_DATA[h].periodos[m]&&CONSUMO_DATA[h].periodos[m].consumo_cargado?CONSUMO_DATA[h].periodos[m]:null,destacado:false})),
+  ];
+
   function semaforoColor(pct, dir){
     if(pct==null || !dir) return '#000';
     if(dir==='alto_bueno') return pct>=60?'#15803d':(pct>=40?'#92400e':'#991b1b');
@@ -5768,39 +5786,50 @@ function renderIndicadoresPROA(){
     return '#000';
   }
 
-  function tablaIndicador(titulo, formula, uso, numFn, denFn, pctFn, dir, colorNum){
-    const cols=meses.map(m=>{
-      const p=periodosMap[m];
-      const num=numFn(p), den=denFn(p), pct=pctFn(p,num,den);
-      return {m,num,den,pct};
-    });
-    const filaNum=cols.map(c=>`<td style="text-align:center;padding:6px 10px;color:#000;font-weight:600;">${c.num!=null?c.num.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>`).join('');
-    const filaDen=cols.map(c=>`<td style="text-align:center;padding:6px 10px;color:#000;font-weight:600;">${c.den!=null?c.den.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>`).join('');
-    const filaPct=cols.map(c=>{
-      const color=dir?semaforoColor(c.pct,dir):'#154f39';
-      const bg=dir?(color==='#15803d'?'#dcfce7':color==='#92400e'?'#fef3c7':'#fee2e2'):'#f0fdf4';
-      return `<td style="text-align:center;padding:6px 10px;font-weight:800;color:${color};background:${bg};">${c.pct!=null?c.pct.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</td>`;
+  function tablaIndicador(titulo, formula, uso, numFn, denFn, pctFn, dir){
+    const headerMeses=meses.map(m=>`<th colspan="3" style="text-align:center;padding:6px 4px;color:#fff;border-left:1px solid rgba(255,255,255,.25);">${m}</th>`).join('');
+    const headerSub=meses.map(()=>`
+      <th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;border-left:1px solid rgba(255,255,255,.25);">Numerador</th>
+      <th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;">Denominador</th>
+      <th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;">%</th>
+    `).join('');
+
+    const filasHtml=filasUnidades.map(u=>{
+      const celdas=meses.map(m=>{
+        const p=u.getP(m);
+        if(!p) return `<td style="text-align:center;padding:5px 8px;color:#cbd5e1;border-left:1px solid #f1f5f9;">—</td><td style="text-align:center;padding:5px 8px;color:#cbd5e1;">—</td><td style="text-align:center;padding:5px 8px;color:#cbd5e1;">—</td>`;
+        const num=numFn(p), den=denFn(p), pct=pctFn(p,num,den);
+        const color=dir?semaforoColor(pct,dir):'#154f39';
+        const bg=!dir?'transparent':(color==='#15803d'?'#dcfce7':color==='#92400e'?'#fef3c7':'#fee2e2');
+        return `<td style="text-align:center;padding:5px 8px;color:#000;border-left:1px solid #f1f5f9;">${num!=null?num.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>
+          <td style="text-align:center;padding:5px 8px;color:#000;">${den!=null?den.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>
+          <td style="text-align:center;padding:5px 8px;font-weight:800;color:${color};background:${bg};">${pct!=null?pct.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</td>`;
+      }).join('');
+      return `<tr style="${u.destacado?'background:#eff6ff;border-top:2px solid #bfdbfe;border-bottom:2px solid #bfdbfe;':''}">
+        <td style="padding:6px 10px;font-weight:${u.destacado?800:700};color:${u.destacado?'#1e40af':'#000'};white-space:nowrap;position:sticky;left:0;background:${u.destacado?'#eff6ff':'#fff'};">${u.label}</td>
+        ${celdas}
+      </tr>`;
     }).join('');
-    const headerMeses=cols.map(c=>`<th style="text-align:center;padding:7px 10px;color:#fff;">${c.m}</th>`).join('');
+
     return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;margin-top:14px;">
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">${titulo}</div>
       <div style="font-size:.66rem;color:#94a3b8;margin-bottom:10px;">Fórmula: ${formula} · Uso: ${uso}</div>
-      <table style="width:100%;border-collapse:collapse;font-size:.78rem;">
-        <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
-          <th style="text-align:left;padding:7px 10px;color:#fff;min-width:110px;">Mes</th>${headerMeses}
-        </tr></thead>
-        <tbody>
-          <tr><td style="padding:6px 10px;font-weight:700;color:#374151;">Numerador</td>${filaNum}</tr>
-          <tr style="border-top:1px solid #f1f5f9;"><td style="padding:6px 10px;font-weight:700;color:#374151;">Denominador</td>${filaDen}</tr>
-          <tr style="border-top:1px solid #f1f5f9;"><td style="padding:6px 10px;font-weight:700;color:#374151;">%</td>${filaPct}</tr>
-        </tbody>
+      <table style="width:100%;border-collapse:collapse;font-size:.76rem;">
+        <thead>
+          <tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
+            <th rowspan="2" style="text-align:left;padding:7px 10px;color:#fff;min-width:170px;position:sticky;left:0;background:#154f39;">Unidad Médica</th>
+            ${headerMeses}
+          </tr>
+          <tr style="background:linear-gradient(135deg,#154f39,#1a6347);">${headerSub}</tr>
+        </thead>
+        <tbody>${filasHtml}</tbody>
       </table>
     </div>`;
   }
 
   const t1=tablaIndicador(
     '1. DDD/100 camas censables', 'ΣDDD ÷ camas × 100', 'Consumo global (indicador principal del dashboard)',
-    p=>p.ddd_total, p=>p.camas, p=>p.ddd_100_camas, null
+    p=>p.ddd_total, p=>p.camas, p=>p.camas?Math.round(p.ddd_total/p.camas*100*100)/100:null, null
   );
   const t2=tablaIndicador(
     '3. DDD/100 días-paciente', 'ΣDDD ÷ días-paciente × 100', 'Comparación hospitalaria (estándar OMS)',
@@ -5808,15 +5837,15 @@ function renderIndicadoresPROA(){
   );
   const t3=tablaIndicador(
     '6. Proporción Access', 'ΣDDD Access ÷ ΣDDD totales × 100', 'Calidad del consumo — meta OMS ≥60%',
-    p=>p.por_aware&&p.por_aware.Access, p=>p.ddd_total, p=>p.por_aware_pct&&p.por_aware_pct.Access, 'alto_bueno'
+    p=>p.por_aware&&p.por_aware.Access, p=>p.ddd_total, (p,n,d)=>d?Math.round(n/d*1000)/10:null, 'alto_bueno'
   );
   const t4=tablaIndicador(
     '7. Proporción Watch', 'ΣDDD Watch ÷ ΣDDD totales × 100', 'Vigilancia de uso de mayor riesgo',
-    p=>p.por_aware&&p.por_aware.Watch, p=>p.ddd_total, p=>p.por_aware_pct&&p.por_aware_pct.Watch, 'alto_malo'
+    p=>p.por_aware&&p.por_aware.Watch, p=>p.ddd_total, (p,n,d)=>d?Math.round(n/d*1000)/10:null, 'alto_malo'
   );
   const t5=tablaIndicador(
     '8. Proporción Reserve', 'ΣDDD Reserve ÷ ΣDDD totales × 100', 'Uso de antimicrobianos de reserva',
-    p=>p.por_aware&&p.por_aware.Reserve, p=>p.ddd_total, p=>p.por_aware_pct&&p.por_aware_pct.Reserve, 'alto_malo'
+    p=>p.por_aware&&p.por_aware.Reserve, p=>p.ddd_total, (p,n,d)=>d?Math.round(n/d*1000)/10:null, 'alto_malo'
   );
 
   inner.innerHTML=`
@@ -5824,7 +5853,6 @@ function renderIndicadoresPROA(){
       <h3 style="font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 4px;">📐 Indicadores PROA (Programa de Optimización de Antimicrobianos)</h3>
       <p style="font-size:.72rem;color:#64748b;margin:0;">De los 20 indicadores estándar de un programa PROA, estos 5 son los que se pueden calcular con datos reales de tus fuentes actuales (CONSABI + PARTE II). Los otros 15 necesitan datos que hoy no existen en ningún archivo que manejas — principalmente registro de administración diaria por paciente (DOT), auditoría clínica caso por caso, o desenlace de pacientes. No se inventan ni se aproximan aquí.</p>
     </div>
-    <div style="padding-top:14px;display:flex;gap:8px;flex-wrap:wrap;">${hospTabsInd}</div>
     ${t1}${t2}${t3}${t4}${t5}
     <div style="background:#f0f9ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px 18px;margin-top:14px;font-size:.74rem;color:#374151;line-height:1.6;">
       <b>📈 % Resistencia antimicrobiana</b> (el indicador #20) ya está disponible en la pestaña <b>🎯 Cobertura Empírica</b> — ahí se calcula por cultivo/servicio/infección y por antibiótico específico (100% − %Sensibilidad), con más detalle del que cabría aquí mezclado con los indicadores mensuales de consumo.
