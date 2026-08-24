@@ -5848,7 +5848,9 @@ function renderIndicadoresPROA(){
     return pct<=corteEsperado?'#15803d':(pct<=corteMedio?'#92400e':'#991b1b');
   }
 
-  function tablaIndicador(tablaId, titulo, formula, uso, numFn, denFn, pctFn, dir, corteEsperado, corteMedio){
+  function tablaIndicador(tablaId, titulo, formula, uso, numFn, denFn, pctFn, dir, corteEsperado, corteMedio, sufijoValor, etiquetaCol){
+    sufijoValor = sufijoValor!==undefined?sufijoValor:'%';
+    etiquetaCol = etiquetaCol||'%';
     const ordenTabla=_indicadoresOrden[tablaId]||null;
     let filasUnidades=filasUnidadesBase.map(u=>{
       const pUlt=u.getP(ultimoMes);
@@ -5866,9 +5868,9 @@ function renderIndicadoresPROA(){
     const headerMeses=mesesAMostrar.map(m=>`<th colspan="${nCols}" style="text-align:center;padding:6px 4px;color:#fff;border-left:1px solid rgba(255,255,255,.25);">${m}${m===ultimoMes?' 🔽':''}</th>`).join('');
     const headerSub=mesesAMostrar.map(()=>{
       let h='';
-      if(colsAMostrar.has('num')) h+=`<th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;border-left:1px solid rgba(255,255,255,.25);">Numerador</th>`;
-      if(colsAMostrar.has('den')) h+=`<th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;${!colsAMostrar.has('num')?'border-left:1px solid rgba(255,255,255,.25);':''}">Denominador</th>`;
-      if(colsAMostrar.has('pct')) h+=`<th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;${!colsAMostrar.has('num')&&!colsAMostrar.has('den')?'border-left:1px solid rgba(255,255,255,.25);':''}">%</th>`;
+      if(colsAMostrar.has('num')) h+=`<th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;border-left:1px solid rgba(255,255,255,.25);width:88px;">Numerador</th>`;
+      if(colsAMostrar.has('den')) h+=`<th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;width:88px;${!colsAMostrar.has('num')?'border-left:1px solid rgba(255,255,255,.25);':''}">Denominador</th>`;
+      if(colsAMostrar.has('pct')) h+=`<th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;width:96px;${!colsAMostrar.has('num')&&!colsAMostrar.has('den')?'border-left:1px solid rgba(255,255,255,.25);':''}">${etiquetaCol}</th>`;
       return h;
     }).join('');
 
@@ -5882,7 +5884,7 @@ function renderIndicadoresPROA(){
         let c='';
         if(colsAMostrar.has('num')) c+=`<td style="text-align:center;padding:5px 8px;color:#000;border-left:1px solid #f1f5f9;">${num!=null?num.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>`;
         if(colsAMostrar.has('den')) c+=`<td style="text-align:center;padding:5px 8px;color:#000;${!colsAMostrar.has('num')?'border-left:1px solid #f1f5f9;':''}">${den!=null?den.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>`;
-        if(colsAMostrar.has('pct')) c+=`<td style="text-align:center;padding:5px 8px;font-weight:800;color:${color};background:${bg};${!colsAMostrar.has('num')&&!colsAMostrar.has('den')?'border-left:1px solid #f1f5f9;':''}${esUltimo?'box-shadow:inset 0 0 0 1.5px #154f39;':''}">${pct!=null?pct.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</td>`;
+        if(colsAMostrar.has('pct')) c+=`<td style="text-align:center;padding:5px 8px;font-weight:800;color:${color};background:${bg};${!colsAMostrar.has('num')&&!colsAMostrar.has('den')?'border-left:1px solid #f1f5f9;':''}${esUltimo?'box-shadow:inset 0 0 0 1.5px #154f39;':''}">${pct!=null?pct.toLocaleString('es-MX',{maximumFractionDigits:1})+sufijoValor:'—'}</td>`;
         return c;
       }).join('');
       return `<tr style="${u.destacado?'background:#eff6ff;border-top:2px solid #bfdbfe;border-bottom:2px solid #bfdbfe;':''}">
@@ -5898,7 +5900,7 @@ function renderIndicadoresPROA(){
       </div>
       <div style="font-size:.66rem;color:#94a3b8;margin-bottom:6px;">Fórmula: ${formula} · Uso: ${uso}</div>
       ${leyendaReferencia(dir,corteEsperado,corteMedio)}
-      <table style="width:100%;border-collapse:collapse;font-size:.76rem;">
+      <table style="border-collapse:collapse;font-size:.76rem;">
         <thead>
           <tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
             <th rowspan="2" style="text-align:left;padding:7px 10px;color:#fff;min-width:170px;position:sticky;left:0;background:#154f39;">Unidad Médica</th>
@@ -5913,11 +5915,11 @@ function renderIndicadoresPROA(){
 
   const t1=tablaIndicador('t1',
     '1. DDD/100 camas censables', 'ΣDDD ÷ camas × 100', 'Consumo global (indicador principal del dashboard)',
-    p=>p.ddd_total, p=>p.camas, p=>p.camas?Math.round(p.ddd_total/p.camas*100*100)/100:null, null
+    p=>p.ddd_total, p=>p.camas, p=>p.camas?Math.round(p.ddd_total/p.camas*100*100)/100:null, null, null, null, '', 'DDD/100 camas'
   );
   const t2=tablaIndicador('t2',
     '3. DDD/100 días-paciente', 'ΣDDD ÷ días-paciente × 100', 'Comparación hospitalaria (estándar OMS)',
-    p=>p.ddd_total, p=>p.dias_paciente, p=>p.dias_paciente?Math.round(p.ddd_total/p.dias_paciente*100*100)/100:null, null
+    p=>p.ddd_total, p=>p.dias_paciente, p=>p.dias_paciente?Math.round(p.ddd_total/p.dias_paciente*100*100)/100:null, null, null, null, '', 'DDD/100 días-pac.'
   );
   const t3=tablaIndicador('t3',
     '6. Proporción Access', 'ΣDDD Access ÷ ΣDDD totales × 100', 'Calidad del consumo — meta OMS ≥60%',
