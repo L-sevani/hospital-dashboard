@@ -3869,6 +3869,9 @@ let ESPECIALIDAD_DATA=null;
 let _especialidadUnidad=null;
 let _especialidadPeriodo=null;
 let _especialidadAwareFiltro=null; // null = todos; o un Set con las categorías activas (selección múltiple)
+let _indicadoresOrden=null; // null = orden original; 'asc'/'desc' = por el % del último mes, en todas las tablas de Indicadores PROA
+let _indicadoresMesesSel=null; // null = todos los meses; o un Set con los meses seleccionados
+let _indicadoresColsSel=null; // null = las 3 columnas; o un Set con {'num','den','pct'} seleccionadas
 
 let _awareFilter='all';
 
@@ -5742,27 +5745,49 @@ function renderConsumoEspecialidad(){
 }
 
 /* ─── INDICADORES PROA (los que sí son calculables con datos reales) ── */
+function toggleIndicadoresOrden(){
+  _indicadoresOrden = _indicadoresOrden===null ? 'desc' : (_indicadoresOrden==='desc' ? 'asc' : null);
+  renderIndicadoresPROA();
+}
+function toggleIndicadoresMes(m){
+  if(!_indicadoresMesesSel) _indicadoresMesesSel=new Set([m]);
+  else{
+    _indicadoresMesesSel=new Set(_indicadoresMesesSel);
+    if(_indicadoresMesesSel.has(m)) _indicadoresMesesSel.delete(m); else _indicadoresMesesSel.add(m);
+  }
+  renderIndicadoresPROA();
+}
+function toggleIndicadoresCol(c){
+  const todas=['num','den','pct'];
+  if(!_indicadoresColsSel) _indicadoresColsSel=new Set(todas.filter(x=>x!==c));
+  else{
+    _indicadoresColsSel=new Set(_indicadoresColsSel);
+    if(_indicadoresColsSel.has(c)) _indicadoresColsSel.delete(c); else _indicadoresColsSel.add(c);
+  }
+  if(_indicadoresColsSel.size===0 || _indicadoresColsSel.size===3) _indicadoresColsSel=null;
+  renderIndicadoresPROA();
+}
+
 function renderIndicadoresPROA(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
   _tipRegistry={};
   const ids=consumoHospIds();
 
-  // Meses con CONSABI cargado en AL MENOS un hospital (union), para que la tabla
-  // muestre todo lo que exista aunque algun hospital le falte un mes puntual.
   const mesesSet=new Set();
   ids.forEach(h=>Object.keys(CONSUMO_DATA[h].periodos).forEach(m=>{
     if(CONSUMO_DATA[h].periodos[m].consumo_cargado) mesesSet.add(m);
   }));
-  const meses=[...mesesSet].sort();
-
-  if(!meses.length){
+  const todosLosMeses=[...mesesSet].sort();
+  if(!todosLosMeses.length){
     inner.innerHTML=`<div style="padding:40px;text-align:center;color:#94a3b8;">Sin meses con CONSABI cargado todavia.</div>`;
     return;
   }
+  const meses=_indicadoresMesesSel?todosLosMeses.filter(m=>_indicadoresMesesSel.has(m)):todosLosMeses;
+  const mesesAMostrar=meses.length?meses:todosLosMeses; // si quitaron todos, mostrar todos en vez de tabla vacia
+  const ultimoMes=mesesAMostrar[mesesAMostrar.length-1];
+  const colsAMostrar=_indicadoresColsSel||new Set(['num','den','pct']);
 
-  // Fila "OOAD Tlaxcala (Delegacional)": suma de los 3 hospitales, solo en los meses
-  // donde los 3 tienen CONSABI cargado (mismo criterio que "Consolidado OOAD Tlaxcala").
   function datosDelegacional(m){
     const datos=ids.map(h=>CONSUMO_DATA[h].periodos[m]).filter(p=>p&&p.consumo_cargado);
     if(datos.length!==ids.length) return null;
@@ -5774,36 +5799,108 @@ function renderIndicadoresPROA(){
     return {ddd_total,camas,dias_paciente,por_aware};
   }
 
-  const filasUnidades=[
+  const filasUnidadesBase=[
     {id:'__DELEG__',label:'OOAD Tlaxcala (Delegacional)',getP:m=>datosDelegacional(m),destacado:true},
     ...ids.map(h=>({id:h,label:getHospitalDisplayName(h),getP:m=>CONSUMO_DATA[h].periodos[m]&&CONSUMO_DATA[h].periodos[m].consumo_cargado?CONSUMO_DATA[h].periodos[m]:null,destacado:false})),
   ];
 
-  function semaforoColor(pct, dir){
-    if(pct==null || !dir) return '#000';
-    if(dir==='alto_bueno') return pct>=60?'#15803d':(pct>=40?'#92400e':'#991b1b');
-    if(dir==='alto_malo') return pct<=20?'#15803d':(pct<=40?'#92400e':'#991b1b');
-    return '#000';
+  // Controles: mes(es) a mostrar + columnas a mostrar + orden
+  const mesesToggle=todosLosMeses.map(m=>{
+    const activo=!_indicadoresMesesSel || _indicadoresMesesSel.has(m);
+    return `<button onclick="toggleIndicadoresMes('${m}')" style="padding:4px 10px;border-radius:14px;font-size:.68rem;font-weight:700;cursor:pointer;border:1px solid ${activo?'#154f39':'#e2e8f0'};background:${activo?'#ecfdf5':'#fff'};color:${activo?'#154f39':'#9ca3af'};">${m}</button>`;
+  }).join('');
+  const colLabels={num:'Numerador',den:'Denominador',pct:'%'};
+  const colsToggle=['num','den','pct'].map(c=>{
+    const activo=colsAMostrar.has(c);
+    return `<button onclick="toggleIndicadoresCol('${c}')" style="padding:4px 10px;border-radius:14px;font-size:.68rem;font-weight:700;cursor:pointer;border:1px solid ${activo?'#154f39':'#e2e8f0'};background:${activo?'#ecfdf5':'#fff'};color:${activo?'#154f39':'#9ca3af'};">${colLabels[c]}</button>`;
+  }).join('');
+  const ordenBtnHtml=`<button onclick="toggleIndicadoresOrden()" style="padding:6px 14px;border-radius:16px;font-size:.72rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;background:${_indicadoresOrden?'#154f39':'#fff'};color:${_indicadoresOrden?'#fff':'#154f39'};">
+    ${_indicadoresOrden==='desc'?`⬇️ Ordenado mayor a menor (${ultimoMes})`:_indicadoresOrden==='asc'?`⬆️ Ordenado menor a mayor (${ultimoMes})`:`↕️ Ordenar por % de ${ultimoMes}`}
+  </button>`;
+
+  const controlesHtml=`
+    <div style="display:flex;flex-direction:column;gap:8px;padding-top:14px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:.68rem;color:#94a3b8;font-weight:700;">Meses:</span>${mesesToggle}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:.68rem;color:#94a3b8;font-weight:700;">Columnas:</span>${colsToggle}
+      </div>
+      <div>${ordenBtnHtml}</div>
+    </div>`;
+
+  // Referencia dinámica: calculada con los 4 valores (Delegación + 3 hospitales) del
+  // último mes visible de ESTA tabla. Con solo 4 puntos, el corte se saca como el
+  // promedio de las 2 unidades más bajas (corte bajo) y el promedio de las 2 más
+  // altas (corte alto) -- no es un estándar externo, es relativo a tus propias
+  // unidades ese mes.
+  function leyendaReferencia(dir, valoresUltimoMes){
+    const vals=valoresUltimoMes.filter(v=>v!=null).sort((a,b)=>a-b);
+    if(!dir){
+      if(vals.length<2) return `<div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Sin semáforo: no hay un corte universal de "bueno/malo" para este indicador — depende del nivel de complejidad de cada hospital.</div>`;
+      const corteBajo=(vals[0]+vals[1])/2, corteAlto=(vals[vals.length-2]+vals[vals.length-1])/2;
+      return `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+        <span style="font-size:.68rem;color:#94a3b8;font-weight:700;">${ultimoMes} — Referencia (relativa a tus propias unidades este mes):</span>
+        <span style="padding:3px 10px;border-radius:12px;background:#f1f5f9;color:#334155;font-size:.7rem;font-weight:700;">Arriba del rango ≥ ${corteAlto.toFixed(2)}</span>
+        <span style="padding:3px 10px;border-radius:12px;background:#f1f5f9;color:#334155;font-size:.7rem;font-weight:700;">Rango típico ${corteAlto.toFixed(2)}–${corteBajo.toFixed(2)}</span>
+        <span style="padding:3px 10px;border-radius:12px;background:#f1f5f9;color:#334155;font-size:.7rem;font-weight:700;">Debajo del rango ≤ ${corteBajo.toFixed(2)}</span>
+      </div>`;
+    }
+    if(vals.length<2) return `<div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Se necesitan al menos 2 unidades con dato en ${ultimoMes} para calcular la referencia.</div>`;
+    const corteBajo=(vals[0]+vals[1])/2, corteAlto=(vals[vals.length-2]+vals[vals.length-1])/2;
+    const esperadoTxt = dir==='alto_bueno' ? `≥ ${corteAlto.toFixed(2)}` : `≤ ${corteBajo.toFixed(2)}`;
+    const medioTxt = dir==='alto_bueno' ? `${corteAlto.toFixed(2)} – ${corteBajo.toFixed(2)}` : `${corteBajo.toFixed(2)} – ${corteAlto.toFixed(2)}`;
+    const bajoTxt = dir==='alto_bueno' ? `≤ ${corteBajo.toFixed(2)}` : `≥ ${corteAlto.toFixed(2)}`;
+    return `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+      <span style="font-size:.68rem;color:#94a3b8;font-weight:700;">${ultimoMes} — Referencia (relativa a tus propias unidades este mes):</span>
+      <span style="padding:3px 10px;border-radius:12px;background:#dcfce7;color:#15803d;font-size:.7rem;font-weight:800;">✓ Esperado ${esperadoTxt}</span>
+      <span style="padding:3px 10px;border-radius:12px;background:#fef3c7;color:#92400e;font-size:.7rem;font-weight:800;">~ Medio ${medioTxt}</span>
+      <span style="padding:3px 10px;border-radius:12px;background:#fee2e2;color:#991b1b;font-size:.7rem;font-weight:800;">✗ Bajo ${bajoTxt}</span>
+    </div>`;
+  }
+
+  function semaforoColorRelativo(pct, dir, corteBajo, corteAlto){
+    if(pct==null || !dir || corteBajo==null) return '#000';
+    if(dir==='alto_bueno') return pct>=corteAlto?'#15803d':(pct>corteBajo?'#92400e':'#991b1b');
+    return pct<=corteBajo?'#15803d':(pct<corteAlto?'#92400e':'#991b1b');
   }
 
   function tablaIndicador(titulo, formula, uso, numFn, denFn, pctFn, dir){
-    const headerMeses=meses.map(m=>`<th colspan="3" style="text-align:center;padding:6px 4px;color:#fff;border-left:1px solid rgba(255,255,255,.25);">${m}</th>`).join('');
-    const headerSub=meses.map(()=>`
-      <th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;border-left:1px solid rgba(255,255,255,.25);">Numerador</th>
-      <th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;">Denominador</th>
-      <th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;">%</th>
-    `).join('');
+    let filasUnidades=filasUnidadesBase.map(u=>{
+      const pUlt=u.getP(ultimoMes);
+      const pctUlt=pUlt?pctFn(pUlt,numFn(pUlt),denFn(pUlt)):null;
+      return {...u,pctUlt};
+    });
+    if(_indicadoresOrden==='desc') filasUnidades=filasUnidades.slice().sort((a,b)=>(b.pctUlt??-Infinity)-(a.pctUlt??-Infinity));
+    else if(_indicadoresOrden==='asc') filasUnidades=filasUnidades.slice().sort((a,b)=>(a.pctUlt??Infinity)-(b.pctUlt??Infinity));
+
+    const valoresUltimoMes=filasUnidadesBase.map(u=>u.pctUlt!==undefined?u.pctUlt:(()=>{const p=u.getP(ultimoMes);return p?pctFn(p,numFn(p),denFn(p)):null;})());
+    const valsOrd=valoresUltimoMes.filter(v=>v!=null).sort((a,b)=>a-b);
+    const corteBajoRel=valsOrd.length>=2?(valsOrd[0]+valsOrd[1])/2:null;
+    const corteAltoRel=valsOrd.length>=2?(valsOrd[valsOrd.length-2]+valsOrd[valsOrd.length-1])/2:null;
+
+    const nCols=colsAMostrar.size;
+    const headerMeses=mesesAMostrar.map(m=>`<th colspan="${nCols}" style="text-align:center;padding:6px 4px;color:#fff;border-left:1px solid rgba(255,255,255,.25);">${m}${m===ultimoMes?' 🔽':''}</th>`).join('');
+    const headerSub=mesesAMostrar.map(()=>{
+      let h='';
+      if(colsAMostrar.has('num')) h+=`<th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;border-left:1px solid rgba(255,255,255,.25);">Numerador</th>`;
+      if(colsAMostrar.has('den')) h+=`<th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;${!colsAMostrar.has('num')?'border-left:1px solid rgba(255,255,255,.25);':''}">Denominador</th>`;
+      if(colsAMostrar.has('pct')) h+=`<th style="text-align:center;padding:5px 8px;color:#e2e8f0;font-size:.62rem;font-weight:600;${!colsAMostrar.has('num')&&!colsAMostrar.has('den')?'border-left:1px solid rgba(255,255,255,.25);':''}">%</th>`;
+      return h;
+    }).join('');
 
     const filasHtml=filasUnidades.map(u=>{
-      const celdas=meses.map(m=>{
+      const celdas=mesesAMostrar.map((m,mi)=>{
         const p=u.getP(m);
-        if(!p) return `<td style="text-align:center;padding:5px 8px;color:#cbd5e1;border-left:1px solid #f1f5f9;">—</td><td style="text-align:center;padding:5px 8px;color:#cbd5e1;">—</td><td style="text-align:center;padding:5px 8px;color:#cbd5e1;">—</td>`;
-        const num=numFn(p), den=denFn(p), pct=pctFn(p,num,den);
-        const color=dir?semaforoColor(pct,dir):'#154f39';
+        const num=p?numFn(p):null, den=p?denFn(p):null, pct=p?pctFn(p,num,den):null;
+        const color=dir?semaforoColorRelativo(pct,dir,corteBajoRel,corteAltoRel):'#154f39';
         const bg=!dir?'transparent':(color==='#15803d'?'#dcfce7':color==='#92400e'?'#fef3c7':'#fee2e2');
-        return `<td style="text-align:center;padding:5px 8px;color:#000;border-left:1px solid #f1f5f9;">${num!=null?num.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>
-          <td style="text-align:center;padding:5px 8px;color:#000;">${den!=null?den.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>
-          <td style="text-align:center;padding:5px 8px;font-weight:800;color:${color};background:${bg};">${pct!=null?pct.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</td>`;
+        const esUltimo=m===ultimoMes;
+        let c='';
+        if(colsAMostrar.has('num')) c+=`<td style="text-align:center;padding:5px 8px;color:#000;border-left:1px solid #f1f5f9;">${num!=null?num.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>`;
+        if(colsAMostrar.has('den')) c+=`<td style="text-align:center;padding:5px 8px;color:#000;${!colsAMostrar.has('num')?'border-left:1px solid #f1f5f9;':''}">${den!=null?den.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'}</td>`;
+        if(colsAMostrar.has('pct')) c+=`<td style="text-align:center;padding:5px 8px;font-weight:800;color:${color};background:${bg};${!colsAMostrar.has('num')&&!colsAMostrar.has('den')?'border-left:1px solid #f1f5f9;':''}${esUltimo?'box-shadow:inset 0 0 0 1.5px #154f39;':''}">${pct!=null?pct.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—'}</td>`;
+        return c;
       }).join('');
       return `<tr style="${u.destacado?'background:#eff6ff;border-top:2px solid #bfdbfe;border-bottom:2px solid #bfdbfe;':''}">
         <td style="padding:6px 10px;font-weight:${u.destacado?800:700};color:${u.destacado?'#1e40af':'#000'};white-space:nowrap;position:sticky;left:0;background:${u.destacado?'#eff6ff':'#fff'};">${u.label}</td>
@@ -5813,7 +5910,8 @@ function renderIndicadoresPROA(){
 
     return `<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;margin-top:14px;">
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">${titulo}</div>
-      <div style="font-size:.66rem;color:#94a3b8;margin-bottom:10px;">Fórmula: ${formula} · Uso: ${uso}</div>
+      <div style="font-size:.66rem;color:#94a3b8;margin-bottom:6px;">Fórmula: ${formula} · Uso: ${uso}</div>
+      ${leyendaReferencia(dir,valoresUltimoMes)}
       <table style="width:100%;border-collapse:collapse;font-size:.76rem;">
         <thead>
           <tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
@@ -5851,11 +5949,12 @@ function renderIndicadoresPROA(){
   inner.innerHTML=`
     <div style="padding-top:14px;">
       <h3 style="font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 4px;">📐 Indicadores PROA (Programa de Optimización de Antimicrobianos)</h3>
-      <p style="font-size:.72rem;color:#64748b;margin:0;">De los 20 indicadores estándar de un programa PROA, estos 5 son los que se pueden calcular con datos reales de tus fuentes actuales (CONSABI + PARTE II). Los otros 15 necesitan datos que hoy no existen en ningún archivo que manejas — principalmente registro de administración diaria por paciente (DOT), auditoría clínica caso por caso, o desenlace de pacientes. No se inventan ni se aproximan aquí.</p>
+      <p style="font-size:.72rem;color:#64748b;margin:0;">De los 20 indicadores estándar de un programa PROA, estos 5 son los que se pueden calcular con datos reales de tus fuentes actuales (CONSABI + PARTE II). Los otros 15 necesitan datos que hoy no existen en ningún archivo que manejas.</p>
     </div>
+    ${controlesHtml}
     ${t1}${t2}${t3}${t4}${t5}
     <div style="background:#f0f9ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px 18px;margin-top:14px;font-size:.74rem;color:#374151;line-height:1.6;">
-      <b>📈 % Resistencia antimicrobiana</b> (el indicador #20) ya está disponible en la pestaña <b>🎯 Cobertura Empírica</b> — ahí se calcula por cultivo/servicio/infección y por antibiótico específico (100% − %Sensibilidad), con más detalle del que cabría aquí mezclado con los indicadores mensuales de consumo.
+      <b>📈 % Resistencia antimicrobiana</b> (el indicador #20) ya está disponible en la pestaña <b>🎯 Cobertura Empírica</b>.
     </div>
   `;
   wireTips(inner);
