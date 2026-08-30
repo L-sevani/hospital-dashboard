@@ -4140,7 +4140,7 @@ function renderConsumoDDD(){
     {label:'DDD / 100 camas',val:d.ddd_100_camas!=null?d.ddd_100_camas.toLocaleString('es-MX',{maximumFractionDigits:1}):'—',sub:`Camas censables: ${Math.round(d.camas)}`,delta:_consumoModo==='mensual'&&dAnterior?deltaArrow(deltaPct(d.ddd_100_camas,dAnterior.ddd_100_camas),false):''},
     {label:'ΣDDD total',val:d.ddd_total!=null?d.ddd_total.toLocaleString('es-MX',{maximumFractionDigits:1}):'—',sub:'Antibióticos endovenosos (CONSABI)',delta:''},
     {label:'Días paciente',val:Math.round(d.dias_paciente).toLocaleString('es-MX'),sub:'Fuente: PARTE II',delta:''},
-    {label:'% Access',val:(d.por_aware_pct.Access||0)+'%',sub:'Meta OMS: ≥60%',delta:_consumoModo==='mensual'&&dAnterior?deltaArrow(deltaPct(d.por_aware_pct.Access,dAnterior.por_aware_pct?dAnterior.por_aware_pct.Access:null),true):''},
+    {label:'% Access',val:(d.por_aware_pct.Access||0)+'%',sub:'Meta OMS: ≥70%',delta:_consumoModo==='mensual'&&dAnterior?deltaArrow(deltaPct(d.por_aware_pct.Access,dAnterior.por_aware_pct?dAnterior.por_aware_pct.Access:null),true):''},
     {label:'Ocupación hospitalaria',val:d.ocupacion!=null?d.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—',sub:'Fuente: PARTE II',delta:''},
   ];
   const kpiHtml=kpis.map(k=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;flex:1;min-width:160px;"><div style="font-size:.68rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.03em;">${k.label}</div><div style="font-size:1.5rem;font-weight:800;color:#154f39;margin:2px 0;">${k.val}${k.delta}</div><div style="font-size:.68rem;color:#94a3b8;">${k.sub}</div></div>`).join('');
@@ -4507,7 +4507,7 @@ function renderConsumoDDD(){
   let resumenHtml='';
   {
     const pctAccess=d.por_aware_pct.Access||0;
-    const metaOk=pctAccess>=60;
+    const metaOk=pctAccess>=70;
     const topAbx=d.top_antibioticos[0];
     const deltaDdd=_consumoModo==='mensual'&&dAnterior?deltaPct(d.ddd_100_camas,dAnterior.ddd_100_camas):null;
     let tendenciaTxt='';
@@ -4522,7 +4522,7 @@ function renderConsumoDDD(){
       <div style="font-size:.85rem;font-weight:800;color:#154f39;margin-bottom:8px;">📋 Resumen ejecutivo — ${getHospitalDisplayName(_consumoHospital)} · ${_consumoModo==='acumulado'?'Acumulado a '+_consumoPeriodo:_consumoPeriodo}</div>
       <p style="font-size:.8rem;color:#1e293b;line-height:1.7;margin:0;">
         El indicador de consumo se ubica en <b>${d.ddd_100_camas!=null?d.ddd_100_camas.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'} DDD/100 camas</b>${tendenciaTxt?', '+tendenciaTxt:''}.
-        La proporción de antibióticos <b>Access</b> es de <b>${pctAccess}%</b>, ${metaOk?'cumpliendo':'por debajo de'} la meta OMS de ≥60%${!metaOk?' — se recomienda revisar el esquema empírico predominante':''}.
+        La proporción de antibióticos <b>Access</b> es de <b>${pctAccess}%</b>, ${metaOk?'cumpliendo':'por debajo de'} la meta OMS de ≥70%${!metaOk?' — se recomienda revisar el esquema empírico predominante':''}.
         ${topAbx?`El antibiótico de mayor consumo es <b>${topAbx.antibiotico}</b> (${topAbx.aware}), con ${topAbx.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})} DDD.`:''}
         ${d.ocupacion!=null?` La ocupación hospitalaria del período es de <b>${d.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})}%</b>.`:''}
       </p>
@@ -5828,7 +5828,7 @@ function renderIndicadoresPROA(){
     </div>`;
 
   // Referencia FIJA (no calculada de los datos) -- valores dados por Sevani:
-  // Access esperado >=60%, Watch esperado <=30%, Reserve esperado <=10%.
+  // Access esperado >=70% (meta OMS actualizada 2024/2030), Watch esperado <=30%, Reserve esperado <=10%.
   // Access es ademas la meta oficial OMS; Watch/Reserve son la meta CIAE (no hay un
   // que definio Sevani (no un estandar OMS publicado con ese numero exacto).
   function leyendaReferencia(dir, corteEsperado, corteMedio){
@@ -5924,8 +5924,8 @@ function renderIndicadoresPROA(){
     p=>p.ddd_total, p=>p.dias_paciente, p=>p.dias_paciente?Math.round(p.ddd_total/p.dias_paciente*100*100)/100:null, null, null, null, '', 'DDD/100 días-pac.'
   );
   const t3=tablaIndicador('t3',
-    '6. Proporción Access', 'ΣDDD (Dosis Diarias Definidas) de antibióticos categoría Access ÷ ΣDDD totales × 100', 'Calidad del consumo — meta OMS ≥60%',
-    p=>p.por_aware&&p.por_aware.Access, p=>p.ddd_total, (p,n,d)=>d?Math.round(n/d*1000)/10:null, 'alto_bueno', 60, 40
+    '6. Proporción Access', 'ΣDDD (Dosis Diarias Definidas) de antibióticos categoría Access ÷ ΣDDD totales × 100', 'Calidad del consumo — meta OMS ≥70% (actualizada en la Asamblea General de la ONU 2024, meta a 2030; la meta anterior 2019-2023 era ≥60%)',
+    p=>p.por_aware&&p.por_aware.Access, p=>p.ddd_total, (p,n,d)=>d?Math.round(n/d*1000)/10:null, 'alto_bueno', 70, 50
   );
   const t4=tablaIndicador('t4',
     '7. Proporción Watch', 'ΣDDD (Dosis Diarias Definidas) de antibióticos categoría Watch ÷ ΣDDD totales × 100', 'Vigilancia de uso de mayor riesgo — meta CIAE ≤30%',
