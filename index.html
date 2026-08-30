@@ -5829,7 +5829,7 @@ function renderIndicadoresPROA(){
 
   // Referencia FIJA (no calculada de los datos) -- valores dados por Sevani:
   // Access esperado >=60%, Watch esperado <=30%, Reserve esperado <=10%.
-  // Access es ademas la meta oficial OMS; Watch/Reserve son el corte institucional
+  // Access es ademas la meta oficial OMS; Watch/Reserve son la meta CIAE (no hay un
   // que definio Sevani (no un estandar OMS publicado con ese numero exacto).
   function leyendaReferencia(dir, corteEsperado, corteMedio){
     if(!dir) return `<div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Sin semáforo: no hay un corte universal de "bueno/malo" para este indicador — depende del nivel de complejidad de cada hospital.</div>`;
@@ -5928,11 +5928,11 @@ function renderIndicadoresPROA(){
     p=>p.por_aware&&p.por_aware.Access, p=>p.ddd_total, (p,n,d)=>d?Math.round(n/d*1000)/10:null, 'alto_bueno', 60, 40
   );
   const t4=tablaIndicador('t4',
-    '7. Proporción Watch', 'ΣDDD (Dosis Diarias Definidas) de antibióticos categoría Watch ÷ ΣDDD totales × 100', 'Vigilancia de uso de mayor riesgo',
+    '7. Proporción Watch', 'ΣDDD (Dosis Diarias Definidas) de antibióticos categoría Watch ÷ ΣDDD totales × 100', 'Vigilancia de uso de mayor riesgo — meta CIAE ≤30%',
     p=>p.por_aware&&p.por_aware.Watch, p=>p.ddd_total, (p,n,d)=>d?Math.round(n/d*1000)/10:null, 'alto_malo', 30, 50
   );
   const t5=tablaIndicador('t5',
-    '8. Proporción Reserve', 'ΣDDD (Dosis Diarias Definidas) de antibióticos categoría Reserve ÷ ΣDDD totales × 100', 'Uso de antimicrobianos de reserva',
+    '8. Proporción Reserve', 'ΣDDD (Dosis Diarias Definidas) de antibióticos categoría Reserve ÷ ΣDDD totales × 100', 'Uso de antimicrobianos de reserva — meta CIAE ≤10%',
     p=>p.por_aware&&p.por_aware.Reserve, p=>p.ddd_total, (p,n,d)=>d?Math.round(n/d*1000)/10:null, 'alto_malo', 10, 20
   );
 
