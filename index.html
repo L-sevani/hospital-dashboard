@@ -5916,23 +5916,23 @@ function renderIndicadoresPROA(){
   }
 
   const t1=tablaIndicador('t1',
-    '1. DDD/100 camas censables', 'ΣDDD ÷ camas × 100', 'Consumo global (indicador principal del dashboard)',
+    '1. DDD/100 camas censables', 'ΣDDD (Suma de Dosis Diarias Definidas — la unidad estándar de la OMS para medir consumo de medicamentos) ÷ camas × 100', 'Consumo global (indicador principal del dashboard)',
     p=>p.ddd_total, p=>p.camas, p=>p.camas?Math.round(p.ddd_total/p.camas*100*100)/100:null, null, null, null, '', 'DDD/100 camas'
   );
   const t2=tablaIndicador('t2',
-    '3. DDD/100 días-paciente', 'ΣDDD ÷ días-paciente × 100', 'Comparación hospitalaria (estándar OMS)',
+    '3. DDD/100 días-paciente', 'ΣDDD (Suma de Dosis Diarias Definidas) ÷ días-paciente × 100', 'Comparación hospitalaria (estándar OMS)',
     p=>p.ddd_total, p=>p.dias_paciente, p=>p.dias_paciente?Math.round(p.ddd_total/p.dias_paciente*100*100)/100:null, null, null, null, '', 'DDD/100 días-pac.'
   );
   const t3=tablaIndicador('t3',
-    '6. Proporción Access', 'ΣDDD Access ÷ ΣDDD totales × 100', 'Calidad del consumo — meta OMS ≥60%',
+    '6. Proporción Access', 'ΣDDD (Dosis Diarias Definidas) de antibióticos categoría Access ÷ ΣDDD totales × 100', 'Calidad del consumo — meta OMS ≥60%',
     p=>p.por_aware&&p.por_aware.Access, p=>p.ddd_total, (p,n,d)=>d?Math.round(n/d*1000)/10:null, 'alto_bueno', 60, 40
   );
   const t4=tablaIndicador('t4',
-    '7. Proporción Watch', 'ΣDDD Watch ÷ ΣDDD totales × 100', 'Vigilancia de uso de mayor riesgo',
+    '7. Proporción Watch', 'ΣDDD (Dosis Diarias Definidas) de antibióticos categoría Watch ÷ ΣDDD totales × 100', 'Vigilancia de uso de mayor riesgo',
     p=>p.por_aware&&p.por_aware.Watch, p=>p.ddd_total, (p,n,d)=>d?Math.round(n/d*1000)/10:null, 'alto_malo', 30, 50
   );
   const t5=tablaIndicador('t5',
-    '8. Proporción Reserve', 'ΣDDD Reserve ÷ ΣDDD totales × 100', 'Uso de antimicrobianos de reserva',
+    '8. Proporción Reserve', 'ΣDDD (Dosis Diarias Definidas) de antibióticos categoría Reserve ÷ ΣDDD totales × 100', 'Uso de antimicrobianos de reserva',
     p=>p.por_aware&&p.por_aware.Reserve, p=>p.ddd_total, (p,n,d)=>d?Math.round(n/d*1000)/10:null, 'alto_malo', 10, 20
   );
 
