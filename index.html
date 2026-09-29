@@ -4235,7 +4235,7 @@ function renderConsumo(){
     body.innerHTML=`<div style="padding:40px;text-align:center;color:#94a3b8;">Aún no hay datos de consumo cargados.<br><span style="font-size:.78rem;">Genera <code>consumo_data.json</code> con <code>consumo_ddd.py</code> y colócalo junto a <code>index.html</code> (mismo repo/carpeta que <code>dashboard_data.json</code>).</span></div>`;
     return;
   }
-  if(!_consumoHospital || !CONSUMO_DATA[_consumoHospital]) _consumoHospital=ids[0];
+  if(!_consumoHospital || (!CONSUMO_DATA[_consumoHospital] && _consumoHospital!=='DELEGACIONAL')) _consumoHospital=ids[0];
 
   const tabBtn=(id,label)=>`<button onclick="_consumoView='${id}';renderConsumo();" style="padding:8px 16px;border-radius:10px 10px 0 0;font-size:.8rem;font-weight:700;cursor:pointer;border:1.5px solid ${id===_consumoView?'#154f39':'transparent'};border-bottom:none;background:${id===_consumoView?'#fff':'transparent'};color:${id===_consumoView?'#154f39':'#64748b'};">${label}</button>`;
 
