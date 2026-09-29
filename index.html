@@ -1888,6 +1888,7 @@ function getHospitalDisplayName(h){
     'AMBULATORIOS TLAXCALA': '📋 Ambulatorios · NO IAAS',
     'DELEGACION TLAXCALA':   '📋 Ambulatorios · NO IAAS',
     'AMBULATORIOS':          '📋 Ambulatorios · NO IAAS',
+    'DELEGACIONAL':          '🏛️ OOAD Tlaxcala (Delegacional)',
   };
   return map[h] || HOSPITALES_NOMBRES[h] || h || 'HGZ No. 1 Tlaxcala';
 }
@@ -4075,7 +4076,53 @@ function _piezasYdddSegunFiltro(a){
   return {piezas, ddd, huboPiezas, calibrado};
 }
 
+function _combinarHospitalesV2(partes){
+  let camasSum=0,dddSum=0,diasSum=0,ocupSum=0,ocupN=0;
+  const awareSum={}, abxSum={}, serviciosAcc={}, sinCalibrarAcc={};
+  partes.forEach(d=>{
+    camasSum+=d.camas||0; diasSum+=d.dias_paciente||0; dddSum+=d.ddd_total||0;
+    if(d.ocupacion!=null){ocupSum+=d.ocupacion; ocupN++;}
+    Object.entries(d.por_aware||{}).forEach(([a,v])=>{awareSum[a]=(awareSum[a]||0)+v;});
+    (d.top_antibioticos||[]).forEach(a=>{
+      if(!abxSum[a.antibiotico]) abxSum[a.antibiotico]={antibiotico:a.antibiotico,ddd:0,aware:a.aware,piezas:0};
+      abxSum[a.antibiotico].ddd+=a.ddd; abxSum[a.antibiotico].piezas+=a.piezas||0;
+    });
+    (d.antibioticos_sin_calibrar||[]).forEach(a=>{
+      if(!sinCalibrarAcc[a.nombre]) sinCalibrarAcc[a.nombre]={nombre:a.nombre,piezas:0};
+      sinCalibrarAcc[a.nombre].piezas+=a.piezas;
+    });
+    Object.entries(d.servicios||{}).forEach(([serv,info])=>{
+      if(!serviciosAcc[serv]) serviciosAcc[serv]={camasSum:0,diasSum:0,ocupSum:0,ocupN:0,n:0,division:info.division};
+      const s=serviciosAcc[serv];
+      s.camasSum+=info.camas||0; s.diasSum+=info.dias_paciente||0;
+      if(info.ocupacion!=null){s.ocupSum+=info.ocupacion; s.ocupN++;}
+      s.n++;
+    });
+  });
+  const ddd100=camasSum?(dddSum/camasSum*100):null;
+  const porAwarePct={};
+  Object.entries(awareSum).forEach(([k,v])=>{porAwarePct[k]=dddSum?Math.round(v/dddSum*1000)/10:0;});
+  const servicios={};
+  Object.entries(serviciosAcc).forEach(([serv,s])=>{
+    servicios[serv]={camas:Math.round(s.camasSum/s.n*10)/10, dias_paciente:s.diasSum, ocupacion:s.ocupN?Math.round(s.ocupSum/s.ocupN*10)/10:null, division:s.division};
+  });
+  return {
+    camas:Math.round(camasSum*10)/10, dias_paciente:diasSum, ddd_total:Math.round(dddSum*100)/100,
+    ddd_100_camas: ddd100!==null?Math.round(ddd100*100)/100:null,
+    ocupacion: ocupN?Math.round(ocupSum/ocupN*10)/10:null,
+    por_aware:awareSum, por_aware_pct:porAwarePct,
+    top_antibioticos:Object.values(abxSum).sort((a,b)=>b.ddd-a.ddd),
+    antibioticos_sin_calibrar:Object.values(sinCalibrarAcc),
+    servicios, consumo_cargado:true,
+  };
+}
+
 function consumoParaHospitalV2(hosp, periodo, modo){
+  if(hosp==='DELEGACIONAL'){
+    const partes=consumoHospIdsV2().map(h=>consumoParaHospitalV2(h,periodo,modo)).filter(p=>p&&p.consumo_cargado);
+    if(!partes.length) return {consumo_cargado:false};
+    return _combinarHospitalesV2(partes);
+  }
   if(modo==='acumulado') return mergeConsumoPeriodosV2(hosp, periodo);
   const per=CONSUMO_DATA_V2[hosp] && CONSUMO_DATA_V2[hosp].periodos;
   if(!per || !per[periodo]) return null;
@@ -4230,7 +4277,9 @@ function renderConsumoDDD(){
   if(!inner) return;
   _tipRegistry={};
   const ids=consumoHospIdsV2();
-  const _periodosRaw=(CONSUMO_DATA_V2[_consumoHospital]&&CONSUMO_DATA_V2[_consumoHospital].periodos)||{};
+  const _periodosRaw=_consumoHospital==='DELEGACIONAL'
+    ? Object.assign({}, ...ids.map(h=>(CONSUMO_DATA_V2[h]&&CONSUMO_DATA_V2[h].periodos)||{}))
+    : (CONSUMO_DATA_V2[_consumoHospital]&&CONSUMO_DATA_V2[_consumoHospital].periodos)||{};
   const periodosMap={};
   Object.keys(_periodosRaw).forEach(p=>{ periodosMap[p]=consumoParaHospitalV2(_consumoHospital,p,'mensual')||{consumo_cargado:false}; });
   const periodos=Object.keys(periodosMap).sort();
@@ -4242,7 +4291,7 @@ function renderConsumoDDD(){
   const mesActualPreliminar = !!(periodosMap[_consumoPeriodo] && periodosMap[_consumoPeriodo].estatus_periodo==='Abierto');
 
   // Selector de hospital
-  const hospTabs=ids.map(h=>`<button onclick="_consumoHospital='${h}';_consumoPeriodo=null;renderConsumo();" style="padding:7px 14px;border-radius:20px;font-size:.76rem;font-weight:700;cursor:pointer;border:1.5px solid ${h===_consumoHospital?'#154f39':'#e2e8f0'};background:${h===_consumoHospital?'#154f39':'#fff'};color:${h===_consumoHospital?'#fff':'#374151'};">${getHospitalDisplayName(h)}</button>`).join('');
+  const hospTabs=[...ids,'DELEGACIONAL'].map(h=>`<button onclick="_consumoHospital='${h}';_consumoPeriodo=null;renderConsumo();" style="padding:7px 14px;border-radius:20px;font-size:.76rem;font-weight:700;cursor:pointer;border:1.5px solid ${h===_consumoHospital?(h==='DELEGACIONAL'?'#1e40af':'#154f39'):'#e2e8f0'};background:${h===_consumoHospital?(h==='DELEGACIONAL'?'#1e40af':'#154f39'):(h==='DELEGACIONAL'?'#eff6ff':'#fff')};color:${h===_consumoHospital?'#fff':(h==='DELEGACIONAL'?'#1e40af':'#374151')};">${getHospitalDisplayName(h)}</button>`).join('');
 
   // Toggle Mensual / Acumulado
   const modoToggle=`<div style="display:flex;gap:0;align-items:center;">
