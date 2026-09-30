@@ -1195,9 +1195,17 @@ function _insertarBotonDescarga(el, cid, nombreArchivo){
 function _detectarTituloGrafica(cid){
   const cont=document.getElementById(cid);
   if(!cont) return '';
-  const prev=cont.previousElementSibling;
-  if(prev && prev.textContent) return prev.textContent.trim();
-  return '';
+  // Busca el <h2> más cercano hacia atrás entre los hermanos -- el patrón de
+  // título que se usa en todo el dashboard -- aunque haya otros elementos en
+  // medio (chips, avisos, etc.) entre el h2 y el contenedor de la gráfica.
+  let sib=cont.previousElementSibling;
+  let fallback='';
+  while(sib){
+    if(!fallback && sib.textContent) fallback=sib.textContent.trim();
+    if(sib.tagName==='H2' && sib.textContent) return sib.textContent.trim();
+    sib=sib.previousElementSibling;
+  }
+  return fallback;
 }
 
 async function descargarGraficaImagen(cid, nombreArchivo){
