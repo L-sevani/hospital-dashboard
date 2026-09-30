@@ -1227,35 +1227,24 @@ async function descargarGraficaImagen(cid, nombreArchivo){
   }
   try{
     const chartCanvas=await html2canvas(capEl,{backgroundColor:'#ffffff', scale:2});
-    // El título y los filtros se dibujan directo en el canvas final (no se
-    // capturan del DOM) -- así el resultado no depende de cómo html2canvas
-    // interprete el CSS de esos textos.
-    const {titulo, filtros}=_detectarTituloYFiltros(cid);
-    const padX=24;
-    const tituloAltura=titulo?(filtros?92:64):0;
+    // Solo el título se dibuja en la imagen (los filtros aplicados se muestran
+    // aparte, en su propio cuadro de resumen en la página -- así la gráfica no
+    // se llena de texto extra).
+    const {titulo}=_detectarTituloYFiltros(cid);
+    const padX=24, tituloAltura=titulo?64:0;
     const finalCanvas=document.createElement('canvas');
     finalCanvas.width=chartCanvas.width;
     finalCanvas.height=chartCanvas.height+tituloAltura;
     const ctx=finalCanvas.getContext('2d');
     ctx.fillStyle='#ffffff';
     ctx.fillRect(0,0,finalCanvas.width,finalCanvas.height);
-    const recortarA=(txt,fuente,maxW)=>{
-      ctx.font=fuente;
-      let t=txt;
-      while(ctx.measureText(t).width>maxW && t.length>4) t=t.slice(0,-2)+'…';
-      return t;
-    };
     if(titulo){
       ctx.fillStyle='#154f39';
       const fT='bold 26px Arial, sans-serif';
       ctx.font=fT; ctx.textBaseline='middle';
-      ctx.fillText(recortarA(titulo,fT,finalCanvas.width-padX*2), padX, 36);
-      if(filtros){
-        ctx.fillStyle='#64748b';
-        const fF='22px Arial, sans-serif';
-        ctx.font=fF;
-        ctx.fillText(recortarA(filtros,fF,finalCanvas.width-padX*2), padX, 72);
-      }
+      let t=titulo;
+      while(ctx.measureText(t).width>finalCanvas.width-padX*2 && t.length>4) t=t.slice(0,-2)+'…';
+      ctx.fillText(t, padX, tituloAltura/2+2);
     }
     ctx.drawImage(chartCanvas,0,tituloAltura);
     const link=document.createElement('a');
@@ -2720,7 +2709,7 @@ function applyDrillChart(){
     const merged=calcPct(allRows);
     const rows=activeFilter==='cb'?filterRowsToCb(merged):merged;
     if(!rows.length) return;
-    datasets.push({label:getHospitalDisplayName(hid),micro:`${dimIcon} ${selLabel}`,rows,color:col.main,dimKey,topMicrosForIA});
+    datasets.push({label:getHospitalDisplayName(hid),micro:`${dimIcon} ${selLabel}`,rows,color:col.main,dimKey,topMicrosForIA,selSvc,selInf,selCul,selMicros});
   });
 
   if(!datasets.length){
@@ -2739,9 +2728,30 @@ function applyDrillChart(){
   const allTopMicros=usedMicro?[]:
     [...new Set(datasets.flatMap(d=>d.topMicrosForIA||[]))].slice(0,8);
 
+  function _filtroLineaResumen(icon,label,arr,usado){
+    const n=arr.length;
+    const txt = n===0 ? '—' : (n===1?arr[0]:`${n} marcados`);
+    if(usado) return `<div style="font-size:.7rem;color:#15803d;font-weight:700;">${icon} ${label}: ${txt} <span style="font-weight:800;">← usado en esta gráfica</span></div>`;
+    return `<div style="font-size:.68rem;color:#94a3b8;">${icon} ${label}: ${txt}${n?' (no aplicado)':''}</div>`;
+  }
+
   result.innerHTML=`
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;">
+      <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📋 Resumen de filtros aplicados · ${periodLabel}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        ${datasets.map(d=>`<div style="min-width:220px;background:#fff;border-radius:8px;padding:8px 12px;border:1px solid #e2e8f0;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:${d.color};display:inline-block;flex-shrink:0;"></span>
+            <strong style="color:${d.color};font-size:.74rem;">${d.label}</strong>
+          </div>
+          ${_filtroLineaResumen('🦠','Microorganismo',d.selMicros,d.dimKey==='micro')}
+          ${_filtroLineaResumen('🧫','Cultivo',d.selCul,d.dimKey==='cul')}
+          ${_filtroLineaResumen('🩺','Infección',d.selInf,d.dimKey==='inf')}
+          ${_filtroLineaResumen('🏥','Servicio',d.selSvc,d.dimKey==='svc')}
+        </div>`).join('')}
+      </div>
+    </div>
     <div style="background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
-      <div style="font-size:.68rem;color:#9333ea;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Resultado · ${periodLabel}</div>
       <h2 style="font-family:'DM Serif Display',serif;font-size:1rem;color:#1a1a2e;margin:0 0 12px;">${(()=>{
         const isAmb=d=>d.label.toLowerCase().includes('ambulatorio');
         const hasIaas=datasets.some(d=>!isAmb(d));
@@ -2749,13 +2759,6 @@ function applyDrillChart(){
         const suffix=hasIaas&&hasAmb?'IAAS y Ambulatorios':hasAmb?'Ambulatorios':'IAAS';
         return 'Perfil de sensibilidad y resistencia en microorganismos asociados a '+suffix;
       })()}</h2>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
-        ${datasets.map(d=>`<div style="display:flex;align-items:center;gap:6px;font-size:.72rem;background:#f8fafc;border-radius:8px;padding:4px 10px;border:1px solid #e2e8f0;">
-          <span style="width:10px;height:10px;border-radius:50%;background:${d.color};display:inline-block;flex-shrink:0;"></span>
-          <strong style="color:${d.color};">${d.label}</strong>
-          <span style="color:#64748b;">→ ${d.micro}</span>
-        </div>`).join('')}
-      </div>
       <div id="${cid}"></div>
       <div style="margin-top:18px;padding-top:14px;border-top:1px solid #f1f5f9;text-align:center;">
         <button id="btn-ia-${iaId}" onclick="drillLaunchIA('${iaId}')"
