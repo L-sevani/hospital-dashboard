@@ -163,6 +163,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .drill-step-header{display:flex;align-items:center;gap:8px;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#374151;margin-bottom:10px;}
 .drill-step-num{width:22px;height:22px;border-radius:50%;background:#7c3aed;color:#fff;font-size:.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -1171,6 +1172,36 @@ function getPrecioHtml(abxName){
     +'</div>';
 }
 
+// ── Botón "Descargar imagen" reutilizable para cualquier gráfica de SRI/Frecuencias ──
+function _insertarBotonDescarga(el, cid, nombreArchivo){
+  if(!el) return;
+  el.style.position='relative';
+  const btnId='btn-desc-'+cid.replace(/[^A-Za-z0-9]/g,'-');
+  const existente=document.getElementById(btnId);
+  if(existente) existente.remove();
+  el.insertAdjacentHTML('afterbegin',`<button id="${btnId}" class="btn-descargar-grafica" onclick="descargarGraficaImagen('${cid}','${nombreArchivo}')" title="Descargar esta gráfica como imagen" style="position:absolute;top:2px;right:2px;z-index:6;background:#154f39;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25);">⬇️ Imagen</button>`);
+}
+async function descargarGraficaImagen(cid, nombreArchivo){
+  const el=document.getElementById(cid);
+  if(!el || typeof html2canvas==='undefined'){
+    alert('No se pudo generar la imagen (falta conexión a internet para cargar la librería de descarga).');
+    return;
+  }
+  const btn=el.querySelector('.btn-descargar-grafica');
+  if(btn) btn.style.visibility='hidden';
+  try{
+    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2});
+    const link=document.createElement('a');
+    link.download=(nombreArchivo||'grafica')+'.png';
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+  }catch(e){
+    alert('No se pudo generar la imagen. Intenta de nuevo.');
+  }finally{
+    if(btn) btn.style.visibility='visible';
+  }
+}
+
 function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   const el=document.getElementById(cid); if(!el) return;
   if(!data1||!data1.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
@@ -1235,6 +1266,7 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
 
   h+=`</div></div>`;
   el.innerHTML=h;
+  _insertarBotonDescarga(el,cid,'grafica_sri_'+cid);
   // Leyenda S/R/I inline
   const _legParts=['<div style="display:flex;align-items:center;gap:4px;font-size:.69rem;"><span style="width:13px;height:8px;background:#22c55e;border-radius:2px;display:inline-block;"></span>S Sensible</div>','<div style="display:flex;align-items:center;gap:4px;font-size:.69rem;"><span style="width:13px;height:8px;background:#ef4444;border-radius:2px;display:inline-block;"></span>R Resistente</div>','<div style="display:flex;align-items:center;gap:4px;font-size:.69rem;"><span style="width:13px;height:8px;background:#f59e0b;border-radius:2px;display:inline-block;"></span>I Intermedio</div>'];
   if(lbl1&&lbl2) _legParts.push(`<span style="color:#e2e8f0;margin:0 4px;">|</span><div style="display:flex;align-items:center;gap:4px;font-size:.69rem;"><span style="width:13px;height:8px;background:#22c55e;opacity:.5;border-radius:2px;display:inline-block;"></span>${lbl1}</div>`,`<div style="display:flex;align-items:center;gap:4px;font-size:.69rem;"><span style="width:13px;height:8px;background:#15803d;border-radius:2px;display:inline-block;"></span>${lbl2}</div>`);
@@ -1350,6 +1382,7 @@ function buildSRIMultiChart(datasets, cid){
   h+=`<span style="color:#e2e8f0;margin:0 2px;">|</span>`;
   h+=`</div>`;
   el.innerHTML=h;
+  _insertarBotonDescarga(el,cid,'grafica_sri_multi_'+cid);
 
   // Tooltip flotante (mismo sistema que buildSRIChart)
   const tip=getFixedTip();
@@ -1409,6 +1442,7 @@ function buildSRICompactChart(data, cid){
 
   h+=`</div></div>`;
   el.innerHTML=h;
+  _insertarBotonDescarga(el,cid,'grafica_sri_compacta_'+cid);
 
   const tip=getFixedTip();
   el.querySelectorAll('.vbh[data-compact]').forEach(bar=>{
@@ -1507,6 +1541,7 @@ function buildFreqChart(data, cid){
   });
   h+=`</div>`;
   el.innerHTML=h;
+  _insertarBotonDescarga(el,cid,'grafica_frecuencias_'+cid);
 
   const tip=getFixedTip('freq');
   if(!tip.dataset.freqBound){
