@@ -2698,7 +2698,16 @@ function applyDrillChart(){
 
     let allRows=[], selLabel='', dimIcon='🔎', dimKey='combinado', selItems=[], topMicrosForIA=[];
 
-    if(derived.registros && derived.registros.length){
+    // Si en el panel de ESTE hospital no marcaste absolutamente nada (ninguna
+    // casilla en Servicio/Infección/Cultivo/Microorganismo), ese hospital no
+    // participa -- igual que antes. Sin este freno, "las 4 vacías" se
+    // interpretaba como "sin restricción en nada" y traía TODO el hospital
+    // sin filtrar (ese fue el bug con Ambulatorios).
+    const nadaMarcado = !selSvc.length && !selInf.length && !selCul.length && !selMicros.length;
+
+    if(nadaMarcado){
+      // no participa -- se deja allRows vacío, más abajo "if(!allRows.length) return;" lo salta
+    } else if(derived.registros && derived.registros.length){
       // Filtro en cascada REAL: combina las 4 categorías a la vez (AND entre
       // categorías, OR dentro de cada una). Una categoría vacía no restringe.
       const {rows, n, totalPruebas, topMicros}=_aggregarRegistrosCombinado(derived.registros, selSvc, selInf, selCul, selMicros, periods);
