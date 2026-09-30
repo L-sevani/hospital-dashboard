@@ -713,7 +713,8 @@ function _deriveFromHospitalV2(hd){
   const out={
     hospital:{}, servicios:{subgrupos:[],data:{}}, infecciones:{subgrupos:[],data:{}},
     cultivos:{subgrupos:[],data:{}}, micros:{subgrupos:[],data:{}}, freq:{},
-    hospital_auto:{}, hospital_auto_cb:{}, N_micros:0
+    hospital_auto:{}, hospital_auto_cb:{}, N_micros:0,
+    registros:(hd&&hd.registros)||[], // fila por fila: servicio+infección+cultivo+micro+antibióticos juntos -- para el filtro en cascada real de Análisis Detallado
   };
   const periods=((hd&&hd.periodos&&hd.periodos.length)?hd.periodos:Object.keys(((hd||{}).data||{})).filter(k=>/^\d{4}-\d{2}$/.test(String(k))).sort());
   const allMicros=new Set();
@@ -1024,6 +1025,38 @@ function sriForPeriod(obj,period){
     });
   });
   return calcPct(Object.values(merged)).sort((a,b)=>b.pS-a.pS || a.pR-b.pR || a.pI-b.pI);
+}
+
+// Filtro en cascada REAL: combina Servicio + Infección + Cultivo + Microorganismo
+// a la vez (AND entre categorías, OR dentro de cada una si hay varias marcadas),
+// usando los registros fila-por-fila (ver procesar_excel_v2.py -> "registros").
+// Una categoría vacía (nada marcado) no restringe -- cuenta como "todas".
+function _aggregarRegistrosCombinado(registros, selSvc, selInf, selCul, selMicros, periods){
+  const todoPeriodo=!periods || !periods.length || periods.includes('TODOS');
+  const perSet=todoPeriodo?null:new Set(periods);
+  const byAbx={};
+  let n=0, totalPruebas=0;
+  const microsVistos={};
+  (registros||[]).forEach(r=>{
+    if(selSvc.length && !selSvc.includes(r.s)) return;
+    if(selInf.length && !selInf.includes(r.i)) return;
+    if(selCul.length && !selCul.includes(r.c)) return;
+    if(selMicros.length && !selMicros.includes(r.m)) return;
+    if(perSet && !perSet.has(r.p)) return;
+    n++;
+    if(r.m){ microsVistos[r.m]=(microsVistos[r.m]||0)+1; }
+    Object.entries(r.r||{}).forEach(([abx,val])=>{
+      totalPruebas++;
+      const nr=normalizeAbxRow({a:abx, t:1, S:val==='S'?1:0, R:val==='R'?1:0, I:val==='I'?1:0});
+      if(!byAbx[nr.a]) byAbx[nr.a]={a:nr.a,c:nr.c||'Sin clasificar',t:0,S:0,R:0,I:0};
+      byAbx[nr.a].t+=nr.t; byAbx[nr.a].S+=nr.S; byAbx[nr.a].R+=nr.R; byAbx[nr.a].I+=nr.I;
+    });
+  });
+  const topMicros=Object.entries(microsVistos).sort((a,b)=>b[1]-a[1]).map(e=>e[0]).slice(0,6);
+  return {
+    rows: calcPct(Object.values(byAbx)).sort((a,b)=>b.pS-a.pS || a.pR-b.pR || a.pI-b.pI),
+    n, totalPruebas, topMicros,
+  };
 }
 
 function sriMergedRaw(obj, periods){
@@ -2654,7 +2687,6 @@ function applyDrillChart(){
     const derived=getRawSliceForHospital(hid)||RAW;
     const col=DRILL_COLORS[i]||DRILL_COLORS[0];
 
-    // Prioridad: Microorganismo → Cultivo → Infección → Servicio
     const getChecked=key=>{
       const box=document.getElementById(`drill-${key}-checks-${i}`);
       return box?[...box.querySelectorAll('input:checked')].map(c=>c.value):[];
@@ -2664,45 +2696,62 @@ function applyDrillChart(){
     const selInf=getChecked('inf');
     const selSvc=getChecked('svc');
 
-    let allRows=[], selLabel='', dimIcon='', dimKey='', selItems=[], topMicrosForIA=[];
-    if(selMicros.length){
-      selMicros.forEach(m=>{
-        const raw=sriMergedRaw(derived.micros?.data?.[m],periods);
-        if(raw) allRows.push(...raw);
-      });
-      selLabel=selMicros.length===1?selMicros[0]:`${selMicros.length} microorganismos`;
-      dimIcon='🦠'; dimKey='micro'; selItems=selMicros;
-    } else if(selCul.length){
-      selCul.forEach(sg=>{
-        const raw=sriMergedRaw(derived.cultivos?.data?.[sg],periods);
-        if(raw) allRows.push(...raw);
-      });
-      selLabel=selCul.length===1?selCul[0]:`${selCul.length} cultivos`;
-      dimIcon='🧫'; dimKey='cul'; selItems=selCul;
-      // Top micros del cultivo seleccionado
-      selCul.forEach(sg=>{
-        (derived.micros?.subgrupos||[]).forEach(m=>{
-          const mrows=sriMergedRaw(derived.micros?.data?.[m],periods);
-          if(mrows&&mrows.length) topMicrosForIA.push(m);
+    let allRows=[], selLabel='', dimIcon='🔎', dimKey='combinado', selItems=[], topMicrosForIA=[];
+
+    if(derived.registros && derived.registros.length){
+      // Filtro en cascada REAL: combina las 4 categorías a la vez (AND entre
+      // categorías, OR dentro de cada una). Una categoría vacía no restringe.
+      const {rows, n, totalPruebas, topMicros}=_aggregarRegistrosCombinado(derived.registros, selSvc, selInf, selCul, selMicros, periods);
+      allRows=rows;
+      topMicrosForIA=topMicros;
+      const partes=[];
+      if(selSvc.length) partes.push(selSvc.length===1?selSvc[0]:`${selSvc.length} servicios`);
+      if(selInf.length) partes.push(selInf.length===1?selInf[0]:`${selInf.length} infecciones`);
+      if(selCul.length) partes.push(selCul.length===1?selCul[0]:`${selCul.length} cultivos`);
+      if(selMicros.length) partes.push(selMicros.length===1?selMicros[0]:`${selMicros.length} microorganismos`);
+      selLabel=(partes.length?partes.join(' + '):'Todo')+` (${totalPruebas} pruebas de antibiótico)`;
+    } else {
+      // Compatibilidad hacia atrás: si este hospital no trae "registros" todavía
+      // (JSON generado con una versión vieja de procesar_excel_v2.py), se usa el
+      // comportamiento anterior por prioridad (Microorganismo→Cultivo→Infección→Servicio).
+      if(selMicros.length){
+        selMicros.forEach(m=>{
+          const raw=sriMergedRaw(derived.micros?.data?.[m],periods);
+          if(raw) allRows.push(...raw);
         });
-      });
-      topMicrosForIA=[...new Set(topMicrosForIA)].slice(0,6);
-    } else if(selInf.length){
-      selInf.forEach(sg=>{
-        const raw=sriMergedRaw(derived.infecciones?.data?.[sg],periods);
-        if(raw) allRows.push(...raw);
-      });
-      selLabel=selInf.length===1?selInf[0]:`${selInf.length} infecciones`;
-      dimIcon='🩺'; dimKey='inf'; selItems=selInf;
-      topMicrosForIA=(derived.micros?.subgrupos||[]).slice(0,6);
-    } else if(selSvc.length){
-      selSvc.forEach(sg=>{
-        const raw=sriMergedRaw(derived.servicios?.data?.[sg],periods);
-        if(raw) allRows.push(...raw);
-      });
-      selLabel=selSvc.length===1?selSvc[0]:`${selSvc.length} servicios`;
-      dimIcon='🏥'; dimKey='svc'; selItems=selSvc;
-      topMicrosForIA=(derived.micros?.subgrupos||[]).slice(0,6);
+        selLabel=selMicros.length===1?selMicros[0]:`${selMicros.length} microorganismos`;
+        dimIcon='🦠'; dimKey='micro'; selItems=selMicros;
+      } else if(selCul.length){
+        selCul.forEach(sg=>{
+          const raw=sriMergedRaw(derived.cultivos?.data?.[sg],periods);
+          if(raw) allRows.push(...raw);
+        });
+        selLabel=selCul.length===1?selCul[0]:`${selCul.length} cultivos`;
+        dimIcon='🧫'; dimKey='cul'; selItems=selCul;
+        selCul.forEach(sg=>{
+          (derived.micros?.subgrupos||[]).forEach(m=>{
+            const mrows=sriMergedRaw(derived.micros?.data?.[m],periods);
+            if(mrows&&mrows.length) topMicrosForIA.push(m);
+          });
+        });
+        topMicrosForIA=[...new Set(topMicrosForIA)].slice(0,6);
+      } else if(selInf.length){
+        selInf.forEach(sg=>{
+          const raw=sriMergedRaw(derived.infecciones?.data?.[sg],periods);
+          if(raw) allRows.push(...raw);
+        });
+        selLabel=selInf.length===1?selInf[0]:`${selInf.length} infecciones`;
+        dimIcon='🩺'; dimKey='inf'; selItems=selInf;
+        topMicrosForIA=(derived.micros?.subgrupos||[]).slice(0,6);
+      } else if(selSvc.length){
+        selSvc.forEach(sg=>{
+          const raw=sriMergedRaw(derived.servicios?.data?.[sg],periods);
+          if(raw) allRows.push(...raw);
+        });
+        selLabel=selSvc.length===1?selSvc[0]:`${selSvc.length} servicios`;
+        dimIcon='🏥'; dimKey='svc'; selItems=selSvc;
+        topMicrosForIA=(derived.micros?.subgrupos||[]).slice(0,6);
+      }
     }
 
     if(!allRows.length) return;
@@ -2744,10 +2793,10 @@ function applyDrillChart(){
             <span style="width:10px;height:10px;border-radius:50%;background:${d.color};display:inline-block;flex-shrink:0;"></span>
             <strong style="color:${d.color};font-size:.74rem;">${d.label}</strong>
           </div>
-          ${_filtroLineaResumen('🦠','Microorganismo',d.selMicros,d.dimKey==='micro')}
-          ${_filtroLineaResumen('🧫','Cultivo',d.selCul,d.dimKey==='cul')}
-          ${_filtroLineaResumen('🩺','Infección',d.selInf,d.dimKey==='inf')}
-          ${_filtroLineaResumen('🏥','Servicio',d.selSvc,d.dimKey==='svc')}
+          ${_filtroLineaResumen('🦠','Microorganismo',d.selMicros,d.dimKey==='combinado'?d.selMicros.length>0:d.dimKey==='micro')}
+          ${_filtroLineaResumen('🧫','Cultivo',d.selCul,d.dimKey==='combinado'?d.selCul.length>0:d.dimKey==='cul')}
+          ${_filtroLineaResumen('🩺','Infección',d.selInf,d.dimKey==='combinado'?d.selInf.length>0:d.dimKey==='inf')}
+          ${_filtroLineaResumen('🏥','Servicio',d.selSvc,d.dimKey==='combinado'?d.selSvc.length>0:d.dimKey==='svc')}
         </div>`).join('')}
       </div>
     </div>
