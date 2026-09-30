@@ -1192,20 +1192,28 @@ function _insertarBotonDescarga(el, cid, nombreArchivo){
 // Busca el título de la gráfica: en las 7 pestañas, el contenedor de la gráfica
 // siempre está justo después de su <h2>/título en el mismo card -- así que se
 // detecta solo, sin tener que tocar cada lugar donde se llama a estas funciones.
-function _detectarTituloGrafica(cid){
+// Busca el <h2> del título Y, si existe, la fila de "chips" con los filtros
+// aplicados (ej. "HGZ 1 → 68 microorganismos") que vive entre el h2 y la
+// gráfica en la vista de Análisis Detallado. Se devuelven separados para
+// dibujarlos en 2 líneas (título grande, filtros chico) sin ocupar mucho
+// espacio ni en pantalla ni en la imagen descargada.
+function _detectarTituloYFiltros(cid){
   const cont=document.getElementById(cid);
-  if(!cont) return '';
-  // Busca el <h2> más cercano hacia atrás entre los hermanos -- el patrón de
-  // título que se usa en todo el dashboard -- aunque haya otros elementos en
-  // medio (chips, avisos, etc.) entre el h2 y el contenedor de la gráfica.
+  if(!cont) return {titulo:'', filtros:''};
   let sib=cont.previousElementSibling;
-  let fallback='';
+  let filtros='';
+  // El primer hermano antes de la gráfica, SI NO es el propio h2, se toma como
+  // la fila de filtros/chips (cada hijo separado por " · " para que se lea bien).
+  if(sib && sib.tagName!=='H2'){
+    const hijos=[...sib.children].map(c=>(c.textContent||'').trim()).filter(Boolean);
+    filtros=hijos.length?hijos.join('  ·  '):(sib.textContent||'').trim();
+  }
+  let fallback=filtros;
   while(sib){
-    if(!fallback && sib.textContent) fallback=sib.textContent.trim();
-    if(sib.tagName==='H2' && sib.textContent) return sib.textContent.trim();
+    if(sib.tagName==='H2' && sib.textContent) return {titulo:sib.textContent.trim(), filtros};
     sib=sib.previousElementSibling;
   }
-  return fallback;
+  return {titulo:fallback, filtros:''};
 }
 
 async function descargarGraficaImagen(cid, nombreArchivo){
@@ -1219,26 +1227,35 @@ async function descargarGraficaImagen(cid, nombreArchivo){
   }
   try{
     const chartCanvas=await html2canvas(capEl,{backgroundColor:'#ffffff', scale:2});
-    // El título se dibuja directo en el canvas final (no se captura del DOM) --
-    // así el resultado no depende de cómo html2canvas interprete el CSS del título.
-    const titulo=_detectarTituloGrafica(cid);
-    const padX=24, tituloAltura=titulo?64:0;
+    // El título y los filtros se dibujan directo en el canvas final (no se
+    // capturan del DOM) -- así el resultado no depende de cómo html2canvas
+    // interprete el CSS de esos textos.
+    const {titulo, filtros}=_detectarTituloYFiltros(cid);
+    const padX=24;
+    const tituloAltura=titulo?(filtros?92:64):0;
     const finalCanvas=document.createElement('canvas');
     finalCanvas.width=chartCanvas.width;
     finalCanvas.height=chartCanvas.height+tituloAltura;
     const ctx=finalCanvas.getContext('2d');
     ctx.fillStyle='#ffffff';
     ctx.fillRect(0,0,finalCanvas.width,finalCanvas.height);
+    const recortarA=(txt,fuente,maxW)=>{
+      ctx.font=fuente;
+      let t=txt;
+      while(ctx.measureText(t).width>maxW && t.length>4) t=t.slice(0,-2)+'…';
+      return t;
+    };
     if(titulo){
       ctx.fillStyle='#154f39';
-      ctx.font='bold 26px Arial, sans-serif';
-      ctx.textBaseline='middle';
-      let t=titulo;
-      // si el título es más ancho que la imagen, se recorta con "…"
-      while(ctx.measureText(t).width>finalCanvas.width-padX*2 && t.length>4){
-        t=t.slice(0,-2)+'…';
+      const fT='bold 26px Arial, sans-serif';
+      ctx.font=fT; ctx.textBaseline='middle';
+      ctx.fillText(recortarA(titulo,fT,finalCanvas.width-padX*2), padX, 36);
+      if(filtros){
+        ctx.fillStyle='#64748b';
+        const fF='22px Arial, sans-serif';
+        ctx.font=fF;
+        ctx.fillText(recortarA(filtros,fF,finalCanvas.width-padX*2), padX, 72);
       }
-      ctx.fillText(t, padX, tituloAltura/2+2);
     }
     ctx.drawImage(chartCanvas,0,tituloAltura);
     const link=document.createElement('a');
