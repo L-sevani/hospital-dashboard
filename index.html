@@ -2683,6 +2683,7 @@ function applyDrillChart(){
   const periods=getDrillMainPeriods();
 
   const datasets=[];
+  const sinDatos=[]; // hospitales con filtro marcado pero 0 coincidencias reales (no se inventa nada)
   hospIds.forEach((hid,i)=>{
     const derived=getRawSliceForHospital(hid)||RAW;
     const col=DRILL_COLORS[i]||DRILL_COLORS[0];
@@ -2763,18 +2764,33 @@ function applyDrillChart(){
       }
     }
 
-    if(!allRows.length) return;
+    if(!allRows.length){
+      if(!nadaMarcado) sinDatos.push(getHospitalDisplayName(hid));
+      return;
+    }
     const merged=calcPct(allRows);
     const rows=activeFilter==='cb'?filterRowsToCb(merged):merged;
-    if(!rows.length) return;
+    if(!rows.length){
+      sinDatos.push(getHospitalDisplayName(hid));
+      return;
+    }
     datasets.push({label:getHospitalDisplayName(hid),micro:`${dimIcon} ${selLabel}`,rows,color:col.main,dimKey,topMicrosForIA,selSvc,selInf,selCul,selMicros});
   });
 
   if(!datasets.length){
-    result.innerHTML='<div class="empty" style="padding:20px;">Selecciona al menos un Servicio, Infección, Cultivo o Microorganismo en algún hospital.</div>';
+    if(sinDatos.length){
+      result.innerHTML=`<div class="empty" style="padding:20px;">
+        ⚠️ No se encontró ningún caso con esa combinación exacta de filtros en: <strong>${sinDatos.join(', ')}</strong>.<br>
+        <span style="font-size:.78rem;color:#94a3b8;">No es un error — simplemente no hay registros que cumplan Servicio + Infección + Cultivo + Microorganismo todos a la vez, tal como los marcaste. Prueba quitando alguna categoría (por ejemplo, deja Cultivo sin marcar) para ampliar la búsqueda.</span>
+      </div>`;
+    } else {
+      result.innerHTML='<div class="empty" style="padding:20px;">Selecciona al menos un Servicio, Infección, Cultivo o Microorganismo en algún hospital.</div>';
+    }
     return;
   }
-  if(status) status.textContent='';
+  if(sinDatos.length){
+    if(status) status.innerHTML=`⚠️ Sin datos para esa combinación en: <strong>${sinDatos.join(', ')}</strong> (no se inventó nada, esos hospitales simplemente no tienen casos que cumplan las 4 categorías a la vez marcadas)`;
+  } else if(status) status.textContent='';
 
   // dimLabel: descripción de la dimensión seleccionada (para AVISO y título)
   const dimLabel=datasets[0]?.micro||'';
