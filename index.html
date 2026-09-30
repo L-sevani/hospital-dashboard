@@ -1192,11 +1192,7 @@ async function descargarGraficaImagen(cid, nombreArchivo){
     return;
   }
   try{
-    const canvas=await html2canvas(capEl,{
-      backgroundColor:'#ffffff', scale:2, foreignObjectRendering:true,
-      width:capEl.scrollWidth, height:capEl.scrollHeight,
-      windowWidth:capEl.scrollWidth, windowHeight:capEl.scrollHeight,
-    });
+    const canvas=await html2canvas(capEl,{backgroundColor:'#ffffff', scale:2});
     const link=document.createElement('a');
     link.download=(nombreArchivo||'grafica')+'.png';
     link.href=canvas.toDataURL('image/png');
@@ -1263,8 +1259,8 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
     // Total + x label (sin precio en el nombre)
     const tot=hasCmp&&d2?`${d.t}/${d2.t}`:d.t;
     h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${zoneW}px;text-align:center;font-size:.6rem;color:#6b7280;">${tot}</div>`;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${zoneW}px;height:${XLABELH-18}px;display:flex;justify-content:center;overflow:hidden;">
-      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</div>
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${zoneW}px;height:${XLABELH-18}px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+      <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:.61rem;color:#374151;max-width:${XLABELH-22}px;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</span>
     </div>`;
   });
 
@@ -1364,7 +1360,7 @@ function buildSRIMultiChart(datasets, cid){
         // Nombre hospital dentro de la barra — clip estricto al área de barra
         h+=`<div style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;overflow:hidden;clip-path:inset(0 0 0 0);pointer-events:none;">
           <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-            <span style="display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);font-size:.6rem;font-weight:700;color:rgba(0,0,0,0.72);white-space:nowrap;max-height:${CH-4}px;overflow:hidden;text-overflow:ellipsis;">${shortLabel}</span>
+            <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:.6rem;font-weight:700;color:rgba(0,0,0,0.72);max-width:${CH-4}px;overflow:hidden;text-overflow:ellipsis;">${shortLabel}</span>
           </div>
         </div>`;
         const tipData=JSON.stringify({abx:meta.a,hosp:label,S:d.S,R:d.R,I:d.I,T:d.t,pS:pct(d.pS),pR:pct(d.pR),pI:pct(d.pI)}).replace(/'/g,'&apos;');
@@ -1372,8 +1368,8 @@ function buildSRIMultiChart(datasets, cid){
       }
     });
     h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+4}px;width:${groupW}px;text-align:center;font-size:.58rem;color:#9ca3af;">${totalN||''}</div>`;
-    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+16}px;width:${groupW}px;height:${XLABELH-16}px;display:flex;justify-content:center;overflow:hidden;">
-      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</div>
+    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+16}px;width:${groupW}px;height:${XLABELH-16}px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+      <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:.61rem;color:#374151;max-width:${XLABELH-20}px;overflow:hidden;text-overflow:ellipsis;">${tagStr}${name}</span>
     </div>`;
   });
   h+=`</div></div>`;
@@ -1530,8 +1526,8 @@ function buildFreqChart(data, cid){
 
     h+=`<div class="vbh" data-tip='${tipData}' style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
     h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${BW}px;text-align:center;font-size:.6rem;color:#6b7280;">${total}</div>`;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;height:${XLABELH-18}px;display:flex;justify-content:center;overflow:hidden;">
-      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.61rem;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${row}</div>
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;height:${XLABELH-18}px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+      <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:.61rem;color:#374151;max-width:${XLABELH-22}px;overflow:hidden;text-overflow:ellipsis;">${row}</span>
     </div>`;
   });
 
