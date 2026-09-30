@@ -1175,30 +1175,34 @@ function getPrecioHtml(abxName){
 // ── Botón "Descargar imagen" reutilizable para cualquier gráfica de SRI/Frecuencias ──
 function _insertarBotonDescarga(el, cid, nombreArchivo){
   if(!el) return;
-  el.style.position='relative';
   const btnId='btn-desc-'+cid.replace(/[^A-Za-z0-9]/g,'-');
   const existente=document.getElementById(btnId);
   if(existente) existente.remove();
-  el.insertAdjacentHTML('afterbegin',`<button id="${btnId}" class="btn-descargar-grafica" onclick="descargarGraficaImagen('${cid}','${nombreArchivo}')" title="Descargar esta gráfica como imagen" style="position:absolute;top:2px;right:2px;z-index:6;background:#154f39;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25);">⬇️ Imagen</button>`);
+  // Barra normal (NO absoluta) arriba de la gráfica -- así nunca tapa las barras,
+  // y al vivir fuera del div "${cid}__cap" tampoco sale en la imagen descargada.
+  el.insertAdjacentHTML('afterbegin',`<div style="display:flex;justify-content:flex-end;margin-bottom:6px;"><button id="${btnId}" class="btn-descargar-grafica" onclick="descargarGraficaImagen('${cid}','${nombreArchivo}')" title="Descargar esta gráfica completa como imagen" style="background:#154f39;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2);">⬇️ Descargar imagen</button></div>`);
 }
 async function descargarGraficaImagen(cid, nombreArchivo){
-  const el=document.getElementById(cid);
-  if(!el || typeof html2canvas==='undefined'){
+  // Captura el div interno de ancho COMPLETO (id "${cid}__cap"), no el contenedor
+  // visible recortado por scroll -- así la imagen sale entera, con todos los nombres,
+  // sin importar cuánto se haya scrolleado en pantalla.
+  const capEl=document.getElementById(cid+'__cap') || document.getElementById(cid);
+  if(!capEl || typeof html2canvas==='undefined'){
     alert('No se pudo generar la imagen (falta conexión a internet para cargar la librería de descarga).');
     return;
   }
-  const btn=el.querySelector('.btn-descargar-grafica');
-  if(btn) btn.style.visibility='hidden';
   try{
-    const canvas=await html2canvas(el,{backgroundColor:'#ffffff',scale:2});
+    const canvas=await html2canvas(capEl,{
+      backgroundColor:'#ffffff', scale:2, foreignObjectRendering:true,
+      width:capEl.scrollWidth, height:capEl.scrollHeight,
+      windowWidth:capEl.scrollWidth, windowHeight:capEl.scrollHeight,
+    });
     const link=document.createElement('a');
     link.download=(nombreArchivo||'grafica')+'.png';
     link.href=canvas.toDataURL('image/png');
     link.click();
   }catch(e){
     alert('No se pudo generar la imagen. Intenta de nuevo.');
-  }finally{
-    if(btn) btn.style.visibility='visible';
   }
 }
 
@@ -1223,7 +1227,7 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   const totalH=PADTOP+CH+XLABELH;
 
   let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
 
   // Y gridlines
   [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].forEach(t=>{
@@ -1329,7 +1333,7 @@ function buildSRIMultiChart(datasets, cid){
   const HCOLORS=['#1d4ed8','#15803d','#b45309'];
 
   let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
   [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].forEach(t=>{
     const y=PADTOP+Math.round((1-t)*CH);
     h+=`<div style="position:absolute;left:${YW}px;right:0;top:${y}px;border-top:1px solid ${t===0?'#9ca3af':'#e5e7eb'};"></div>`;
@@ -1419,7 +1423,7 @@ function buildSRICompactChart(data, cid){
   const pct=v=>v!=null?(v*100).toFixed(1)+'%':'–';
 
   let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.66rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.66rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
 
   [0,.2,.4,.6,.8,1].forEach(t=>{
     const y=PADTOP+Math.round((1-t)*CH);
@@ -1495,7 +1499,7 @@ function buildFreqChart(data, cid){
   const totalH=PADTOP+CH+XLABELH;
 
   let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;overflow:hidden;clip-path:inset(0);">`;
 
   ticks.forEach(t=>{
     const y=PADTOP+Math.round((1-t/niceMax)*CH);
