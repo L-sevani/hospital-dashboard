@@ -4942,6 +4942,37 @@ function renderConsumoDDD(){
     trazadoresHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;color:#94a3b8;font-size:.78rem;">📉 La tendencia por grupo trazador (varias líneas) se activa con ≥2 meses de CONSABI cargados. Por ahora solo hay ${periodosConConsumo.length} mes(es).</div>`;
   }
 
+  // 🏥 Consumo por servicio — camas/días paciente/ocupación reales de PARTE II por
+  // Especialidad; la columna DDD se deja explícitamente N/D porque CONSABI/Recetas no
+  // reportan el consumo desglosado por servicio (no se inventa un reparto proporcional).
+  let servicioTablaHtml='';
+  if(d && d.servicios && Object.keys(d.servicios).length){
+    const filasServicio=Object.entries(d.servicios)
+      .sort((a,b)=>(b[1].dias_paciente||0)-(a[1].dias_paciente||0))
+      .map(([serv,info])=>`
+        <tr>
+          <td style="text-align:left;padding:6px 10px;color:#000;">${serv}</td>
+          <td style="text-align:center;padding:6px 10px;color:#000;">${info.camas!=null?info.camas.toLocaleString('es-MX',{maximumFractionDigits:1}):'<span style="color:#cbd5e1;">N/D</span>'}</td>
+          <td style="text-align:center;padding:6px 10px;color:#000;">${info.dias_paciente!=null?Math.round(info.dias_paciente).toLocaleString('es-MX'):'<span style="color:#cbd5e1;">N/D</span>'}</td>
+          <td style="text-align:center;padding:6px 10px;color:#000;">${info.ocupacion!=null?info.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'<span style="color:#cbd5e1;">N/D</span>'}</td>
+          <td style="text-align:center;padding:6px 10px;"><span style="color:#cbd5e1;">N/D</span></td>
+        </tr>`).join('');
+    servicioTablaHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow-x:auto;">
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🏥 Consumo por servicio</div>
+      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Camas, días paciente y ocupación reales por Especialidad (fuente: PARTE II). La columna DDD se deja explícitamente N/D: CONSABI/Recetas no reportan el consumo desglosado por servicio, así que no se inventa un reparto proporcional.</div>
+      <table style="width:100%;border-collapse:collapse;font-size:.74rem;min-width:520px;">
+        <thead><tr style="background:#154f39;">
+          <th style="text-align:left;padding:7px 10px;color:#fff;">Especialidad</th>
+          <th style="text-align:center;padding:7px 10px;color:#fff;">Camas</th>
+          <th style="text-align:center;padding:7px 10px;color:#fff;">Días paciente</th>
+          <th style="text-align:center;padding:7px 10px;color:#fff;">Ocupación</th>
+          <th style="text-align:center;padding:7px 10px;color:#fff;">DDD</th>
+        </tr></thead>
+        <tbody>${filasServicio}</tbody>
+      </table>
+    </div>`;
+  }
+
   inner.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-top:14px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">${hospTabs}</div>
