@@ -4161,6 +4161,7 @@ function setOoadPieSel(sel){
 }
 let _coberturaCultivo=null, _coberturaAbxSel=null, _coberturaSortCol=null, _coberturaDim='cultivos', _coberturaFiltroCB='todos';
 let _consumoAwareFilter=null; // Set de categorías activas, null = todas
+let _consumoTopMetrica='ddd'; // métrica de la gráfica 'Antimicrobianos con mayor consumo': 'ddd'|'costo'|'piezas'
 
 function consumoHospIds(){
   // Solo hospitales con datos de consumo cargados (por ahora: 3 unidades IAAS)
@@ -4241,17 +4242,31 @@ function consumoParaHospital(hosp, periodo, modo){
 // al ΣDDD -- se reportan aparte en "sin_calibrar" para mostrarlo honestamente.
 function _piezasYdddSegunFiltro(a){
   let piezas=0, ddd=0, calibrado=a.calibrado, huboPiezas=false;
+  // costo = piezas × PRE UNIT (Plantilla de Recetas). piezasConPrecio permite saber si el
+  // costo es completo: meses cuyo JSON aún no trae precio_unit NO se inventan, quedan fuera.
+  let costo=0, piezasConPrecio=0;
   if(_consumoFiltroTipo==='individual' || _consumoFiltroTipo==='ambas'){
     piezas+=a.piezas_individual||0;
     if(a.piezas_individual>0) huboPiezas=true;
     if(a.ddd_individual!=null) ddd+=a.ddd_individual;
+    if(a.precio_unit){ costo+=a.costo_individual||0; piezasConPrecio+=a.piezas_individual||0; }
   }
   if(_consumoFiltroTipo==='colectiva' || _consumoFiltroTipo==='ambas'){
     piezas+=a.piezas_colectiva||0;
     if(a.piezas_colectiva>0) huboPiezas=true;
     if(a.ddd_colectiva!=null) ddd+=a.ddd_colectiva;
+    if(a.precio_unit){ costo+=a.costo_colectiva||0; piezasConPrecio+=a.piezas_colectiva||0; }
   }
-  return {piezas, ddd, huboPiezas, calibrado};
+  return {piezas, ddd, huboPiezas, calibrado, costo, piezasConPrecio};
+}
+
+// Suma las "presentaciones" (vía + precio unitario + piezas) de un antibiótico entre
+// períodos/hospitales: mismo nombre puede tener varias claves (IV/oral, distinto precio).
+function _sumarPresentaciones(dst, src){
+  Object.entries(src||{}).forEach(([k,p])=>{
+    if(!dst[k]) dst[k]={via:p.via,precio:p.precio,piezas:0};
+    dst[k].piezas+=p.piezas||0;
+  });
 }
 
 function _combinarHospitalesV2(partes){
@@ -4262,8 +4277,10 @@ function _combinarHospitalesV2(partes){
     if(d.ocupacion!=null){ocupSum+=d.ocupacion; ocupN++;}
     Object.entries(d.por_aware||{}).forEach(([a,v])=>{awareSum[a]=(awareSum[a]||0)+v;});
     (d.top_antibioticos||[]).forEach(a=>{
-      if(!abxSum[a.antibiotico]) abxSum[a.antibiotico]={antibiotico:a.antibiotico,ddd:0,aware:a.aware,piezas:0};
+      if(!abxSum[a.antibiotico]) abxSum[a.antibiotico]={antibiotico:a.antibiotico,ddd:0,aware:a.aware,piezas:0,costo:0,piezasConPrecio:0,presentaciones:{}};
       abxSum[a.antibiotico].ddd+=a.ddd; abxSum[a.antibiotico].piezas+=a.piezas||0;
+      abxSum[a.antibiotico].costo+=a.costo||0; abxSum[a.antibiotico].piezasConPrecio+=a.piezasConPrecio||0;
+      _sumarPresentaciones(abxSum[a.antibiotico].presentaciones, a.presentaciones);
     });
     (d.antibioticos_sin_calibrar||[]).forEach(a=>{
       if(!sinCalibrarAcc[a.nombre]) sinCalibrarAcc[a.nombre]={nombre:a.nombre,piezas:0};
@@ -4313,7 +4330,7 @@ function consumoParaHospitalV2(hosp, periodo, modo){
   const topMap={};
   const sinCalibrarConPiezas=[];
   antibioticosFiltrados.forEach(a=>{
-    const {piezas, ddd, huboPiezas, calibrado}=_piezasYdddSegunFiltro(a);
+    const {piezas, ddd, huboPiezas, calibrado, costo, piezasConPrecio}=_piezasYdddSegunFiltro(a);
     if(!huboPiezas) return;
     if(!calibrado || ddd===0 && !a.calibrado){
       if(!a.calibrado) sinCalibrarConPiezas.push({nombre:a.nombre||a.clave, piezas});
@@ -4321,9 +4338,16 @@ function consumoParaHospitalV2(hosp, periodo, modo){
     }
     dddSum+=ddd;
     porAware[a.aware]=(porAware[a.aware]||0)+ddd;
-    if(!topMap[a.nombre]) topMap[a.nombre]={antibiotico:a.nombre,ddd:0,aware:a.aware,piezas:0};
+    if(!topMap[a.nombre]) topMap[a.nombre]={antibiotico:a.nombre,ddd:0,aware:a.aware,piezas:0,costo:0,piezasConPrecio:0,presentaciones:{}};
     topMap[a.nombre].ddd+=ddd;
     topMap[a.nombre].piezas+=piezas;
+    topMap[a.nombre].costo+=costo;
+    topMap[a.nombre].piezasConPrecio+=piezasConPrecio;
+    if(a.precio_unit && piezas>0){
+      const kp=(a.via||'')+'|'+a.precio_unit;
+      if(!topMap[a.nombre].presentaciones[kp]) topMap[a.nombre].presentaciones[kp]={via:a.via,precio:a.precio_unit,piezas:0};
+      topMap[a.nombre].presentaciones[kp].piezas+=piezas;
+    }
   });
   const porAwarePct={};
   Object.entries(porAware).forEach(([k,v])=>{porAwarePct[k]=dddSum?Math.round(v/dddSum*1000)/10:0;});
@@ -4359,8 +4383,10 @@ function mergeConsumoPeriodosV2(hosp, uptoPeriod){
     if(d.ocupacion!=null){ocupSum+=d.ocupacion; ocupN++;}
     Object.entries(d.por_aware||{}).forEach(([a,v])=>{awareSum[a]=(awareSum[a]||0)+v;});
     (d.top_antibioticos||[]).forEach(a=>{
-      if(!abxSum[a.antibiotico]) abxSum[a.antibiotico]={antibiotico:a.antibiotico,ddd:0,aware:a.aware,piezas:0};
+      if(!abxSum[a.antibiotico]) abxSum[a.antibiotico]={antibiotico:a.antibiotico,ddd:0,aware:a.aware,piezas:0,costo:0,piezasConPrecio:0,presentaciones:{}};
       abxSum[a.antibiotico].ddd+=a.ddd; abxSum[a.antibiotico].piezas+=a.piezas||0;
+      abxSum[a.antibiotico].costo+=a.costo||0; abxSum[a.antibiotico].piezasConPrecio+=a.piezasConPrecio||0;
+      _sumarPresentaciones(abxSum[a.antibiotico].presentaciones, a.presentaciones);
     });
     (d.antibioticos_sin_calibrar||[]).forEach(a=>{
       if(!sinCalibrarAcc[a.nombre]) sinCalibrarAcc[a.nombre]={nombre:a.nombre,piezas:0};
@@ -4437,6 +4463,8 @@ function renderConsumo(){
   else if(_consumoView==='especialidad') renderConsumoEspecialidad();
   else renderIndicadoresPROA();
 }
+
+function setConsumoTopMetrica(m){ _consumoTopMetrica=m; renderConsumoDDD(); }
 
 function toggleAwareFilter(cat){
   if(!_consumoAwareFilter) _consumoAwareFilter=new Set(['Access','Watch','Reserve','Sin clasificar']);
@@ -4561,23 +4589,50 @@ function renderConsumoDDD(){
   }).join('');
   const filterHint = activeFilt ? `<div style="font-size:.64rem;color:#154f39;margin-top:6px;">Filtro activo — <span style="text-decoration:underline;cursor:pointer;" onclick="_consumoAwareFilter=null;renderConsumoDDD();">mostrar todos</span></div>` : '';
 
-  // Top antibióticos (barra horizontal), ya vienen ordenados desc por ΣDDD; aplica filtro AWaRe
-  const topFull=d.top_antibioticos.filter(a=>!activeFilt||activeFilt.has(a.aware));
+  // Top antibióticos (barra horizontal). Métrica seleccionable: ΣDDD, costo ($) o piezas.
+  // Costo = piezas × PRE UNIT (Plantilla de Recetas); aplica filtro AWaRe y los filtros de
+  // tipo de receta / vía igual que el resto de la pestaña.
+  const metrica=_consumoTopMetrica;
+  const valM=a=>metrica==='costo'?(a.costo||0):(metrica==='piezas'?(a.piezas||0):a.ddd);
+  const fmtMoney=v=>'$'+Math.round(v).toLocaleString('es-MX');
+  const fmtPrecio=v=>'$'+v.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtM=v=>metrica==='costo'?fmtMoney(v):(metrica==='piezas'?Math.round(v).toLocaleString('es-MX'):v.toLocaleString('es-MX',{maximumFractionDigits:1}));
+  const topFull=d.top_antibioticos.filter(a=>!activeFilt||activeFilt.has(a.aware)).slice().sort((a,b)=>valM(b)-valM(a));
   const top=topFull.slice(0,10);
-  const maxDdd=Math.max(...top.map(a=>a.ddd),1);
-  const totalDddTop=topFull.reduce((s,a)=>s+a.ddd,0);
+  const maxDdd=Math.max(...top.map(valM),1);
+  const totalDddTop=topFull.reduce((s,a)=>s+valM(a),0);
+  const totalCostoTop=topFull.reduce((s,a)=>s+(a.costo||0),0);
+  const totalDddAll=topFull.reduce((s,a)=>s+a.ddd,0);
+  const totalPiezasAll=topFull.reduce((s,a)=>s+(a.piezas||0),0);
+  const hayCostoParcial=topFull.some(a=>(a.piezasConPrecio||0)<(a.piezas||0)-1e-9);
   const barsHtml=top.map(a=>{
-    const pctA=totalDddTop?Math.round(a.ddd/totalDddTop*1000)/10:0;
-    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${a.antibiotico}</div><div>ΣDDD: ${a.ddd.toLocaleString('es-MX',{maximumFractionDigits:2})} (${pctA}%)</div><div>Clasificación AWaRe: ${a.aware}</div><div>Grupo: ${grupoFarmacologico(a.antibiotico)}</div>`);
+    const pctA=totalDddTop?Math.round(valM(a)/totalDddTop*1000)/10:0;
+    const pctCosto=totalCostoTop?Math.round((a.costo||0)/totalCostoTop*1000)/10:0;
+    const parcial=(a.piezasConPrecio||0)<(a.piezas||0)-1e-9;
+    const sinPrecio=!(a.piezasConPrecio>0);
+    const precioProm=a.piezasConPrecio>0?(a.costo/a.piezasConPrecio):null;
+    const pres=Object.values(a.presentaciones||{}).sort((x,y)=>y.piezas-x.piezas);
+    const presHtml=pres.length?`<div style="margin-top:5px;padding-top:4px;border-top:1px solid rgba(148,163,184,.35);"><div style="font-size:.64rem;color:#94a3b8;">Precio unitario (PRE UNIT)</div>${pres.slice(0,4).map(p=>`<div>${p.via==='oral'?'💊':'💉'} ${fmtPrecio(p.precio)} / pieza <span style="color:#94a3b8;">· ${Math.round(p.piezas).toLocaleString('es-MX')} pz</span></div>`).join('')}${pres.length>4?`<div style="color:#94a3b8;">+${pres.length-4} presentación(es) más</div>`:''}</div>`:'';
+    const costoLinea=sinPrecio
+      ?`<div style="color:#fbbf24;">💰 Sin precio cargado en este período</div>`
+      :`<div>💰 Costo: <b>${fmtMoney(a.costo)}</b>${totalCostoTop?` (${pctCosto}% del costo)`:''}</div>${precioProm!=null&&pres.length!==1?`<div>Precio promedio: ${fmtPrecio(precioProm)} / pieza</div>`:''}${parcial?`<div style="color:#fbbf24;font-size:.66rem;">⚠️ Costo parcial: ${Math.round(a.piezasConPrecio).toLocaleString('es-MX')} de ${Math.round(a.piezas).toLocaleString('es-MX')} pzs con precio</div>`:''}`;
+    const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${a.antibiotico}</div><div>ΣDDD: ${a.ddd.toLocaleString('es-MX',{maximumFractionDigits:2})}${totalDddAll?` (${Math.round(a.ddd/totalDddAll*1000)/10}%)`:''}</div><div>📦 Piezas: ${Math.round(a.piezas||0).toLocaleString('es-MX')}${totalPiezasAll?` (${Math.round((a.piezas||0)/totalPiezasAll*1000)/10}%)`:''}</div>${costoLinea}${presHtml}<div style="margin-top:4px;">Clasificación AWaRe: ${a.aware}</div><div>Grupo: ${grupoFarmacologico(a.antibiotico)}</div>`);
     return `
-    <div data-tipid="${tid}" style="display:grid;grid-template-columns:190px 1fr 90px;align-items:center;gap:8px;cursor:pointer;">
+    <div data-tipid="${tid}" style="display:grid;grid-template-columns:190px 1fr ${metrica==='costo'?'120px':'90px'};align-items:center;gap:8px;cursor:pointer;">
       <span style="font-size:.74rem;color:#000;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${awareBadge(a.aware)}${a.antibiotico}</span>
       <div style="background:#f1f5f9;border-radius:5px;height:14px;position:relative;">
-        <div style="width:${(a.ddd/maxDdd*100).toFixed(1)}%;background:${AWARE_COLORS[a.aware]||'#94a3b8'};height:14px;border-radius:5px;transition:width .3s;"></div>
+        <div style="width:${(valM(a)/maxDdd*100).toFixed(1)}%;background:${AWARE_COLORS[a.aware]||'#94a3b8'};height:14px;border-radius:5px;transition:width .3s;"></div>
       </div>
-      <span style="font-size:.72rem;font-weight:700;color:#1e293b;text-align:right;">${a.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})} <span style="color:#94a3b8;font-weight:600;">(${pctA}%)</span></span>
+      <span style="font-size:.72rem;font-weight:700;color:#1e293b;text-align:right;">${fmtM(valM(a))} <span style="color:#94a3b8;font-weight:600;">(${pctA}%)</span>${metrica==='costo'&&parcial?'<span title="Costo parcial: faltan precios en algunos meses" style="color:#d97706;"> ⚠️</span>':''}</span>
     </div>`;
   }).join('') || `<div style="color:#94a3b8;font-size:.78rem;padding:10px 0;">Sin antibióticos en el filtro seleccionado.</div>`;
+  const metBtn=(m,label)=>`<button onclick="setConsumoTopMetrica('${m}')" style="padding:4px 11px;font-size:.7rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;background:${metrica===m?'#154f39':'#fff'};color:${metrica===m?'#fff':'#154f39'};${m==='ddd'?'border-radius:8px 0 0 8px;':(m==='piezas'?'border-radius:0 8px 8px 0;border-left:none;':'border-left:none;')}">${label}</button>`;
+  const topTituloMetrica=metrica==='costo'?'costo $':(metrica==='piezas'?'piezas':'ΣDDD');
+  const topNotas=[
+    metrica==='costo'?`<div style="font-size:.7rem;color:#154f39;font-weight:700;padding-top:8px;">💰 Costo total del filtro actual: ${fmtMoney(totalCostoTop)} <span style="color:#94a3b8;font-weight:600;">(piezas × PRE UNIT, Plantilla de Recetas)</span></div>`:'',
+    (metrica==='costo'&&hayCostoParcial)?`<div style="font-size:.68rem;color:#92400e;padding-top:4px;">⚠️ Algunos meses del período aún no traen precio (PRE UNIT) en el JSON; el costo de esos meses no se estima ni se inventa, así que el total es parcial. Vuelve a correr <code>consumo_ddd_v2.py</code> con todos los meses para completarlo.</div>`:'',
+    (metrica!=='ddd'&&d.antibioticos_sin_calibrar&&d.antibioticos_sin_calibrar.length)?`<div style="font-size:.66rem;color:#94a3b8;padding-top:4px;">${d.antibioticos_sin_calibrar.length} antibiótico(s) sin calibración DDD no aparecen en esta gráfica.</div>`:''
+  ].join('');
 
   // Consumo por grupo farmacológico, ordenado de mayor a menor
   const grupoMap={};
@@ -4993,8 +5048,12 @@ function renderConsumoDDD(){
     <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">💊 Qué se consume</div>
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Antimicrobianos con mayor consumo (ΣDDD)</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div style="font-size:.85rem;font-weight:800;color:#1e293b;">💊 Antimicrobianos con mayor consumo (${topTituloMetrica})</div>
+          <div style="display:flex;">${metBtn('ddd','ΣDDD')}${metBtn('costo','💰 Costo')}${metBtn('piezas','📦 Piezas')}</div>
+        </div>
         <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}</div>
+        ${topNotas}
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🌐 Clasificación AWaRe del consumo <span style="font-size:.64rem;color:#94a3b8;font-weight:600;">· clic para filtrar</span></div>
