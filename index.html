@@ -4464,6 +4464,14 @@ function renderConsumo(){
   else renderIndicadoresPROA();
 }
 
+// Texto que describe la vía seleccionada, para que las etiquetas sigan al filtro (antes decían
+// 'solo endovenosos' fijo aunque se eligiera Oral o Ambos).
+function _viaTextoFiltro(){
+  return _consumoFiltroVia==='endovenoso'?'solo endovenosos':(_consumoFiltroVia==='oral'?'solo orales':'endovenosos + orales');
+}
+function _tipoTextoFiltro(){
+  return _consumoFiltroTipo==='individual'?'recetas individuales':(_consumoFiltroTipo==='colectiva'?'recetas colectivas':'individuales + colectivas');
+}
 function setConsumoTopMetrica(m){ _consumoTopMetrica=m; renderConsumoDDD(); }
 
 function toggleAwareFilter(cat){
@@ -4562,7 +4570,7 @@ function renderConsumoDDD(){
   // KPI cards (con variación vs mes anterior cuando aplica)
   const kpis=[
     {label:'DDD / 100 camas',val:d.ddd_100_camas!=null?d.ddd_100_camas.toLocaleString('es-MX',{maximumFractionDigits:1}):'—',sub:`Camas censables: ${Math.round(d.camas)}`,delta:_consumoModo==='mensual'&&dAnterior?deltaArrow(deltaPct(d.ddd_100_camas,dAnterior.ddd_100_camas),false):''},
-    {label:'ΣDDD total',val:d.ddd_total!=null?d.ddd_total.toLocaleString('es-MX',{maximumFractionDigits:1}):'—',sub:'Antibióticos endovenosos (CONSABI)',delta:''},
+    {label:'ΣDDD total',val:d.ddd_total!=null?d.ddd_total.toLocaleString('es-MX',{maximumFractionDigits:1}):'—',sub:`Antibióticos ${_viaTextoFiltro()} · ${_tipoTextoFiltro()} (Plantilla de Recetas)`,delta:''},
     {label:'Días paciente',val:Math.round(d.dias_paciente).toLocaleString('es-MX'),sub:'Fuente: PARTE II',delta:''},
     {label:'% Access',val:(d.por_aware_pct.Access||0)+'%',sub:'Meta OMS: ≥70%',delta:_consumoModo==='mensual'&&dAnterior?deltaArrow(deltaPct(d.por_aware_pct.Access,dAnterior.por_aware_pct?dAnterior.por_aware_pct.Access:null),true):''},
     {label:'Ocupación hospitalaria',val:d.ocupacion!=null?d.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'—',sub:'Fuente: PARTE II',delta:''},
@@ -4628,8 +4636,24 @@ function renderConsumoDDD(){
   }).join('') || `<div style="color:#94a3b8;font-size:.78rem;padding:10px 0;">Sin antibióticos en el filtro seleccionado.</div>`;
   const metBtn=(m,label)=>`<button onclick="setConsumoTopMetrica('${m}')" style="padding:4px 11px;font-size:.7rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;background:${metrica===m?'#154f39':'#fff'};color:${metrica===m?'#fff':'#154f39'};${m==='ddd'?'border-radius:8px 0 0 8px;':(m==='piezas'?'border-radius:0 8px 8px 0;border-left:none;':'border-left:none;')}">${label}</button>`;
   const topTituloMetrica=metrica==='costo'?'costo $':(metrica==='piezas'?'piezas':'ΣDDD');
+  // Fila "Otros": la gráfica muestra solo el top 10, pero los porcentajes y el total son de TODOS
+  // los antibióticos del filtro; esta fila junta el resto para que las barras sumen el total.
+  const restoTop=topFull.slice(10);
+  let otrosHtml='';
+  if(restoTop.length){
+    const sumOtros=restoTop.reduce((s2,a)=>s2+valM(a),0);
+    const pctOtros=totalDddTop?Math.round(sumOtros/totalDddTop*1000)/10:0;
+    const tidOtros=registerTip(`<div style="font-weight:700;margin-bottom:4px;">Otros ${restoTop.length} antibióticos</div><div>${fmtM(sumOtros)} (${pctOtros}%)</div><div style="color:#94a3b8;font-size:.66rem;margin-top:3px;">${restoTop.slice(0,12).map(a=>a.antibiotico+' '+fmtM(valM(a))).join(' · ')}${restoTop.length>12?' · …':''}</div>`);
+    otrosHtml=`<div data-tipid="${tidOtros}" style="display:grid;grid-template-columns:190px 1fr ${metrica==='costo'?'120px':'90px'};align-items:center;gap:8px;cursor:pointer;margin-top:2px;">
+      <span style="font-size:.72rem;color:#64748b;font-weight:600;font-style:italic;">Otros ${restoTop.length} antibióticos</span>
+      <div style="background:#f1f5f9;border-radius:5px;height:14px;"><div style="width:${Math.min(100,sumOtros/maxDdd*100).toFixed(1)}%;background:#cbd5e1;height:14px;border-radius:5px;"></div></div>
+      <span style="font-size:.72rem;font-weight:700;color:#475569;text-align:right;">${fmtM(sumOtros)} <span style="color:#94a3b8;font-weight:600;">(${pctOtros}%)</span></span>
+    </div>`;
+  }
+  const sinNingunPrecio=topFull.length>0 && topFull.every(a=>!(a.piezasConPrecio>0));
   const topNotas=[
-    metrica==='costo'?`<div style="font-size:.7rem;color:#154f39;font-weight:700;padding-top:8px;">💰 Costo total del filtro actual: ${fmtMoney(totalCostoTop)} <span style="color:#94a3b8;font-weight:600;">(piezas × PRE UNIT, Plantilla de Recetas)</span></div>`:'',
+    (metrica!=='ddd'&&sinNingunPrecio)?`<div style="margin-top:8px;padding:8px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:.72rem;color:#991b1b;">⚠️ El <code>consumo_data_v2.json</code> que está cargando esta página <b>no trae precios</b> (campo <code>precio_unit</code>). Sube al repo el JSON nuevo (junto con este index.html) y recarga con Ctrl+Shift+R. Los meses sin precio quedan en $0 y no se estiman.</div>`:'',
+    metrica==='costo'?`<div style="font-size:.7rem;color:#154f39;font-weight:700;padding-top:8px;">💰 Costo total del filtro actual: ${fmtMoney(totalCostoTop)} <span style="color:#94a3b8;font-weight:600;">(top 10 + otros; piezas × PRE UNIT, Plantilla de Recetas)</span></div>`:'',
     (metrica==='costo'&&hayCostoParcial)?`<div style="font-size:.68rem;color:#92400e;padding-top:4px;">⚠️ Algunos meses del período aún no traen precio (PRE UNIT) en el JSON; el costo de esos meses no se estima ni se inventa, así que el total es parcial. Vuelve a correr <code>consumo_ddd_v2.py</code> con todos los meses para completarlo.</div>`:'',
     (metrica!=='ddd'&&d.antibioticos_sin_calibrar&&d.antibioticos_sin_calibrar.length)?`<div style="font-size:.66rem;color:#94a3b8;padding-top:4px;">${d.antibioticos_sin_calibrar.length} antibiótico(s) sin calibración DDD no aparecen en esta gráfica.</div>`:''
   ].join('');
@@ -4755,7 +4779,7 @@ function renderConsumoDDD(){
 
       ooadHtml=`<div style="background:linear-gradient(135deg,#f0f9ff,#eff6ff);border:1px solid #bfdbfe;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🌐 ${tituloActivo} · ${_consumoModo==='acumulado'?'Acumulado a '+perActual:perActual}</div>
-        <div style="font-size:.68rem;color:#64748b;margin-bottom:12px;">${selValido?`Datos de ${tituloActivo} (mismo criterio oficial, solo endovenosos).`:'Los 3 hospitales sumados, mismo criterio oficial que arriba (solo endovenosos) — replica exacto la hoja "Sin AB orales CONCENTRADO OOAD" de CONSABI.'}${_consumoModo==='acumulado'?' Valores acumulados desde el primer mes con CONSABI cargado.':''} ΣDDD: <b>${ddSumActivo.toLocaleString('es-MX',{maximumFractionDigits:1})}</b>.</div>
+        <div style="font-size:.68rem;color:#64748b;margin-bottom:12px;">${selValido?`Datos de ${tituloActivo} (vía: ${_viaTextoFiltro()} · ${_tipoTextoFiltro()}).`:`Los 3 hospitales sumados, mismo filtro que arriba (vía: ${_viaTextoFiltro()} · ${_tipoTextoFiltro()}). Con Endovenoso + recetas Individual+Colectiva replica la hoja "Sin AB orales CONCENTRADO OOAD" de CONSABI.`}${_consumoModo==='acumulado'?' Valores acumulados desde el primer mes con CONSABI cargado.':''} ΣDDD: <b>${ddSumActivo.toLocaleString('es-MX',{maximumFractionDigits:1})}</b>.</div>
         <div style="display:flex;align-items:center;gap:16px;">
           ${pieSvg}
           <div style="display:flex;flex-direction:column;gap:1px;">${legendOoad}</div>
@@ -5052,7 +5076,7 @@ function renderConsumoDDD(){
           <div style="font-size:.85rem;font-weight:800;color:#1e293b;">💊 Antimicrobianos con mayor consumo (${topTituloMetrica})</div>
           <div style="display:flex;">${metBtn('ddd','ΣDDD')}${metBtn('costo','💰 Costo')}${metBtn('piezas','📦 Piezas')}</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}${otrosHtml}</div>
         ${topNotas}
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
