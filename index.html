@@ -218,14 +218,14 @@ body.sy-locked{overflow:hidden;}
 @keyframes syUp2{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 @keyframes syFade{from{opacity:0}to{opacity:1}}
 @keyframes syDrop{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
-.section.active>*{animation:syUp .55s cubic-bezier(.2,.7,.2,1) both;}
-.section.active>*:nth-child(2){animation-delay:.07s;}
-.section.active>*:nth-child(3){animation-delay:.14s;}
-.section.active>*:nth-child(n+4){animation-delay:.2s;}
+.section.active>*{animation:syUp .28s cubic-bezier(.2,.7,.2,1) both;}
+.section.active>*:nth-child(2){animation-delay:.035s;}
+.section.active>*:nth-child(3){animation-delay:.07s;}
+.section.active>*:nth-child(n+4){animation-delay:.1s;}
 /* Al entrar desde la portada */
 body.sy-enter .header{animation:syDrop .8s .25s cubic-bezier(.2,.7,.2,1) both;}
 body.sy-enter .nav,body.sy-enter .controls,body.sy-enter .filter-bar,body.sy-enter .legrow{animation:syFade .8s .45s both;}
-body.sy-enter .section.active>*{animation:syUp2 .8s .55s cubic-bezier(.2,.7,.2,1) both;}
+body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1) both;}
 
 /* ═════════ PORTADA CON ADN ═════════ */
 #sy-intro{position:fixed;inset:0;z-index:1000;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;transition:transform .95s cubic-bezier(.77,0,.18,1);will-change:transform;}
@@ -6733,6 +6733,8 @@ initDashboard();
     document.body.classList.add('sy-enter');
     intro.classList.add('sy-leave');
     window.scrollTo(0,0);
+    // sy-enter solo debe afectar la primera entrada; si se queda, cada cambio de pestaña usa la animación lenta de la portada
+    setTimeout(function(){ if(!visible) document.body.classList.remove('sy-enter'); },1800);
     setTimeout(function(){
       if(visible) return;
       running=false; cancelAnimationFrame(raf);
