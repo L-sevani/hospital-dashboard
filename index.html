@@ -185,6 +185,8 @@ body.sy-locked{overflow:hidden;}
 /* Barras de controles */
 .controls,.legrow,.filter-bar{background:rgba(255,255,255,.78);border-bottom:1px solid var(--line);}
 .csel,.sgsearch{border-color:var(--line);background:#fbfdfc;}
+/* Las listas desplegables (período, comparar…) viven dentro de .controls; la animación de entrada (syFade) lo vuelve un contexto de apilamiento y las barras siguientes (filtros, chips) las tapaban. Se sube su z-index por encima de esas barras (chips=120) pero debajo del encabezado (200). */
+.controls{position:relative;z-index:150;}
 .context-bar{background:rgba(247,251,249,.92);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);}
 .context-chip{background:#e4f2ec;border-color:#bcdccd;color:var(--imss-d);}
 .context-chip.muted{background:#fff;border-color:var(--line);color:#4f665d;}
