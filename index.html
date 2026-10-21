@@ -350,7 +350,9 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
 .sk-dl:hover{background:#fdf0f4;transform:translateY(1px);}
 .sk-sub{margin:18px 0 10px;font-size:.78rem;font-weight:700;letter-spacing:.03em;color:#9a8590;text-transform:uppercase;}
 .sk-opts{display:flex;gap:10px;flex-wrap:wrap;}
-.sk-opt{display:flex;flex-direction:column;align-items:center;gap:8px;width:104px;padding:12px 6px;border:1px solid #eadde3;border-radius:12px;background:#fff;color:#4a2335;font:600 .8rem "Figtree",system-ui,sans-serif;cursor:pointer;transition:background .15s,border-color .15s;}
+.sk-opt{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;width:calc((100% - 20px)/3);min-height:92px;padding:12px 6px;border:1px solid #eadde3;border-radius:12px;background:#fff;color:#4a2335;font:600 .8rem "Figtree",system-ui,sans-serif;cursor:pointer;transition:background .15s,border-color .15s;}
+.sk-opt[hidden]{display:none;}
+.sk-opt span{text-align:center;line-height:1.25;}
 .sk-opt:hover{background:#f4fbf6;border-color:#bfe3c9;}
 .sk-note{min-height:1.2em;margin:14px 0 0;font-size:.82rem;color:#7a4a5a;line-height:1.4;}
 @media(max-width:560px){.sk-row{flex-direction:row;gap:8px;}.sk-share{padding:0 16px;}.sk-modes button{padding:0 12px;font-size:.82rem;gap:6px;}.sk-modes .sk-snd{width:38px;padding:0;}.sk-sw{gap:13px;}.sk-hero{min-height:max(700px,calc(100svh - 150px));}}
@@ -7322,23 +7324,10 @@ initDashboard();
     requestAnimationFrame(function(){ intro.classList.remove('sy-leave'); });
     setTimeout(function(){ busy=false; },1000);
   }
-  function inScrollable(el){
-    while(el && el!==document.body && el.nodeType===1){
-      var cs=getComputedStyle(el), oy=cs.overflowY;
-      if((oy==='auto'||oy==='scroll') && el.scrollHeight>el.clientHeight+1) return true;
-      el=el.parentNode;
-    }
-    return false;
-  }
-  var acc=0, accT=0;
+  /* Desde el tablero ya NO se vuelve a la portada desplazándose hacia arriba: solo con el botón "↑ Portada". */
   function onWheel(e){
     if(Date.now()-lastChange<900) return;
-    if(visible){ if(e.deltaY>25) enter(); return; }
-    if(e.deltaY>=0 || (window.pageYOffset||0)>0 || inScrollable(e.target)){ acc=0; return; }
-    var now=Date.now();
-    if(now-accT>400) acc=0;
-    accT=now; acc+=e.deltaY;
-    if(acc<-220){ acc=0; show(); }
+    if(visible && e.deltaY>25) enter();   // en la portada, bajar con la rueda sigue entrando al tablero
   }
   function onKey(e){ if(visible && (e.key==='Enter'||e.key==='ArrowDown'||e.key==='PageDown')) enter(); }
   var ty=0;
@@ -7369,10 +7358,6 @@ initDashboard();
 
   var hb=document.getElementById('btn-portada');
   if(hb) hb.addEventListener('click',show);
-  try{
-    var hl=document.querySelector('.header img');
-    if(hl){ hl.style.cursor='pointer'; hl.title='Volver a la portada'; hl.addEventListener('click',show); }
-  }catch(e){}
 })();
 </script>
 <script>
@@ -10270,6 +10255,10 @@ window.sakuraStart = async function () {
   /* ventana propia de "Compartir" (se monta en <body> para que no la recorte ni la anime el tablero) */
   const SVG_DL = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg>';
   const SVG_WA = '<svg viewBox="0 0 32 32" width="34" height="34"><circle cx="16" cy="16" r="16" fill="#25D366"/><path d="M16 7.2a8.8 8.8 0 0 0-7.5 13.4L7.3 24.8l4.3-1.1A8.8 8.8 0 1 0 16 7.2z" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M12.6 12c.3-.7.8-.6 1.1-.6.3.5.7 1.4.8 1.6.1.3-.2.6-.4.9-.2.2-.3.4-.1.7.5.9 1.4 1.7 2.4 2.1.3.1.5 0 .7-.2.2-.2.4-.5.7-.5.3.1 1.5.7 1.7.8.2.1.2.4.1.8-.2.6-1 1.1-1.7 1.1-1 0-2.7-.7-4.2-2.2-1.5-1.5-2.2-3.1-2.2-4.1 0-.6.3-1.2.6-1.4z" fill="#fff"/></svg>';
+  const SVG_TG = '<svg viewBox="0 0 32 32" width="34" height="34"><circle cx="16" cy="16" r="16" fill="#229ED9"/><path d="M7.2 15.6 23.5 9.3c.8-.3 1.5.2 1.2 1.4l-2.8 13c-.2.9-.8 1.1-1.5.7l-4.2-3.1-2 2c-.2.2-.4.4-.8.4l.3-4.3 7.8-7c.3-.3-.1-.5-.5-.2l-9.6 6-4.1-1.3c-.9-.3-.9-.9.2-1.3z" fill="#fff"/></svg>';
+  const SVG_MAIL = '<svg viewBox="0 0 32 32" width="34" height="34"><rect x="2" y="6" width="28" height="20" rx="3.5" fill="#3b82c4"/><path d="m4.5 10 11.5 8 11.5-8" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const SVG_COPY = '<svg viewBox="0 0 32 32" width="34" height="34"><circle cx="16" cy="16" r="16" fill="#8a7f85"/><rect x="11" y="11" width="11" height="12" rx="2" fill="none" stroke="#fff" stroke-width="2"/><path d="M9 20V10a2 2 0 0 1 2-2h8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>';
+  const SVG_MORE = '<svg viewBox="0 0 32 32" width="34" height="34"><circle cx="16" cy="16" r="16" fill="#b94468"/><circle cx="9.5" cy="16" r="2" fill="#fff"/><circle cx="16" cy="16" r="2" fill="#fff"/><circle cx="22.5" cy="16" r="2" fill="#fff"/></svg>';
   const modal = document.createElement('div');
   modal.className = 'sk-modal'; modal.setAttribute('aria-hidden', 'true');
   modal.innerHTML = '<div class="sk-sheet" role="dialog" aria-modal="true" aria-label="Compartir QR">' +
@@ -10277,7 +10266,12 @@ window.sakuraStart = async function () {
     '<div class="sk-file"><img id="sk-m-img" alt="Vista previa del QR"><div class="sk-fi"><b>qr-syra.png</b><small id="sk-m-size"></small></div>' +
     '<button type="button" class="sk-dl" id="sk-m-dl" title="Descargar imagen" aria-label="Descargar imagen">' + SVG_DL + '</button></div>' +
     '<div class="sk-sub">Compartir por medio</div>' +
-    '<div class="sk-opts"><button type="button" class="sk-opt" id="sk-m-wa">' + SVG_WA + '<span>WhatsApp Web</span></button></div>' +
+    '<div class="sk-opts">' +
+    '<button type="button" class="sk-opt" id="sk-m-wa">' + SVG_WA + '<span>WhatsApp Web</span></button>' +
+    '<button type="button" class="sk-opt" id="sk-m-tg">' + SVG_TG + '<span>Telegram</span></button>' +
+    '<button type="button" class="sk-opt" id="sk-m-mail">' + SVG_MAIL + '<span>Correo</span></button>' +
+    '<button type="button" class="sk-opt" id="sk-m-copy">' + SVG_COPY + '<span>Copiar imagen</span></button>' +
+    '<button type="button" class="sk-opt" id="sk-m-more" hidden>' + SVG_MORE + '<span>Más opciones<br>(Paint, Teams, Outlook…)</span></button></div>' +
     '<p class="sk-note" id="sk-m-note" role="status"></p></div>';
   document.body.appendChild(modal);
   const mImg = modal.querySelector('#sk-m-img'), mSize = modal.querySelector('#sk-m-size'), mNote = modal.querySelector('#sk-m-note');
@@ -10290,6 +10284,7 @@ window.sakuraStart = async function () {
     if (shareUrl) URL.revokeObjectURL(shareUrl);
     shareBlob = blob; shareUrl = URL.createObjectURL(blob);
     mImg.src = shareUrl; mSize.textContent = (blob.size / 1024).toFixed(1) + ' KB'; mNote.textContent = '';
+    try { const f = new File([blob], 'qr-syra.png', { type: 'image/png' }); modal.querySelector('#sk-m-more').hidden = !(navigator.canShare && navigator.canShare({ files: [f] })); } catch (e) { modal.querySelector('#sk-m-more').hidden = true; }
     lastFocus = document.activeElement;
     modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
     try { modal.querySelector('#sk-m-dl').focus({ preventScroll: true }); } catch (e) { }
@@ -10316,7 +10311,29 @@ window.sakuraStart = async function () {
     mNote.textContent = 'Se abrió WhatsApp Web con el enlace. Para enviar la imagen, descárgala con la flecha y adjúntala.';
     if (copying) copying.then(() => { mNote.textContent = 'Imagen copiada. En WhatsApp Web elige el chat y pégala con Ctrl+V.'; }).catch(() => { });
   }
+  async function shareTelegram() {
+    window.open('https://t.me/share/url?url=' + encodeURIComponent(currentText) + '&text=' + encodeURIComponent('Código QR del tablero SYRA'), '_blank', 'noopener');
+    mNote.textContent = 'Se abrió Telegram con el enlace. Para enviar la imagen, descárgala con la flecha y adjúntala.';
+  }
+  function shareMail() {
+    const a = document.createElement('a');
+    a.href = 'mailto:?subject=' + encodeURIComponent('Código QR del tablero SYRA') + '&body=' + encodeURIComponent('Enlace: ' + currentText + '\n\n(Adjunta la imagen qr-syra.png descargada)');
+    document.body.appendChild(a); a.click(); a.remove();
+    mNote.textContent = 'Se abrió tu correo con el enlace. Descarga la imagen con la flecha para adjuntarla.';
+  }
+  async function copyImage() {
+    try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': shareBlob })]); mNote.textContent = 'Imagen copiada al portapapeles.'; }
+    catch (e) { mNote.textContent = 'Tu navegador no permitió copiar. Usa la flecha para descargar la imagen.'; }
+  }
+  async function shareNative() {
+    try { await navigator.share({ files: [new File([shareBlob], 'qr-syra.png', { type: 'image/png' })], title: 'QR SYRA', text: currentText }); closeShare(); }
+    catch (e) { /* si lo cierras sin elegir app, la ventana sigue aquí */ }
+  }
   $('sk-share').addEventListener('click', openShare);
+  modal.querySelector('#sk-m-tg').addEventListener('click', shareTelegram);
+  modal.querySelector('#sk-m-mail').addEventListener('click', shareMail);
+  modal.querySelector('#sk-m-copy').addEventListener('click', copyImage);
+  modal.querySelector('#sk-m-more').addEventListener('click', shareNative);
   modal.querySelector('#sk-m-close').addEventListener('click', closeShare);
   modal.querySelector('#sk-m-dl').addEventListener('click', downloadQR);
   modal.querySelector('#sk-m-wa').addEventListener('click', shareWhatsApp);
