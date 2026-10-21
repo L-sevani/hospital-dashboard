@@ -611,7 +611,7 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
 
 <div id="banner-noiaas" style="display:none;background:linear-gradient(90deg,#1e3a5f,#1e5f7f);color:#fff;padding:8px 32px;font-size:.78rem;font-weight:600;align-items:center;gap:10px;">
   <span style="background:#f59e0b;color:#1c1917;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:800;">NO IAAS</span>
-  <span>Infecciones No Asociadas a Atención en Salud — Nivel Ambulatorio · Tlaxcala · 2024–2026</span>
+  <span>Infecciones No Asociadas a Atención en Salud — Nivel Ambulatorio · Tlaxcala · <span id="noiaas-rango">2023–2026</span></span>
 </div>
 <div id="context-bar" class="context-bar"></div>
 
@@ -1191,6 +1191,14 @@ function setHospital(h) {
   // Banner NO IAAS
   const banner = document.getElementById('banner-noiaas');
   if(banner) banner.style.display = isNoIaas ? 'flex' : 'none';
+  if(isNoIaas){
+    try{
+      const hd=(RAW&&RAW.data&&RAW.data[h])||{};
+      const ps=(hd.periodos||hd['años']||[]).map(x=>String(x).slice(0,4)).filter(x=>/^\d{4}$/.test(x)).sort();
+      const re=document.getElementById('noiaas-rango');
+      if(re&&ps.length) re.textContent=ps[0]===ps[ps.length-1]?ps[0]:ps[0]+'–'+ps[ps.length-1];
+    }catch(e){}
+  }
   // Update title
   const titleEl=document.getElementById('htitle');
   if(titleEl){
