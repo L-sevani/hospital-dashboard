@@ -367,46 +367,81 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Alertas SyRA ── */
+/* ── Alertas SyRA (mismo lenguaje visual del tablero: píldoras, .ccard, animaciones syUp) ── */
 .ntab .alert-badge{display:inline-block;min-width:18px;padding:1px 6px;margin-left:6px;border-radius:999px;background:#dc2626;color:#fff;font-size:.66rem;font-weight:800;line-height:1.4;text-align:center;vertical-align:1px;}
 .ntab .alert-badge[hidden]{display:none;}
-#banner-alertas{display:none;background:linear-gradient(90deg,#7f1d1d,#b45309);color:#fff;padding:8px 32px;font-size:.78rem;font-weight:600;align-items:center;gap:10px;cursor:pointer;}
+#banner-alertas{display:none;background:linear-gradient(90deg,#7f1d1d,#b45309);color:#fff;padding:8px 32px;font-size:.78rem;font-weight:600;align-items:center;gap:10px;cursor:pointer;animation:syFade .5s both;}
 #banner-alertas b{background:#fff;color:#7f1d1d;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:800;}
 #banner-alertas u{margin-left:auto;opacity:.9;}
 #sec-alertas{padding:24px 32px;gap:16px;}
-.al-head h2{font-size:1.1rem;font-weight:800;color:#1e293b;margin:0;}
-.al-head p{font-size:.76rem;color:#64748b;margin:4px 0 0;max-width:880px;line-height:1.5;}
-.al-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
-.al-filters label{display:flex;flex-direction:column;gap:3px;font-size:.66rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;}
-.al-filters select{padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;background:#fff;font:inherit;font-size:.8rem;font-weight:500;color:var(--ink);text-transform:none;letter-spacing:0;min-width:150px;}
+#sec-alertas .al-head{border-left:4px solid var(--imss);}
+#sec-alertas .al-head h2{margin-bottom:6px;}
+.al-head p{font-size:.78rem;color:#476157;margin:0;max-width:900px;line-height:1.55;}
+.al-fbox{display:flex;flex-direction:column;gap:12px;padding:16px 20px !important;}
+.al-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.al-lbl{font-size:.66rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.05em;min-width:78px;}
+.al-checks{display:flex;gap:6px;flex-wrap:wrap;}
+.al-checks label.sgtab{display:flex;align-items:center;gap:6px;user-select:none;}
+.al-checks label.sgtab input,.al-card .al-ck{accent-color:var(--imss);width:15px;height:15px;cursor:pointer;margin:0;}
+.al-checks label.sgtab.off{opacity:.55;}
+.al-checks small{opacity:.75;font-weight:700;}
+.al-sel{display:flex;flex-direction:column;gap:3px;font-size:.64rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.04em;}
+.al-sel select{min-width:150px;}
 .al-kpis{display:flex;gap:10px;flex-wrap:wrap;}
-.al-kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;min-width:130px;}
-.al-kpi b{display:block;font-size:1.35rem;font-weight:800;color:var(--imss-d);line-height:1.1;}
+.al-kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 18px;min-width:140px;box-shadow:0 14px 28px -22px rgba(0,50,40,.35);transition:transform .2s,box-shadow .2s;}
+.al-kpi:hover{transform:translateY(-2px);}
+.al-kpi b{display:block;font-size:1.4rem;font-weight:800;color:var(--imss-d);line-height:1.1;}
 .al-kpi span{font-size:.68rem;color:#64748b;font-weight:600;}
 .al-kpi.red b{color:#b91c1c;}
-.al-chart{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
-.al-chart h3{font-size:.8rem;font-weight:800;color:#1e293b;margin:0 0 8px;}
-.al-chart svg{width:100%;height:150px;display:block;}
+#sec-alertas .ccard svg{width:100%;height:150px;display:block;}
+.al-bar{position:sticky;top:0;z-index:60;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 24px -16px rgba(0,50,40,.4);}
+.al-bar .al-count{font-size:.78rem;font-weight:700;color:var(--imss-d);margin-right:auto;}
+.al-btn{padding:8px 15px;border-radius:999px;border:1px solid var(--line);background:#fff;color:#374151;font:inherit;font-size:.76rem;font-weight:600;cursor:pointer;transition:background .2s,color .2s,border-color .2s,transform .2s,box-shadow .2s;}
+.al-btn:hover:not(:disabled){border-color:var(--imss);color:var(--imss);transform:translateY(-1px);box-shadow:0 6px 12px -8px rgba(0,102,87,.5);}
+.al-btn.pri{background:var(--imss);border-color:var(--imss);color:#fff;box-shadow:0 8px 14px -8px rgba(0,102,87,.6);}
+.al-btn.pri:hover:not(:disabled){background:var(--imss-d);color:#fff;}
+.al-btn:disabled{opacity:.45;cursor:not-allowed;}
 .al-list{display:flex;flex-direction:column;gap:10px;}
-.al-card{background:#fff;border:1px solid var(--line);border-left:5px solid var(--imss);border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
+.al-card{position:relative;background:#fff;border:1px solid var(--line);border-left:5px solid var(--imss);border-radius:16px;padding:12px 16px 12px 44px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 2px rgba(0,50,40,.04),0 16px 32px -24px rgba(0,50,40,.30);transition:box-shadow .3s,border-color .3s,transform .2s;animation:syUp .32s cubic-bezier(.2,.7,.2,1) both;}
+.al-card:nth-child(2){animation-delay:.03s}.al-card:nth-child(3){animation-delay:.06s}.al-card:nth-child(4){animation-delay:.09s}.al-card:nth-child(n+5){animation-delay:.12s}
+.al-card:hover{transform:translateY(-1px);box-shadow:0 1px 2px rgba(0,50,40,.05),0 22px 40px -22px rgba(0,50,40,.38);}
 .al-card.hi{border-left-color:#dc2626;}.al-card.mid{border-left-color:#f59e0b;}
-.al-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.al-micro{font-weight:800;font-size:.92rem;color:#1e293b;}
+.al-card.sel{background:#f1f8f4;outline:2px solid var(--imss);outline-offset:-2px;}
+.al-card .al-ck{position:absolute;left:14px;top:14px;}
+.al-card .al-cam{position:absolute;right:12px;top:10px;padding:3px 9px;font-size:.7rem;}
+.al-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-right:50px;}
+.al-micro{font-weight:800;font-size:.92rem;color:var(--ink);}
 .al-n{background:#dc2626;color:#fff;border-radius:999px;padding:2px 10px;font-size:.72rem;font-weight:800;}
 .al-meta{font-size:.72rem;color:#64748b;font-weight:600;}
 .al-tags{display:flex;gap:6px;flex-wrap:wrap;}
-.al-tag{font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:999px;background:#eef4f0;color:#2f5b4c;}
+.al-tag{font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:999px;background:#e4f2ec;color:#2f5b4c;}
 .al-tag.warn{background:#fef3c7;color:#92400e;}.al-tag.red{background:#fee2e2;color:#991b1b;}.al-tag.ok{background:#e0f2fe;color:#075985;}
 .al-strip{display:flex;gap:2px;flex-wrap:wrap;cursor:pointer;padding:2px 0;}
-.al-strip i{width:13px;height:18px;border-radius:3px;display:block;}
+.al-strip i{width:13px;height:18px;border-radius:3px;display:block;transition:transform .15s;}
+.al-strip i:hover{transform:scaleY(1.25);}
 .al-S{background:#2f8f74;}.al-I{background:#f59e0b;}.al-R{background:#dc2626;}
 .al-detail{display:none;flex-wrap:wrap;gap:5px;padding-top:2px;}
-.al-card.open .al-detail{display:flex;}
+.al-card.open .al-detail,.al-exp .al-detail{display:flex;}
 .al-chip{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:7px;color:#fff;}
 .al-hint{font-size:.66rem;color:#94a3b8;}
-.al-empty{padding:40px;text-align:center;color:#94a3b8;background:#fff;border:1px dashed var(--line);border-radius:14px;font-size:.85rem;}
-.al-more{align-self:center;padding:9px 22px;border:1.5px solid var(--imss);border-radius:10px;background:#fff;color:var(--imss-d);font:inherit;font-weight:700;font-size:.78rem;cursor:pointer;}
-@media(max-width:700px){#sec-alertas{padding:16px;}#banner-alertas{padding:8px 16px;}}
+.al-empty{padding:40px;text-align:center;color:#94a3b8;background:#fff;border:1px dashed var(--line);border-radius:16px;font-size:.85rem;}
+.al-more{align-self:center;}
+/* comparación */
+#al-compare:empty{display:none;}
+.al-cmp{overflow:auto;}
+.al-cmp table{border-collapse:separate;border-spacing:0;font-size:.74rem;min-width:100%;}
+.al-cmp th,.al-cmp td{padding:6px 10px;border-bottom:1px solid #edf3ef;text-align:center;vertical-align:middle;}
+.al-cmp thead th{background:#f1f8f4;color:var(--imss-d);font-weight:800;position:sticky;top:0;min-width:150px;}
+.al-cmp thead th small{display:block;font-weight:600;color:#64748b;}
+.al-cmp td:first-child,.al-cmp th:first-child{text-align:left;font-weight:700;color:#374151;position:sticky;left:0;background:#fff;min-width:170px;z-index:1;}
+.al-cmp thead th:first-child{background:#f1f8f4;z-index:2;}
+.al-cmp tr.diff td:first-child{border-left:4px solid #f59e0b;}
+.al-cmp .sum td{font-size:.7rem;color:#475569;background:#fafcfb;}
+.al-cmp .c{display:inline-block;min-width:26px;padding:2px 8px;border-radius:7px;color:#fff;font-weight:800;}
+.al-cmp .no{color:#cbd5e1;}
+.al-cmp-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.al-cmp-h h2{margin:0 !important;margin-right:auto !important;}
+@media(max-width:700px){#sec-alertas{padding:16px;}#banner-alertas{padding:8px 16px;}.al-lbl{min-width:100%;}}
 </style>
 </head>
 <body class="sy-locked">
@@ -699,13 +734,18 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
 
   <!-- CLASIFICACIÓN AWaRe -->
   <div class="section" id="sec-alertas">
-    <div class="al-head">
+    <div class="ccard al-head">
       <h2>🚨 Alertas SyRA — perfiles de resistencia idénticos</h2>
       <p>Se alerta cuando <b>2 o más pacientes distintos</b> del mismo hospital, en la <b>misma semana epidemiológica</b>, aíslan el <b>mismo microorganismo</b> con <b>exactamente el mismo perfil</b> S/I/R (ni un antibiótico distinto). Se omiten perfiles triviales (sin resistencias o con menos de 5 antibióticos). Por privacidad no se publica ningún dato de pacientes: solo conteos, semana, servicio y perfil.</p>
     </div>
-    <div class="al-filters" id="al-filters"></div>
+    <div class="ccard al-fbox">
+      <div class="al-row"><span class="al-lbl">Hospitales</span><div class="al-checks" id="al-hosp"></div></div>
+      <div class="al-row" id="al-sels"></div>
+    </div>
     <div class="al-kpis" id="al-kpis"></div>
-    <div class="al-chart"><h3>Alertas por semana epidemiológica</h3><div id="al-chart"></div></div>
+    <div class="ccard"><h2>Alertas por semana epidemiológica</h2><div id="al-chart"></div></div>
+    <div class="al-bar" id="al-bar"></div>
+    <div id="al-compare"></div>
     <div class="al-list" id="al-list"></div>
   </div>
 
@@ -1044,6 +1084,24 @@ function buildFreqFromNewFormat(hd){
     Object.entries(micros).forEach(([micro,count])=>addStack(freq.chart5['TODOS'],micro,sg,count));
   });
 
+  // Por año (permite filtrar por periodo y comparar periodos)
+  const FPK=['chart1','chart2','chart3','chart4'];
+  if(hd.freq_per&&Object.keys(hd.freq_per).length){
+    FPK.forEach(k=>{
+      Object.entries(hd.freq_per[k]||{}).forEach(([y,rows])=>{
+        const f=freq[k][y]=makeFreq();
+        Object.entries(rows).forEach(([row,cols])=>Object.entries(cols).forEach(([col,n])=>addStack(f,row,col,n)));
+      });
+    });
+  }else if((hd.registros||[]).length){
+    // JSON viejo (sin freq_per): se aproxima con los registros que tienen antibiograma
+    hd._freqApprox=true;
+    hd.registros.forEach(r=>{
+      const y=r.p; if(!y) return;
+      const put=(k,row,col)=>{ if(!row||!col) return; addStack(freq[k][y]||(freq[k][y]=makeFreq()),row,col,1); };
+      put('chart1',r.m,r.s); put('chart2',r.s,r.c); put('chart3',r.c,r.m); put('chart4',r.m,r.c);
+    });
+  }
   Object.values(freq).forEach(k=>Object.values(k).forEach(f=>{if(f&&f.totals)finishFreq(f);}));
   return freq;
 }
@@ -1431,8 +1489,34 @@ function sriMergedRaw(obj, periods){
   return calcPct(Object.values(maps)).sort((a,b)=>b.pS-a.pS || a.pR-b.pR || a.pI-b.pI);
 }
 
+// Une varios años (o meses) de un objeto freq[chart]. years: ['2024','2025']
+function freqYearsMerge(obj,years){
+  if(!obj) return null;
+  const parts=[];
+  (years||[]).forEach(y=>{
+    if(obj[y]) parts.push(obj[y]);
+    else Object.keys(obj).filter(k=>k.startsWith(y+'-')).forEach(k=>parts.push(obj[k]));
+  });
+  if(!parts.length) return null;
+  if(parts.length===1) return parts[0];
+  const m={order:[],stacks:{},totals:{}};
+  parts.forEach(d=>(d.order||[]).forEach(row=>{
+    const st=(d.stacks&&d.stacks[row])||{};
+    m.stacks[row]=m.stacks[row]||{}; m.totals[row]=m.totals[row]||0;
+    Object.entries(st).forEach(([c,n])=>{ m.stacks[row][c]=(m.stacks[row][c]||0)+n; m.totals[row]+=n; });
+  }));
+  m.order=Object.keys(m.totals).sort((a,b)=>m.totals[b]-m.totals[a]);
+  return m.order.length?m:null;
+}
+function freqSpec(obj,spec){
+  if(!obj) return null;
+  if(spec==='TODOS') return obj['TODOS']||null;
+  if(Array.isArray(spec)) return freqYearsMerge(obj,spec);
+  return obj[spec]||freqYearsMerge(obj,[spec]);
+}
 function freqForPeriod(key,period){
   const obj=RAW.freq[key]; if(!obj) return null;
+  if(period==='__main_multi__') return freqYearsMerge(obj,mainPeriodSet||[]);
   if(period==='TODOS') return obj['TODOS']||null;
 
   // Robust period resolution: if exact period exists (month or pre-aggregated year), use it.
@@ -2324,18 +2408,116 @@ function attachOtrosTooltips(container){
   });
 }
 
+/* ── Frecuencias: comparar por periodos / por hospitales y ambulatorios ── */
+const FQ={mode:'none',yrs:null,hs:null,metric:'n',top:15};
+const FQ_COLORS=['#006657','#2563eb','#d97706','#7c3aed','#dc2626','#0891b2','#be185d','#65a30d'];
+function fqMode(m){
+  FQ.mode=m;
+  if(m==='per') FQ.yrs=null;
+  if(m==='hosp'&&!FQ.hs) FQ.hs=Object.keys(RAW._derivedByHospital||{});
+  renderFreq();
+}
+function fqToggle(kind,v,on){
+  const k=kind==='y'?'yrs':'hs'; const set=new Set(FQ[k]||[]);
+  on?set.add(v):set.delete(v); FQ[k]=[...set]; renderFreq();
+}
+function fqMetric(m){ FQ.metric=m; renderFreq(); }
+function fqTop(v){ FQ.top=+v||15; renderFreq(); }
+function _fqPeriodSpec(){ return p1==='TODOS'?'TODOS':p1==='__main_multi__'?(mainPeriodSet||[]):p1; }
+function _fqHospKeys(){
+  const ks=Object.keys(RAW._derivedByHospital||{});
+  return [...HOSPITALES_ORDEN.filter(h=>ks.includes(h)),...ks.filter(h=>!HOSPITALES_ORDEN.includes(h))];
+}
+function freqCmpBarHTML(){
+  const pill=(on,click,label)=>`<span class="sgtab${on?' active':''}" onclick="${click}">${label}</span>`;
+  let h=`<div class="ccard al-fbox"><div class="al-row"><span class="al-lbl">Comparar</span><div class="al-checks">`+
+    pill(FQ.mode==='none',"fqMode('none')",'Sin comparar')+
+    pill(FQ.mode==='per',"fqMode('per')",'📅 Por periodos')+
+    pill(FQ.mode==='hosp',"fqMode('hosp')",'🏥 Por hospitales y ambulatorios')+`</div></div>`;
+  if(FQ.mode==='per'){
+    const ys=getYears();
+    FQ.yrs=(FQ.yrs||[]).filter(y=>ys.includes(y));
+    if(!FQ.yrs.length) FQ.yrs=ys.slice(-2);
+    h+=`<div class="al-row"><span class="al-lbl">Años</span><div class="al-checks">`+
+      ys.map(y=>`<label class="sgtab${FQ.yrs.includes(y)?' active':''}"><input type="checkbox"${FQ.yrs.includes(y)?' checked':''} onchange="fqToggle('y','${y}',this.checked)"><span>${y}</span></label>`).join('')+
+      `</div><span class="al-hint">${esc2(getHospitalDisplayName(activeHospital))}</span></div>`;
+  }
+  if(FQ.mode==='hosp'){
+    const ks=_fqHospKeys(); FQ.hs=(FQ.hs||[]).filter(k=>ks.includes(k));
+    if(!FQ.hs.length) FQ.hs=ks.slice();
+    h+=`<div class="al-row"><span class="al-lbl">Unidades</span><div class="al-checks">`+
+      ks.map(k=>`<label class="sgtab${FQ.hs.includes(k)?' active':''}"><input type="checkbox"${FQ.hs.includes(k)?' checked':''} onchange="fqToggle('h','${k}',this.checked)"><span>${esc2(getHospitalDisplayName(k))}</span></label>`).join('')+
+      `</div><span class="al-hint">Periodo: ${esc2(fmtP(p1))} (el de la barra superior)</span></div>`;
+  }
+  if(FQ.mode!=='none'){
+    h+=`<div class="al-row"><span class="al-lbl">Valores</span><div class="al-checks">`+
+      pill(FQ.metric==='n',"fqMetric('n')",'Cantidad')+pill(FQ.metric==='pct',"fqMetric('pct')",'% del total de cada serie')+
+      `</div><label class="al-sel" style="flex-direction:row;align-items:center;gap:6px;">Mostrar top<select class="csel" onchange="fqTop(this.value)">`+
+      [10,15,20,30].map(n=>`<option value="${n}"${FQ.top===n?' selected':''}>${n}</option>`).join('')+`</select></label></div>`;
+  }
+  return h+'</div>';
+}
+function esc2(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function buildFreqCompare(series,cid,metric,top){
+  const el=document.getElementById(cid); if(!el) return;
+  const S=series.filter(x=>x.data&&x.data.order&&x.data.order.length);
+  if(!S.length){ el.innerHTML='<div class="empty">Sin datos para las series seleccionadas</div>'; return; }
+  S.forEach(x=>{ x.sum=Object.values(x.data.totals).reduce((a,b)=>a+b,0)||1; });
+  const val=(x,row)=>{ const n=(x.data.totals[row]||0); return metric==='pct'?n*100/x.sum:n; };
+  const rows=[...new Set(S.flatMap(x=>x.data.order))];
+  rows.sort((a,b)=>S.reduce((t,x)=>t+val(x,b),0)-S.reduce((t,x)=>t+val(x,a),0));
+  const shown=rows.slice(0,top);
+  const mx=Math.max(...shown.flatMap(r=>S.map(x=>val(x,r))),0.0001);
+  const fmt=v=>metric==='pct'?(Math.round(v*10)/10>=10?Math.round(v):Math.round(v*10)/10)+'%':String(v);
+  let h='<div id="'+cid+'__cap" style="background:#fff;padding:6px 4px 10px;">';
+  h+='<div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:10px;">'+S.map(x=>
+    `<div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:#374151;"><span style="width:13px;height:13px;border-radius:3px;background:${x.color};"></span><b>${esc2(x.label)}</b><span style="color:#94a3b8;">(${x.sum} aislamientos)</span></div>`).join('')+'</div>';
+  shown.forEach(r=>{
+    h+=`<div style="display:grid;grid-template-columns:minmax(150px,270px) 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid #eef3f0;">`+
+      `<div title="${esc2(r)}" style="font-size:.72rem;color:#1f2937;font-weight:600;word-break:break-word;">${esc2(r)}</div><div>`+
+      S.map(x=>{ const v=val(x,r),n=x.data.totals[r]||0;
+        return `<div title="${esc2(x.label)}: ${n} (${(n*100/x.sum).toFixed(1)}%)" style="display:flex;align-items:center;gap:6px;height:15px;margin:1px 0;"><div style="width:${(v*100/mx).toFixed(2)}%;min-width:${v>0?2:0}px;height:12px;background:${x.color};border-radius:3px;"></div><span style="font-size:.64rem;color:${v>0?'#475569':'#cbd5e1'};">${fmt(v>0?(metric==='pct'?v:n):0)}</span></div>`; }).join('')+
+      `</div></div>`;
+  });
+  h+=`<div style="font-size:.64rem;color:#94a3b8;margin-top:8px;">Se muestran las ${shown.length} categorías con mayor ${metric==='pct'?'proporción':'frecuencia'} combinada de ${rows.length}.</div></div>`;
+  el.innerHTML=h;
+  _insertarBotonDescarga(el,cid,'comparacion_frecuencias_'+cid);
+}
 function renderFreq(){
   const cfg=FREQ_CFG[activeFreqTab];
   const body=document.getElementById('freq-body'); if(!body) return;
-  body.innerHTML=`<div class="ccard"><h2>${cfg.title}</h2><div id="fchart"></div></div>`;
-  let data=freqForPeriod(cfg.key,p1);
-  // Limitar a top 20 filas para Microorg. en Servicios y Cultivos
-  if(data&&data.order&&(cfg.key==='chart1'||cfg.key==='chart4')&&data.order.length>20){
-    const top20=data.order.slice(0,20);
-    data={...data, order:top20};
+  const bar=freqCmpBarHTML();
+  if(FQ.mode==='none'){
+    body.innerHTML=bar+`<div class="ccard"><h2>${cfg.title}</h2><div id="fchart"></div></div>`;
+    let data=freqForPeriod(cfg.key,p1);
+    // Limitar a top 20 filas para Microorg. en Servicios y Cultivos
+    if(data&&data.order&&(cfg.key==='chart1'||cfg.key==='chart4')&&data.order.length>20){
+      const top20=data.order.slice(0,20);
+      data={...data, order:top20};
+    }
+    buildFreqChart(data,'fchart');
+    attachOtrosTooltips(document.getElementById('fchart'));
+    if(p1!=='TODOS'&&RAW._freqApprox) body.insertAdjacentHTML('beforeend',_fqApproxHint());
+    return;
   }
-  buildFreqChart(data,'fchart');
-  attachOtrosTooltips(document.getElementById('fchart'));
+  let series=[],approx=false;
+  if(FQ.mode==='per'){
+    series=(FQ.yrs||[]).slice().sort().map((y,i)=>({label:y,color:FQ_COLORS[i%FQ_COLORS.length],data:freqYearsMerge(RAW.freq[cfg.key],[y])}));
+    approx=!!RAW._freqApprox;
+  }else{
+    const spec=_fqPeriodSpec();
+    series=(FQ.hs||[]).map((k,i)=>{
+      const hd=RAW._derivedByHospital[k]||{};
+      if(spec!=='TODOS'&&hd._freqApprox) approx=true;
+      return {label:getHospitalDisplayName(k).replace(/^[^A-Za-zÁÉÍÓÚ]+/,''),color:FQ_COLORS[i%FQ_COLORS.length],data:freqSpec((hd.freq||{})[cfg.key],spec)};
+    });
+  }
+  const ttl=cfg.title+' — comparación '+(FQ.mode==='per'?'por periodos':'por hospitales y ambulatorios');
+  body.innerHTML=bar+`<div class="ccard"><h2>${ttl}</h2><div id="fcmp"></div></div>`+(approx?_fqApproxHint():'');
+  buildFreqCompare(series,'fcmp',FQ.metric,FQ.top);
+}
+function _fqApproxHint(){
+  return '<div class="al-hint" style="padding:0 6px;">⚠ Los conteos por año de este JSON son aproximados (solo aislamientos con antibiograma). Vuelve a correr <code>procesar_excel_v2.py</code> y sube el <code>dashboard_data.json</code> nuevo para el conteo completo.</div>';
 }
 
 /* ─── COMPARAR HOSPITALES ─────────────────────────────────────── */
@@ -10470,22 +10652,34 @@ if (window.__sakuraWanted) window.sakuraStart();
 /* ═══ Alertas SyRA: perfiles S/I/R idénticos (datos: RAW.data[h].alertas, calculados en procesar_excel_v2.py) ═══ */
 (function(){
   const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-  const F={h:'',y:'',m:'',fr:'',n:'2'};
-  let ALL=null,SHOW=40;
+  const F={hs:new Set(),y:'',m:'',fr:'',n:'2'};
+  const SEL=new Set();           // ids de alertas seleccionadas
+  let ALL=null,SHOW=40,CMP=false;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const $=id=>document.getElementById(id);
-  const hname=h=>(typeof getHospitalDisplayName==='function'?getHospitalDisplayName(h):h).replace(/^[^A-Za-zÁÉÍÓÚ]+/,'');
+  const hname=h=>(typeof getHospitalDisplayName==='function'?getHospitalDisplayName(h):h);
+  const hplain=h=>hname(h).replace(/^[^A-Za-zÁÉÍÓÚ]+/,'');
   const abxName=a=>String(a).replace(/^(G\+|G-|Hongo)\s*/,'').replace(/[,\s]+$/,'');
+  const abxLbl=a=>{const m=/^(G\+|G-|Hongo)\s*/.exec(String(a));return abxName(a)+(m?' ('+m[1]+')':'');};
   function dRange(ini){
     const a=new Date(ini+'T12:00:00'),b=new Date(a.getTime()+6*864e5);
     return a.getDate()+(a.getMonth()!==b.getMonth()?' '+MESES[a.getMonth()]:'')+'–'+b.getDate()+' '+MESES[b.getMonth()]+' '+b.getFullYear();
+  }
+  function hospitals(){
+    const d=(typeof RAW!=='undefined'&&RAW&&RAW.data)||{};
+    const ks=Object.keys(d);
+    ((RAW&&RAW.hospitales)||[]).forEach(h=>{
+      const k=(['DELEGACION TLAXCALA','AMBULATORIOS'].includes(h))?'AMBULATORIOS TLAXCALA':h;
+      if(!ks.includes(k)) ks.push(k);
+    });
+    return ks;
   }
   function load(){
     if(ALL) return ALL;
     ALL=[];
     try{
       Object.entries((typeof RAW!=='undefined'&&RAW&&RAW.data)||{}).forEach(([h,hd])=>{
-        ((hd&&hd.alertas)||[]).forEach(a=>ALL.push(Object.assign({h},a)));
+        ((hd&&hd.alertas)||[]).forEach((a,i)=>ALL.push(Object.assign({h,id:h+'#'+i},a)));
       });
     }catch(e){}
     return ALL;
@@ -10497,7 +10691,7 @@ if (window.__sakuraWanted) window.sakuraStart();
     return all.filter(a=>a.ini>=lim);
   }
   window.updateAlertBadge=function(){
-    ALL=null;
+    ALL=null; SEL.clear();
     const r=recent(),b=$('alert-badge'),bn=$('banner-alertas');
     if(b){ b.textContent=r.length; b.hidden=!r.length; }
     if(bn){
@@ -10508,23 +10702,37 @@ if (window.__sakuraWanted) window.sakuraStart();
       } else bn.style.display='none';
     }
   };
-  function filtered(){
+  function base(){   // filtros excepto hospital (para contar por hospital)
     return load().filter(a=>
-      (!F.h||a.h===F.h)&&(!F.y||a.sem.slice(0,4)===F.y)&&(!F.m||a.m===F.m)&&
-      a.n>=(+F.n||2)&&
-      (!F.fr||(F.fr==='raro'?a.fr<5:F.fr==='comun'?a.fr>=5:true)));
+      (!F.y||a.sem.slice(0,4)===F.y)&&(!F.m||a.m===F.m)&&a.n>=(+F.n||2)&&
+      (!F.fr||(F.fr==='raro'?a.fr<5:a.fr>=5)));
   }
+  const filtered=()=>base().filter(a=>!F.hs.size||F.hs.has(a.h));
+
   function buildFilters(){
-    const all=load(),el=$('al-filters'); if(!el) return;
-    const uniq=f=>[...new Set(all.map(f))].sort();
-    const opt=(arr,cur,all0,lab)=>'<option value="">'+all0+'</option>'+arr.map(v=>'<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(lab?lab(v):v)+'</option>').join('');
-    el.innerHTML=
-      '<label>Hospital<select data-k="h">'+opt(uniq(a=>a.h),F.h,'Todos',hname)+'</select></label>'+
-      '<label>Año<select data-k="y">'+opt(uniq(a=>a.sem.slice(0,4)).reverse(),F.y,'Todos')+'</select></label>'+
-      '<label>Microorganismo<select data-k="m">'+opt(uniq(a=>a.m),F.m,'Todos')+'</select></label>'+
-      '<label>Frecuencia del perfil<select data-k="fr"><option value="">Todos</option><option value="raro"'+(F.fr==='raro'?' selected':'')+'>Poco comunes (&lt;5% de los aislamientos)</option><option value="comun"'+(F.fr==='comun'?' selected':'')+'>Comunes (≥5%)</option></select></label>'+
-      '<label>Mínimo de pacientes<select data-k="n">'+[2,3,4,5].map(n=>'<option value="'+n+'"'+(String(n)===F.n?' selected':'')+'>'+n+' o más</option>').join('')+'</select></label>';
-    el.querySelectorAll('select').forEach(s=>s.onchange=()=>{F[s.dataset.k]=s.value;SHOW=40;window.renderAlertas(true);});
+    const all=load(), hs=hospitals(), cnt={}; base().forEach(a=>{cnt[a.h]=(cnt[a.h]||0)+1;});
+    const H=$('al-hosp'); if(!H) return;
+    H.innerHTML='';
+    const mk=(val,lab,n,on)=>{
+      const l=document.createElement('label'); l.className='sgtab'+(on?' active':'')+(n===0?' off':'');
+      l.innerHTML='<input type="checkbox"'+(on?' checked':'')+'><span>'+esc(lab)+'</span> <small>'+n+'</small>';
+      l.querySelector('input').onchange=e=>{
+        if(val===''){F.hs.clear();}
+        else{ e.target.checked?F.hs.add(val):F.hs.delete(val); }
+        SHOW=40; window.renderAlertas(true);
+      };
+      H.appendChild(l);
+    };
+    mk('','Todos',Object.values(cnt).reduce((s,x)=>s+x,0),!F.hs.size);
+    hs.forEach(h=>mk(h,hname(h),cnt[h]||0,F.hs.has(h)));
+    const S=$('al-sels'); const uniq=f=>[...new Set(all.map(f))].sort();
+    const opt=(arr,cur,all0)=>'<option value="">'+all0+'</option>'+arr.map(v=>'<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(v)+'</option>').join('');
+    S.innerHTML=
+      '<label class="al-sel">Año<select class="csel" data-k="y">'+opt(uniq(a=>a.sem.slice(0,4)).reverse(),F.y,'Todos')+'</select></label>'+
+      '<label class="al-sel">Microorganismo<select class="csel" data-k="m">'+opt(uniq(a=>a.m),F.m,'Todos')+'</select></label>'+
+      '<label class="al-sel">Frecuencia del perfil<select class="csel" data-k="fr"><option value="">Todos</option><option value="raro"'+(F.fr==='raro'?' selected':'')+'>Poco comunes (&lt;5% de los aislamientos)</option><option value="comun"'+(F.fr==='comun'?' selected':'')+'>Comunes (≥5%)</option></select></label>'+
+      '<label class="al-sel">Mínimo de pacientes<select class="csel" data-k="n">'+[2,3,4,5].map(n=>'<option value="'+n+'"'+(String(n)===F.n?' selected':'')+'>'+n+' o más</option>').join('')+'</select></label>';
+    S.querySelectorAll('select').forEach(s=>s.onchange=()=>{F[s.dataset.k]=s.value;SHOW=40;window.renderAlertas(true);});
   }
   function chart(list){
     const el=$('al-chart'); if(!el) return;
@@ -10546,32 +10754,111 @@ if (window.__sakuraWanted) window.sakuraStart();
   function card(a){
     const sev=a.n>=4||a.nR>=6?'hi':a.n>=3?'mid':'';
     const fr=a.fr<5?'<span class="al-tag red">Perfil poco común · '+a.fr+'%</span>':'<span class="al-tag ok">Perfil común · '+a.fr+'%</span>';
-    return '<div class="al-card '+sev+'" onclick="this.classList.toggle(\'open\')">'+
+    return '<div class="al-card '+sev+(SEL.has(a.id)?' sel':'')+'" data-id="'+esc(a.id)+'">'+
+      '<input type="checkbox" class="al-ck" title="Seleccionar para comparar / descargar"'+(SEL.has(a.id)?' checked':'')+'>'+
+      '<button class="al-btn al-cam" title="Descargar imagen de esta alerta" data-cam="1">📷</button>'+
       '<div class="al-top"><span class="al-n">'+a.n+' pacientes</span><span class="al-micro">'+esc(a.m)+'</span>'+
-      '<span class="al-meta">Semana '+esc(a.sem.slice(5))+' · '+dRange(a.ini)+' · '+esc(hname(a.h))+'</span></div>'+
+      '<span class="al-meta">Semana '+esc(a.sem.slice(5))+' · '+dRange(a.ini)+' · '+esc(hplain(a.h))+'</span></div>'+
       '<div class="al-tags">'+fr+
         '<span class="al-tag warn">'+a.nR+' R'+(a.nI?' · '+a.nI+' I':'')+' de '+a.nT+' antibióticos</span>'+
         (a.svc||[]).map(x=>'<span class="al-tag">'+esc(x[0])+' ('+x[1]+')</span>').join('')+
         (a.cul||[]).map(x=>'<span class="al-tag">🧫 '+esc(x[0])+' ('+x[1]+')</span>').join('')+'</div>'+
-      '<div class="al-strip" title="Clic para ver antibióticos">'+a.perfil.map(p=>'<i class="al-'+p[1]+'" title="'+esc(abxName(p[0]))+': '+p[1]+'"></i>').join('')+'</div>'+
+      '<div class="al-strip" data-tog="1" title="Clic para ver antibióticos">'+a.perfil.map(p=>'<i class="al-'+p[1]+'" title="'+esc(abxName(p[0]))+': '+p[1]+'"></i>').join('')+'</div>'+
       '<div class="al-detail">'+a.perfil.map(p=>'<span class="al-chip al-'+p[1]+'">'+esc(abxName(p[0]))+' · '+p[1]+'</span>').join('')+'</div>'+
-      '<div class="al-hint">Este mismo perfil lo tienen '+a.tp+' aislamientos de '+esc(a.m)+' en el hospital (histórico). Clic en la tarjeta para ver el detalle.</div>'+
+      '<div class="al-hint">Este mismo perfil lo tienen '+a.tp+' aislamientos de '+esc(a.m)+' en el hospital (histórico). Clic en la tira de colores para ver el detalle.</div>'+
     '</div>';
   }
-  window.renderAlertas=function(keepFilters){
-    if(!keepFilters||!$('al-filters').children.length) buildFilters();
-    const list=filtered(), tot=load();
+  /* ── imagen ── */
+  async function toImage(node,title,file){
+    if(typeof html2canvas==='undefined'){ alert('No se pudo generar la imagen (falta conexión a internet para cargar la librería de descarga).'); return; }
+    try{
+      const cv=await html2canvas(node,{backgroundColor:'#ffffff',scale:2});
+      const th=64,out=document.createElement('canvas'); out.width=cv.width; out.height=cv.height+th;
+      const x=out.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,out.width,out.height);
+      x.fillStyle='#154f39'; x.font='bold 26px Arial, sans-serif'; x.textBaseline='middle';
+      let t=title; while(x.measureText(t).width>out.width-48&&t.length>4) t=t.slice(0,-2)+'…';
+      x.fillText(t,24,th/2+2); x.drawImage(cv,0,th);
+      const a=document.createElement('a'); a.download=file+'.png'; a.href=out.toDataURL('image/png'); a.click();
+    }catch(e){ alert('No se pudo generar la imagen. Intenta de nuevo.'); }
+  }
+  const stamp=()=>new Date().toISOString().slice(0,10);
+  async function imgCards(list,title,file){
+    const box=document.createElement('div');
+    box.className='al-list al-exp';
+    box.style.cssText='position:fixed;left:-99999px;top:0;width:1100px;padding:16px;background:#fff;';
+    box.innerHTML=list.map(a=>card(a).replace(/<input[^>]*>/,'').replace(/<button[^>]*data-cam[^>]*>.*?<\/button>/,'').replace('class="al-card','style="animation:none" class="al-card')).join('');
+    document.body.appendChild(box);
+    try{ await toImage(box,title,file); } finally { box.remove(); }
+  }
+  function selected(){ return load().filter(a=>SEL.has(a.id)); }
+  function updateBar(list){
+    const n=selected().length;
+    $('al-bar').innerHTML=
+      '<span class="al-count">'+(n?n+' seleccionada'+(n>1?'s':''):'Selecciona alertas con las casillas para comparar o descargar')+' · '+list.length+' visibles</span>'+
+      '<button class="al-btn" id="al-all">☑ Seleccionar visibles</button>'+
+      '<button class="al-btn" id="al-none"'+(n?'':' disabled')+'>Limpiar</button>'+
+      '<button class="al-btn pri" id="al-cmp"'+(n>=2?'':' disabled')+'>⇄ Comparar'+(n>=2?' ('+n+')':'')+'</button>'+
+      '<button class="al-btn" id="al-img"'+(list.length||n?'':' disabled')+'>📷 Descargar imagen'+(n?' ('+n+')':'')+'</button>';
+    $('al-all').onclick=()=>{list.forEach(a=>SEL.add(a.id));window.renderAlertas(true);};
+    $('al-none').onclick=()=>{SEL.clear();CMP=false;window.renderAlertas(true);};
+    $('al-cmp').onclick=()=>{CMP=true;window.renderAlertas(true);const c=$('al-compare');if(c)c.scrollIntoView({behavior:'smooth',block:'start'});};
+    $('al-img').onclick=()=>{
+      const l=n?selected():list.slice(0,SHOW);
+      imgCards(l,'Alertas SyRA — '+(n?'selección':'vista actual')+' ('+l.length+')','alertas-syra-'+stamp());
+    };
+  }
+  function compare(){
+    const el=$('al-compare'); if(!el) return;
+    const L=selected();
+    if(!CMP||L.length<2){ el.innerHTML=''; return; }
+    const abx=[...new Set(L.flatMap(a=>a.perfil.map(p=>p[0])))].sort((a,b)=>abxLbl(a).localeCompare(abxLbl(b)));
+    const maps=L.map(a=>Object.fromEntries(a.perfil));
+    const head=L.map(a=>'<th>'+esc(a.m)+'<small>'+esc(hplain(a.h))+'</small><small>Sem '+esc(a.sem.slice(5))+' · '+dRange(a.ini)+'</small></th>').join('');
+    const sum=(lab,f)=>'<tr class="sum"><td>'+lab+'</td>'+L.map(a=>'<td>'+f(a)+'</td>').join('')+'</tr>';
+    let rows=sum('Pacientes',a=>a.n)+sum('Servicios',a=>(a.svc||[]).map(x=>esc(x[0])+' ('+x[1]+')').join('<br>')||'—')+
+      sum('Cultivos',a=>(a.cul||[]).map(x=>esc(x[0])+' ('+x[1]+')').join('<br>')||'—')+
+      sum('R / I / total',a=>a.nR+' / '+a.nI+' / '+a.nT)+sum('Frecuencia del perfil',a=>a.fr+'%');
+    let nd=0;
+    abx.forEach(ab=>{
+      const vals=maps.map(m=>m[ab]||''), set=new Set(vals.filter(Boolean));
+      const diff=set.size>1||vals.some(v=>!v);
+      if(diff) nd++;
+      rows+='<tr'+(diff?' class="diff"':'')+'><td>'+esc(abxLbl(ab))+'</td>'+vals.map(v=>'<td>'+(v?'<span class="c al-'+v+'">'+v+'</span>':'<span class="no">—</span>')+'</td>').join('')+'</tr>';
+    });
+    el.innerHTML='<div class="ccard"><div class="al-cmp-h"><h2>⇄ Comparación de '+L.length+' alertas</h2>'+
+      '<span class="al-hint">Las filas con borde naranja son antibióticos donde difieren (o no se probó en alguna). '+nd+' de '+abx.length+' difieren.</span>'+
+      '<button class="al-btn" id="al-cmp-img">📷 Descargar imagen</button><button class="al-btn" id="al-cmp-x">✕ Cerrar</button></div>'+
+      '<div class="al-cmp" id="al-cmp-tbl"><table><thead><tr><th>Antibiótico</th>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    $('al-cmp-x').onclick=()=>{CMP=false;window.renderAlertas(true);};
+    $('al-cmp-img').onclick=()=>toImage($('al-cmp-tbl'),'Comparación de alertas SyRA ('+L.length+')','comparacion-alertas-syra-'+stamp());
+  }
+  function wire(){
+    const L=$('al-list'); if(!L||L._w) return; L._w=true;
+    L.addEventListener('click',e=>{
+      const c=e.target.closest('.al-card'); if(!c) return;
+      const id=c.dataset.id;
+      if(e.target.closest('[data-cam]')){ e.stopPropagation(); const a=load().find(x=>x.id===id); if(a) imgCards([a],'Alerta SyRA — '+a.m,'alerta-syra-'+a.sem+'-'+stamp()); return; }
+      if(e.target.closest('[data-tog]')){ c.classList.toggle('open'); return; }
+      if(e.target.classList.contains('al-ck')){ e.target.checked?SEL.add(id):SEL.delete(id); c.classList.toggle('sel',e.target.checked); if(SEL.size<2) CMP=false; updateBar(filtered()); compare(); }
+    });
+  }
+  window.renderAlertas=function(keep){
+    wire();
+    const tot=load();
+    for(const id of [...SEL]) if(!tot.some(a=>a.id===id)) SEL.delete(id);
+    buildFilters();
+    const list=filtered();
     const sems=new Set(list.map(a=>a.sem)), pac=list.reduce((s,a)=>s+a.n,0);
     $('al-kpis').innerHTML=
       '<div class="al-kpi red"><b>'+list.length+'</b><span>alertas (filtro actual)</span></div>'+
       '<div class="al-kpi"><b>'+pac+'</b><span>pacientes involucrados</span></div>'+
       '<div class="al-kpi"><b>'+sems.size+'</b><span>semanas con alertas</span></div>'+
       '<div class="al-kpi"><b>'+recent().length+'</b><span>en las últimas 2 semanas</span></div>';
-    chart(list);
-    const L=$('al-list');
-    if(!tot.length){ L.innerHTML='<div class="al-empty">Aún no hay alertas en <code>dashboard_data.json</code>.<br>Vuelve a correr <code>procesar_excel_v2.py</code> con la versión nueva y sube el JSON.</div>'; return; }
-    if(!list.length){ L.innerHTML='<div class="al-empty">Ninguna alerta con estos filtros.</div>'; return; }
-    L.innerHTML=list.slice(0,SHOW).map(card).join('')+(list.length>SHOW?'<button class="al-more" id="al-more">Mostrar más ('+(list.length-SHOW)+' restantes)</button>':'');
+    chart(list); updateBar(list); compare();
+    const Li=$('al-list');
+    if(!tot.length){ Li.innerHTML='<div class="al-empty">Aún no hay alertas en <code>dashboard_data.json</code>.<br>Vuelve a correr <code>procesar_excel_v2.py</code> con la versión nueva y sube el JSON.</div>'; return; }
+    if(!list.length){ Li.innerHTML='<div class="al-empty">Ninguna alerta con estos filtros.</div>'; return; }
+    Li.innerHTML=list.slice(0,SHOW).map(card).join('')+(list.length>SHOW?'<button class="al-btn al-more" id="al-more">Mostrar más ('+(list.length-SHOW)+' restantes)</button>':'');
     const mb=$('al-more'); if(mb) mb.onclick=()=>{SHOW+=40;window.renderAlertas(true);};
   };
 })();
