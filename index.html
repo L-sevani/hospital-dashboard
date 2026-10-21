@@ -463,6 +463,20 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
 .fq-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;}
 @media(max-width:1000px){.fq-grid{grid-template-columns:minmax(0,1fr);}}
 .fq-grid .ccard{min-width:0;}
+
+/* gráficas responsivas */
+.cz-tools{display:inline-flex;align-items:center;gap:8px;font-size:.7rem;color:#8a93a3;white-space:nowrap;}
+.cz-reset{border:1px solid #d5dae3;background:#fff;color:#555;border-radius:6px;padding:3px 9px;cursor:pointer;font-size:.7rem;font-family:inherit;}
+.cz-reset:hover{background:#f4f6f9;}
+.cz-scroll{overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#c3c9d4 transparent;}
+.cz-scroll::-webkit-scrollbar{height:9px;}.cz-scroll::-webkit-scrollbar-thumb{background:#c3c9d4;border-radius:8px;}
+.cz-y{background:rgba(255,255,255,.95);z-index:4;}
+.ck-ax{fill:#64748b;font:500 11px 'DM Sans',Arial,sans-serif;}
+.ck-line{min-width:0;}
+@media(max-width:900px){
+  div[style*="grid-template-columns:1fr 1fr"],div[style*="grid-template-columns:1.4fr 1fr"]{grid-template-columns:minmax(0,1fr) !important;}
+  .adv-groups-grid{grid-template-columns:minmax(0,1fr);}
+}
 </style>
 </head>
 <body class="sy-locked">
@@ -1665,6 +1679,77 @@ function _truncNombre(txt, maxChars){
   maxChars=Math.max(4,maxChars||20);
   return txt.length>maxChars ? txt.slice(0,maxChars-1)+'…' : txt;
 }
+/* ═══ Gráficas responsivas (ancho real de la tarjeta · zoom con la rueda · barra de desplazamiento · eje Y fijo) ═══ */
+const _CZ={};
+function _czReg(cid,fn){ const s=_CZ[cid]||(_CZ[cid]={z:1}); if(!s.busy) s.z=1; s.fn=fn; }
+function _czZ(cid){ return (_CZ[cid]&&_CZ[cid].z)||1; }
+function _czAvail(el,isMobile,sidePad){
+  const w=el&&el.clientWidth;
+  return Math.max(isMobile?240:320, w>60 ? w-52 : (window.innerWidth||1200)-sidePad);
+}
+function _czRerender(cid){ const s=_CZ[cid]; if(!s||!s.fn) return; s.busy=true; try{ s.fn(); } finally { s.busy=false; } }
+function _czBind(el,cid){
+  const s=_CZ[cid]; if(!s||!el) return;
+  const sc=el.querySelector('.cz-scroll'); if(!sc) return;
+  const lbl=el.querySelector('.cz-lbl'), btn=el.querySelector('.cz-reset');
+  if(lbl) lbl.textContent=Math.round(s.z*100)+'%';
+  const fixY=()=>{ const x=sc.scrollLeft; sc.querySelectorAll('.cz-y').forEach(d=>{ d.style.transform=x>1?'translate('+x+'px,-50%)':'translateY(-50%)'; }); };
+  if(sc.dataset.czb) return; sc.dataset.czb='1';
+  sc.addEventListener('scroll',fixY); fixY();
+  const apply=(z,keepX)=>{
+    const cap=sc.firstElementChild, ratio=cap?(sc.scrollLeft+keepX)/Math.max(1,cap.offsetWidth):0;
+    s.z=z; _czRerender(cid);
+    const nsc=el.querySelector('.cz-scroll');
+    if(nsc&&nsc.firstElementChild) nsc.scrollLeft=ratio*nsc.firstElementChild.offsetWidth-keepX;
+  };
+  sc.addEventListener('wheel',e=>{
+    if(e.ctrlKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)) return;     // gesto horizontal: desplazamiento normal
+    const zin=e.deltaY<0;
+    if(!zin && s.z<=1) return;                                       // nada que alejar: deja correr la página
+    e.preventDefault();
+    const rect=sc.getBoundingClientRect(), mx=e.clientX-rect.left;
+    s.pz=Math.min(10,Math.max(1,(s.pz||s.z)*Math.exp(-e.deltaY*0.0015))); s.pmx=mx;
+    if(!s.raf) s.raf=requestAnimationFrame(()=>{ s.raf=0; const z=s.pz; s.pz=0; apply(z,s.pmx); });
+  },{passive:false});
+  if(btn) btn.addEventListener('click',()=>{ s.z=1; _czRerender(cid); });
+  sc.addEventListener('dblclick',()=>{ if(s.z>1){ s.z=1; _czRerender(cid); } });
+}
+/* ── Gráficas de línea (SVG) dibujadas a tamaño real: texto y puntos nunca se estiran; zoom + desplazamiento ── */
+const _CKL={};
+function ckLine(cfg){
+  const id='ckl'+Math.random().toString(36).slice(2,8);
+  _CKL[id]=cfg; _CZ[id]={z:1,fn:()=>ckLineDraw(id)};
+  return `<div class="ck-line" id="${id}" data-pending="1"><div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:4px;"><span class="cz-tools"><span class="cz-lbl">100%</span><button type="button" class="cz-reset" title="Restablecer zoom (o doble clic en la gráfica)">Restablecer</button></span></div><div class="cz-scroll" style="width:100%;overflow-x:auto;overflow-y:hidden;"><div class="ck-cap"></div></div></div>`;
+}
+function ckLineDraw(id){
+  const el=document.getElementById(id), c=_CKL[id]; if(!el||!c) return;
+  const cap=el.querySelector('.ck-cap'), z=_czZ(id);
+  const n=Math.max(1,c.xLabels.length), H=c.H||180, padL=c.padL||40, padR=14, padT=12, padB=26;
+  const base=Math.max(el.clientWidth||560, n*(c.minPx||64)+padL+padR);
+  const W=Math.round(base*z), iw=W-padL-padR, ih=H-padT-padB;
+  const X=i=>padL+(n>1?i*iw/(n-1):iw/2), Y=v=>padT+ih*(1-v/(c.yMax||1));
+  const fmt=c.yFmt||(v=>String(v));
+  let g='';
+  (c.yTicks||[0,.25,.5,.75,1].map(f=>c.yMax*f)).forEach(v=>{ g+=`<line x1="${padL}" y1="${Y(v)}" x2="${W-padR}" y2="${Y(v)}" stroke="${v===0?'#cbd5e1':'#f1f5f9'}" stroke-width="1"/><text class="ck-ax" x="${padL-6}" y="${Y(v)+4}" text-anchor="end">${fmt(v)}</text>`; });
+  const every=Math.max(1,Math.ceil(n/Math.max(2,Math.floor(iw/54))));
+  const xl=c.xLabels.map((t,i)=>i%every===0?`<text class="ck-ax" x="${X(i)}" y="${H-8}" text-anchor="middle">${t}</text>`:'').join('');
+  let ln='';
+  c.series.forEach(s=>{
+    const pts=s.pts.map(p=>`${X(p.i)},${Y(p.v)}`).join(' ');
+    ln+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    s.pts.forEach(p=>{ ln+=`<circle data-tipid="${registerTip(p.tip)}" cx="${X(p.i)}" cy="${Y(p.v)}" r="4" fill="${s.color}" stroke="#fff" stroke-width="1.5" style="cursor:pointer;"/>`; });
+  });
+  cap.style.width=W+'px';
+  cap.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;" role="img">${g}${ln}${xl}</svg>`;
+  wireTips(cap);
+  const lb=el.querySelector('.cz-lbl'); if(lb) lb.textContent=Math.round(z*100)+'%';
+}
+(function(){
+  let q=0;
+  new MutationObserver(()=>{ if(q) return; q=requestAnimationFrame(()=>{ q=0;
+    document.querySelectorAll('.ck-line[data-pending]').forEach(e=>{ e.removeAttribute('data-pending'); ckLineDraw(e.id); _czBind(e,e.id); });
+  }); }).observe(document.documentElement,{childList:true,subtree:true});
+})();
 function _insertarBotonDescarga(el, cid, nombreArchivo){
   if(!el) return;
   const btnId='btn-desc-'+cid.replace(/[^A-Za-z0-9]/g,'-');
@@ -1672,7 +1757,9 @@ function _insertarBotonDescarga(el, cid, nombreArchivo){
   if(existente) existente.remove();
   // Barra normal (NO absoluta) arriba de la gráfica -- así nunca tapa las barras,
   // y al vivir fuera del div "${cid}__cap" tampoco sale en la imagen descargada.
-  el.insertAdjacentHTML('afterbegin',`<div style="display:flex;justify-content:flex-end;margin-bottom:6px;"><button id="${btnId}" class="btn-descargar-grafica" onclick="descargarGraficaImagen('${cid}','${nombreArchivo}')" title="Descargar esta gráfica completa como imagen" style="background:#154f39;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2);">⬇️ Descargar imagen</button></div>`);
+  const _zt=_CZ[cid]?`<span class="cz-tools"><span class="cz-lbl">100%</span><button type="button" class="cz-reset" title="Restablecer zoom (o doble clic en la gráfica)">Restablecer</button></span>`:'';
+  el.insertAdjacentHTML('afterbegin',`<div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">${_zt}<button id="${btnId}" class="btn-descargar-grafica" onclick="descargarGraficaImagen('${cid}','${nombreArchivo}')" title="Descargar esta gráfica completa como imagen" style="background:#154f39;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:.68rem;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2);">⬇️ Descargar imagen</button></div>`);
+  _czBind(el,cid);
 }
 // Busca el título de la gráfica: en las 7 pestañas, el contenedor de la gráfica
 // siempre está justo después de su <h2>/título en el mismo card -- así que se
@@ -1705,7 +1792,10 @@ async function descargarGraficaImagen(cid, nombreArchivo){
   // Captura el div interno de ancho COMPLETO (id "${cid}__cap"), no el contenedor
   // visible recortado por scroll -- así la imagen sale entera, con todos los nombres,
   // sin importar cuánto se haya scrolleado en pantalla.
+  const _zs=_CZ[cid]; let _prevZ=1;
+  if(_zs&&_zs.z>1){ _prevZ=_zs.z; _zs.z=1; _czRerender(cid); }          // la imagen siempre sale al 100 %
   const capEl=document.getElementById(cid+'__cap') || document.getElementById(cid);
+  if(capEl) capEl.querySelectorAll('.cz-y').forEach(d=>{ d.style.transform='translateY(-50%)'; });
   if(!capEl || typeof html2canvas==='undefined'){
     alert('No se pudo generar la imagen (falta conexión a internet para cargar la librería de descarga).');
     return;
@@ -1736,13 +1826,16 @@ async function descargarGraficaImagen(cid, nombreArchivo){
     link.download=(nombreArchivo||'grafica')+'.png';
     link.href=finalCanvas.toDataURL('image/png');
     link.click();
+    if(_prevZ>1&&_zs){ _zs.z=_prevZ; _czRerender(cid); }
   }catch(e){
+    if(_prevZ>1&&_zs){ _zs.z=_prevZ; _czRerender(cid); }
     alert('No se pudo generar la imagen. Intenta de nuevo.');
   }
 }
 
 function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   const el=document.getElementById(cid); if(!el) return;
+  const _a=arguments; _czReg(cid,()=>buildSRIChart.apply(null,_a));
   if(!data1||!data1.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
   const P1=lbl1||fmtP(p1);
   const P2=lbl2||(p2?fmtP(p2):null);
@@ -1750,10 +1843,10 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   const pct=v=>(v*100).toFixed(1)+'%';
   const isMobile=(window.innerWidth||1200)<768;
   const sidePad=isMobile?32:96;
-  const availW=Math.max(isMobile?300:600,(window.innerWidth||1200)-sidePad);
+  const availW=_czAvail(el,isMobile,sidePad);
   const CH=isMobile?220:300, YW=isMobile?36:44, XLABELH=isMobile?120:155, PADTOP=12;
   const n=data1.length;
-  const SLOT=Math.max(isMobile?(hasCmp?28:20):(hasCmp?48:34),Math.min(isMobile?(hasCmp?70:55):(hasCmp?100:80),Math.floor(availW/n)));
+  const SLOT=Math.round(_czZ(cid)*Math.max(isMobile?(hasCmp?28:20):(hasCmp?48:34),Math.min(isMobile?(hasCmp?70:55):(hasCmp?100:80),Math.floor(availW/n))));
   const BW=hasCmp?Math.round(SLOT*0.43):Math.round(SLOT*0.72);
   const GAP2=4; // gap between pair
   const zoneW=hasCmp?BW*2+GAP2:BW;
@@ -1761,14 +1854,14 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   const totalW=YW+n*SLOT+slotPad;
   const totalH=PADTOP+CH+XLABELH;
 
-  let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
+  let h=`<div class="cz-scroll" style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
   h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
 
   // Y gridlines
   [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].forEach(t=>{
     const y=PADTOP+Math.round((1-t)*CH);
     h+=`<div style="position:absolute;left:${YW}px;right:0;top:${y}px;border-top:1px solid ${t===0?'#9ca3af':'#e5e7eb'};"></div>`;
-    h+=`<div style="position:absolute;left:0;width:${YW-4}px;top:${y}px;transform:translateY(-50%);text-align:right;padding-right:4px;color:#6b7280;">${t===1?'1':t.toFixed(1)}</div>`;
+    h+=`<div class="cz-y" style="position:absolute;left:0;width:${YW-4}px;top:${y}px;transform:translateY(-50%);text-align:right;padding-right:4px;color:#6b7280;">${t===1?'1':t.toFixed(1)}</div>`;
   });
 
   // Bars
@@ -1842,6 +1935,7 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
 // ── MULTI-HOSPITAL SRI CHART (N barras por antibiótico) ──
 function buildSRIMultiChart(datasets, cid){
   const el=document.getElementById(cid); if(!el) return;
+  const _a=arguments; _czReg(cid,()=>buildSRIMultiChart.apply(null,_a));
   if(!datasets||!datasets.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
   // Recopilar todos los antibióticos y ordenar por R promedio desc
   const abxMap=new Map();
@@ -1855,11 +1949,12 @@ function buildSRIMultiChart(datasets, cid){
   const pct=v=>(v*100).toFixed(1)+'%';
   const isMobile=(window.innerWidth||1200)<768;
   const sidePad=isMobile?32:96;
-  const availW=Math.max(isMobile?300:600,(window.innerWidth||1200)-sidePad);
+  const availW=_czAvail(el,isMobile,sidePad);
   const CH=isMobile?220:300, YW=isMobile?36:44, XLABELH=isMobile?120:155, PADTOP=12;
   const n=allAbx.length;
-  const BW=Math.max(12,Math.min(22,Math.floor((availW-YW)/Math.max(n,1)/N*0.65)));
-  const GAP_BAR=2, GAP_GROUP=10;
+  const _Z=_czZ(cid);
+  const BW=Math.round(_Z*Math.max(12,Math.min(22,Math.floor((availW-YW)/Math.max(n,1)/N*0.65))));
+  const GAP_BAR=2, GAP_GROUP=Math.round(10*_Z);
   const groupW=N*BW+(N-1)*GAP_BAR;
   const SLOT=groupW+GAP_GROUP;
   const slotPad=Math.round((SLOT-groupW)/2);
@@ -1867,12 +1962,12 @@ function buildSRIMultiChart(datasets, cid){
   const totalH=PADTOP+CH+XLABELH;
   const HCOLORS=['#1d4ed8','#15803d','#b45309'];
 
-  let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
+  let h=`<div class="cz-scroll" style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
   h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
   [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].forEach(t=>{
     const y=PADTOP+Math.round((1-t)*CH);
     h+=`<div style="position:absolute;left:${YW}px;right:0;top:${y}px;border-top:1px solid ${t===0?'#9ca3af':'#e5e7eb'};"></div>`;
-    h+=`<div style="position:absolute;left:0;width:${YW-4}px;top:${y}px;transform:translateY(-50%);text-align:right;padding-right:4px;color:#6b7280;">${t===1?'1':t.toFixed(1)}</div>`;
+    h+=`<div class="cz-y" style="position:absolute;left:0;width:${YW-4}px;top:${y}px;transform:translateY(-50%);text-align:right;padding-right:4px;color:#6b7280;">${t===1?'1':t.toFixed(1)}</div>`;
   });
 
   allAbx.forEach((meta,i)=>{
@@ -1947,23 +2042,25 @@ function buildSRIMultiChart(datasets, cid){
 // ── COMPACT CHART (comparación rápida entre hospitales) ──
 function buildSRICompactChart(data, cid){
   const el=document.getElementById(cid); if(!el) return;
+  const _a=arguments; _czReg(cid,()=>buildSRICompactChart.apply(null,_a));
   if(!data||!data.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
   const CH=180, YW=32, PADTOP=10, XLABELH=56;
   const n=data.length;
-  const SLOT=Math.max(72,Math.min(110,Math.floor(560/Math.max(n,1))));
+  const _cw=(el.clientWidth>60?el.clientWidth-44:560);
+  const SLOT=Math.round(_czZ(cid)*Math.max(72,Math.min(110,Math.floor(_cw/Math.max(n,1)))));
   const BW=Math.max(28,Math.round(SLOT*0.52));
   const slotPad=Math.round((SLOT-BW)/2);
   const totalW=YW+n*SLOT+slotPad;
   const totalH=PADTOP+CH+XLABELH;
   const pct=v=>v!=null?(v*100).toFixed(1)+'%':'–';
 
-  let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
+  let h=`<div class="cz-scroll" style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
   h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.66rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
 
   [0,.2,.4,.6,.8,1].forEach(t=>{
     const y=PADTOP+Math.round((1-t)*CH);
     h+=`<div style="position:absolute;left:${YW}px;right:0;top:${y}px;border-top:1px solid ${t===0?'#94a3b8':'#e5e7eb'};"></div>`;
-    h+=`<div style="position:absolute;left:0;width:${YW-4}px;top:${y}px;transform:translateY(-50%);text-align:right;padding-right:4px;color:#6b7280;">${t===1?'1':t.toFixed(1)}</div>`;
+    h+=`<div class="cz-y" style="position:absolute;left:0;width:${YW-4}px;top:${y}px;transform:translateY(-50%);text-align:right;padding-right:4px;color:#6b7280;">${t===1?'1':t.toFixed(1)}</div>`;
   });
 
   data.forEach((d,i)=>{
@@ -2005,6 +2102,7 @@ function buildSRICompactChart(data, cid){
 // ── VERTICAL STACKED CHART (frecuencias) ──
 function buildFreqChart(data, cid, opts){
   const el=document.getElementById(cid); if(!el) return;
+  const _a=arguments; _czReg(cid,()=>buildFreqChart.apply(null,_a));
   if(!data||!data.order||!data.order.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
 
   const stackCount={};
@@ -2024,22 +2122,22 @@ function buildFreqChart(data, cid, opts){
 
   const isMobile=(window.innerWidth||1200)<768;
   const sidePad=isMobile?32:96;
-  const availW=(opts&&opts.availW)||Math.max(isMobile?300:600,(window.innerWidth||1200)-sidePad);
+  const availW=(opts&&opts.availW)||_czAvail(el,isMobile,sidePad);
   const CH=isMobile?220:300, YW=isMobile?36:44, XLABELH=isMobile?120:155, PADTOP=12;
   const n=data.order.length;
-  const SLOT=Math.max((opts&&opts.minSlot)||(isMobile?26:48),Math.min(isMobile?70:110,Math.floor(availW/n)));
+  const SLOT=Math.round(_czZ(cid)*Math.max((opts&&opts.minSlot)||(isMobile?26:48),Math.min(isMobile?70:110,Math.floor(availW/n))));
   const BW=Math.round(SLOT*0.70);
   const slotPad=Math.round((SLOT-BW)/2);
   const totalW=YW+n*SLOT+slotPad;
   const totalH=PADTOP+CH+XLABELH;
 
-  let h=`<div style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
+  let h=`<div class="cz-scroll" style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
   h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;overflow:hidden;clip-path:inset(0);">`;
 
   ticks.forEach(t=>{
     const y=PADTOP+Math.round((1-t/niceMax)*CH);
     h+=`<div style="position:absolute;left:${YW}px;right:0;top:${y}px;border-top:1px solid ${t===0?'#9ca3af':'#e5e7eb'};"></div>`;
-    h+=`<div style="position:absolute;left:0;width:${YW-4}px;top:${y}px;transform:translateY(-50%);text-align:right;padding-right:4px;color:#6b7280;">${t}</div>`;
+    h+=`<div class="cz-y" style="position:absolute;left:0;width:${YW-4}px;top:${y}px;transform:translateY(-50%);text-align:right;padding-right:4px;color:#6b7280;">${t}</div>`;
   });
 
   data.order.forEach((row,i)=>{
@@ -5461,29 +5559,15 @@ function renderConsumoDDD(){
       }).filter(s=>s.pts.length>1);
 
       if(seriesPorEsp.length){
-        const W=560,H=180,padL=32,padB=20,padT=10,padR=10;
         const maxVal=Math.max(...seriesPorEsp.flatMap(s=>s.pts.map(p=>p.v)),1);
         const xIndex={}; mesesDisponibles.forEach((m,i)=>{xIndex[m]=i;});
-        const xStep=mesesDisponibles.length>1?(W-padL-padR)/(mesesDisponibles.length-1):0;
-        const yScale=v=>padT+(H-padT-padB)*(1-v/maxVal);
-        const gridLines=[0,0.25,0.5,0.75,1].map(f=>{
-          const v=Math.round(maxVal*f);
-          return `<line x1="${padL}" y1="${yScale(v)}" x2="${W-padR}" y2="${yScale(v)}" stroke="#f1f5f9" stroke-width="1"/><text x="${padL-4}" y="${yScale(v)+3}" text-anchor="end" font-size="8" fill="#cbd5e1">${v}</text>`;
-        }).join('');
-        const xLabels=mesesDisponibles.map((m,i)=>`<text x="${padL+i*xStep}" y="${H-4}" text-anchor="middle" font-size="9" fill="#94a3b8">${MESES_ABBR[m.slice(5)]}</text>`).join('');
-        const linesHtml=seriesPorEsp.map(s=>{
-          const pts=s.pts.map(p=>`${padL+xIndex[p.m]*xStep},${yScale(p.v)}`).join(' ');
-          const circles=s.pts.map(p=>{
-            const tid=registerTip(`<div style="font-weight:700;">${s.nombre}</div><div>${p.m}: ${p.v.toLocaleString('es-MX',{maximumFractionDigits:1})} DDD/100 días pac. (estimado)</div>`);
-            return `<circle data-tipid="${tid}" cx="${padL+xIndex[p.m]*xStep}" cy="${yScale(p.v)}" r="3.5" fill="${s.color}" style="cursor:pointer;"/>`;
-          }).join('');
-          return `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>${circles}`;
-        }).join('');
+        const chartSvg=ckLine({H:180,minPx:64,xLabels:mesesDisponibles.map(m=>MESES_ABBR[m.slice(5)]),yMax:maxVal,yTicks:[0,0.25,0.5,0.75,1].map(f=>Math.round(maxVal*f)),
+          series:seriesPorEsp.map(s=>({name:s.nombre,color:s.color,pts:s.pts.map(p=>({i:xIndex[p.m],v:p.v,tip:`<div style="font-weight:700;">${s.nombre}</div><div>${p.m}: ${p.v.toLocaleString('es-MX',{maximumFractionDigits:1})} DDD/100 días pac. (estimado)</div>`}))}))});
         const legend=seriesPorEsp.map(s=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${s.color};display:inline-block;"></span>${s.nombre}</div>`).join('');
         tendenciaEspecialidadHtml=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:16px 18px;">
           <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📈 Tendencia DDD/100 días paciente por especialidad <span style="font-size:.62rem;font-weight:700;color:#92400e;background:#fef3c7;padding:2px 8px;border-radius:10px;">ESTIMACIÓN DERIVADA</span></div>
           <div style="font-size:.68rem;color:#94a3b8;margin-bottom:8px;line-height:1.5;">Es estimación porque CONSABI nunca desglosa el DDD por especialidad (solo por hospital completo) — cada punto de la línea se calcula mes por mes con el factor DDD÷pieza de ese mes. Se pide un mínimo de 2 meses (no los 7 completos) porque una línea necesita al menos 2 puntos para dibujarse, y exigir el 100% de los meses descartaría especialidades válidas solo por perder un mes puntual (ej. un antibiótico sin match ese mes) — los meses sin cruce simplemente quedan como hueco en la línea, no invalidan los demás.${seriesPorEsp.length<5?` Esta unidad solo tiene ${seriesPorEsp.length} especialidad(es) con cruce suficiente.`:''}</div>
-          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:160px;display:block;">${gridLines}${linesHtml}${xLabels}</svg>
+          ${chartSvg}
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">${legend}</div>
         </div>`;
       }
@@ -5557,25 +5641,14 @@ function renderConsumoDDD(){
     gruposPorPeriodo.forEach(({g})=>Object.entries(g).forEach(([k,v])=>{totalesPorGrupo[k]=(totalesPorGrupo[k]||0)+v;}));
     const topGrupos=Object.entries(totalesPorGrupo).sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]);
     const maxVal=Math.max(...gruposPorPeriodo.flatMap(({g})=>topGrupos.map(k=>g[k]||0)),1);
-    const W=560,H=180,padL=34,padB=22,padT=10,padR=10;
-    const xStep=periodosConConsumo.length>1?(W-padL-padR)/(periodosConConsumo.length-1):0;
-    const yScale=v=>padT+(H-padT-padB)*(1-v/maxVal);
-    const linesHtml=topGrupos.map((grp,gi)=>{
-      const color=GRUPO_COLORS[grp]||PALETTE[gi]||'#94a3b8';
-      const pts=gruposPorPeriodo.map((d,i)=>`${padL+i*xStep},${yScale(d.g[grp]||0)}`).join(' ');
-      const circles=gruposPorPeriodo.map((d,i)=>{
-        const x=padL+i*xStep,y=yScale(d.g[grp]||0);
-        const tid=registerTip(`<div style="font-weight:700;">${grp}</div><div>${d.p}: ${(d.g[grp]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD</div>`);
-        return `<circle data-tipid="${tid}" cx="${x}" cy="${y}" r="3.5" fill="${color}" style="cursor:pointer;"/>`;
-      }).join('');
-      return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2"/>${circles}`;
-    }).join('');
-    const xLabels=periodosConConsumo.map((p,i)=>`<text x="${padL+i*xStep}" y="${H-4}" text-anchor="middle" font-size="9" fill="#94a3b8">${MESES_ABBR[p.slice(5)]}</text>`).join('');
+    const chartSvgTraz=ckLine({H:180,minPx:64,xLabels:periodosConConsumo.map(p=>MESES_ABBR[p.slice(5)]),yMax:maxVal,yTicks:[0,0.25,0.5,0.75,1].map(f=>Math.round(maxVal*f)),
+      series:topGrupos.map((grp,gi)=>({name:grp,color:GRUPO_COLORS[grp]||PALETTE[gi]||'#94a3b8',
+        pts:gruposPorPeriodo.map((d,i)=>({i,v:d.g[grp]||0,tip:`<div style="font-weight:700;">${grp}</div><div>${d.p}: ${(d.g[grp]||0).toLocaleString('es-MX',{maximumFractionDigits:1})} DDD</div>`}))}))});
     const legendTraz=topGrupos.map((g,gi)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${GRUPO_COLORS[g]||PALETTE[gi]};display:inline-block;"></span>${g}</div>`).join('');
     trazadoresHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📉 Tendencia de grupos trazadores</div>
       <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">ΣDDD por grupo farmacológico, mes a mes (top 5 grupos) — solo meses con CONSABI cargado</div>
-      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:160px;display:block;">${linesHtml}${xLabels}</svg>
+      ${chartSvgTraz}
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">${legendTraz}</div>
     </div>`;
   } else {
@@ -6027,20 +6100,8 @@ function renderCobertura(){
       return {abx,pts,color:PALETTE[ai%PALETTE.length]};
     }).filter(s=>s.pts.length>1);
     if(seriesPorAbx.length){
-      const W=560,H=170,padL=30,padB=20,padT=10,padR=10;
-      const xStep=años.length>1?(W-padL-padR)/(años.length-1):0;
-      const xIndex={}; años.forEach((y,i)=>{xIndex[y]=i;});
-      const yScale=v=>padT+(H-padT-padB)*(1-v/100);
-      const gridLines=[0,25,50,75,100].map(v=>`<line x1="${padL}" y1="${yScale(v)}" x2="${W-padR}" y2="${yScale(v)}" stroke="#f1f5f9" stroke-width="1"/><text x="${padL-4}" y="${yScale(v)+3}" text-anchor="end" font-size="8" fill="#cbd5e1">${v}</text>`).join('');
-      const xLabels=años.map((y,i)=>`<text x="${padL+i*xStep}" y="${H-4}" text-anchor="middle" font-size="9" fill="#94a3b8">${y}</text>`).join('');
-      const linesHtml=seriesPorAbx.map(s=>{
-        const pts=s.pts.map(p=>`${padL+xIndex[p.y]*xStep},${yScale(p.pct)}`).join(' ');
-        const circles=s.pts.map(p=>{
-          const tid=registerTip(`<div style="font-weight:700;">${s.abx}</div><div>${p.y}: ${p.pct}% S (n=${p.n})</div>`);
-          return `<circle data-tipid="${tid}" cx="${padL+xIndex[p.y]*xStep}" cy="${yScale(p.pct)}" r="3.5" fill="${s.color}" style="cursor:pointer;"/>`;
-        }).join('');
-        return `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>${circles}`;
-      }).join('');
+      const chartSvgSens=ckLine({H:180,minPx:64,xLabels:años.map(y=>String(y)),yMax:100,yTicks:[0,25,50,75,100],yFmt:v=>v+'%',
+        series:seriesPorAbx.map(s=>({name:s.abx,color:s.color,pts:s.pts.map(p=>({i:años.indexOf(p.y),v:p.pct,tip:`<div style="font-weight:700;">${s.abx}</div><div>${p.y}: ${p.pct}% S (n=${p.n})</div>`}))}))});
       const legendTrend=seriesPorAbx.map(s=>{
         const rowMeta=sriCultivo.find(r=>r.a===s.abx);
         return `<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${s.color};display:inline-block;"></span>${awareBadge(rowMeta?rowMeta.c:'?')}${s.abx}</div>`;
@@ -6048,7 +6109,7 @@ function renderCobertura(){
       trendSensHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📈 Tendencia de sensibilidad · ${_coberturaCultivo}</div>
         <div style="font-size:.66rem;color:#94a3b8;margin-bottom:8px;">%S por año, un antibiótico seleccionado = una línea</div>
-        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:170px;display:block;">${gridLines}${linesHtml}${xLabels}</svg>
+        ${chartSvgSens}
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">${legendTrend}</div>
       </div>`;
     }
@@ -6082,10 +6143,10 @@ function renderCobertura(){
       // Escala real del eje Y (antes solo era relativa sin números)
       const yTicks=[1,0.75,0.5,0.25,0].map(f=>({val:maxDdd*f,bottom:8+f*80}));
       const yAxisHtml=yTicks.map(t=>`<div style="position:absolute;left:-6px;bottom:${t.bottom}%;transform:translate(-100%,50%);font-size:.6rem;color:#94a3b8;white-space:nowrap;">${t.val.toLocaleString('es-MX',{maximumFractionDigits:0})}</div><div style="position:absolute;left:0;right:0;bottom:${t.bottom}%;border-top:1px dashed #f1f5f9;"></div>`).join('');
-      bubbleHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px 8px;">
+      bubbleHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px 8px;overflow-x:auto;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🎯 Consumo vs. Sensibilidad · ${_coberturaCultivo}</div>
         <div style="font-size:.7rem;color:#94a3b8;margin-bottom:4px;">Cada burbuja es un antibiótico. <b>Eje X</b> = % de sensibilidad en antibiograma (todos los períodos). <b>Eje Y y tamaño</b> = ΣDDD consumido en ${ultimoPeriodo} (mismo dato, dos veces, para que se note más el consumo alto). Pasa el cursor sobre una burbuja para ver el detalle.</div>
-        <div style="position:relative;height:280px;margin-left:34px;background:linear-gradient(90deg,#fef2f2 0%,#fef2f2 60%,#fffbeb 60%,#fffbeb 80%,#f0fdf4 80%,#f0fdf4 100%);border-radius:10px;border:1px solid #e2e8f0;margin-bottom:6px;">
+        <div style="position:relative;height:280px;min-width:460px;margin-left:34px;background:linear-gradient(90deg,#fef2f2 0%,#fef2f2 60%,#fffbeb 60%,#fffbeb 80%,#f0fdf4 80%,#f0fdf4 100%);border-radius:10px;border:1px solid #e2e8f0;margin-bottom:6px;">
           ${yAxisHtml}
           <div style="position:absolute;top:6px;left:2%;font-size:.62rem;font-weight:700;color:#991b1b;">FUERA DEL ESQUEMA EMPÍRICO</div>
           <div style="position:absolute;top:6px;left:62%;font-size:.62rem;font-weight:700;color:#92400e;">SÓLO DIRIGIDO</div>
@@ -10785,17 +10846,30 @@ if (window.__sakuraWanted) window.sakuraStart();
     if(!window.__alDdBound){ window.__alDdBound=true; document.addEventListener('click',()=>document.querySelectorAll('.al-dd.open').forEach(x=>x.classList.remove('open'))); }
     draw(''); lab(); return w;
   }
+  let _alList=[];
   function chart(list){
     const el=$('al-chart'); if(!el) return;
-    if(!list.length){ el.innerHTML='<div class="al-hint">Sin datos para graficar.</div>'; return; }
+    _alList=list;
+    if(!el.dataset.init){
+      el.dataset.init='1';
+      el.innerHTML='<div style="display:flex;justify-content:flex-end;margin-bottom:4px;"><span class="cz-tools"><span class="cz-lbl">100%</span><button type="button" class="cz-reset" title="Restablecer zoom (o doble clic en la gráfica)">Restablecer</button></span></div>'+
+        '<div class="cz-scroll" style="width:100%;overflow-x:auto;overflow-y:hidden;"><div class="ck-cap"></div></div><div class="al-leg"><span><i style="background:#2f8f74"></i>Semanas anteriores</span><span><i style="background:#dc2626"></i>Últimas 2 semanas de datos</span><span class="al-hint">Rueda del mouse = zoom · doble clic = restablecer</span></div>';
+      _CZ['al-chart']={z:1,fn:drawChart};
+      _czBind(el,'al-chart');
+    }
+    drawChart();
+  }
+  function drawChart(){
+    const el=$('al-chart'); if(!el) return;
+    const cap=el.querySelector('.ck-cap'), list=_alList, z=_czZ('al-chart');
+    if(!list.length){ cap.style.width='100%'; cap.innerHTML='<div class="al-hint" style="padding:20px 0;">Sin datos para graficar.</div>'; return; }
     const by={}; list.forEach(a=>{by[a.ini]=(by[a.ini]||0)+1;});
     const ks=Object.keys(by).sort(), t0=new Date(ks[0]+'T12:00:00').getTime(), t1=new Date(ks[ks.length-1]+'T12:00:00').getTime();
     const N=Math.round((t1-t0)/(7*864e5))+1, mx=Math.max(...Object.values(by));
-    const W=Math.max(320,Math.floor(el.clientWidth||el.parentElement.clientWidth||900)), H=190, pl=34, pr=8, pt=10, pb=30;
-    const iw=W-pl-pr, ih=H-pt-pb, bw=iw/N;
-    // eje Y con valores enteros "bonitos"
+    const H=190, pl=34, pr=8, pt=10, pb=30;
+    const W=Math.round(Math.max(320,Math.floor(el.clientWidth||900), N*9+pl+pr)*z), iw=W-pl-pr, ih=H-pt-pb, bw=iw/N;
     const step=mx<=5?1:mx<=10?2:mx<=25?5:mx<=60?10:Math.ceil(mx/5/10)*10, top=Math.ceil(mx/step)*step;
-    let s='<svg class="al-svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Alertas por semana epidemiológica">';
+    let s='<svg class="al-svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" style="display:block;max-width:none;" role="img" aria-label="Alertas por semana epidemiológica">';
     for(let v=0;v<=top;v+=step){ const y=pt+ih-ih*v/top;
       s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="'+(v?'#e5ece8':'#9fb3aa')+'"/><text class="al-ax" x="'+(pl-6)+'" y="'+(y+4)+'" text-anchor="end">'+v+'</text>'; }
     const rc=new Set(recent().map(a=>a.ini)), every=Math.max(1,Math.ceil(N/Math.max(2,Math.floor(iw/62))));
@@ -10804,7 +10878,8 @@ if (window.__sakuraWanted) window.sakuraStart();
       if(v) s+='<rect x="'+(x+(bw-w)/2).toFixed(1)+'" y="'+(pt+ih-h).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="'+Math.min(3,w/2).toFixed(1)+'" fill="'+(rc.has(d)?'#dc2626':'#2f8f74')+'"><title>'+dRange(d)+': '+v+' alerta(s)</title></rect>';
       if(i%every===0){ const dd=new Date(d+'T12:00:00'); s+='<text class="al-ax" x="'+(x+bw/2).toFixed(1)+'" y="'+(H-10)+'" text-anchor="middle">'+dd.getDate()+' '+MESES[dd.getMonth()]+' '+String(dd.getFullYear()).slice(2)+'</text>'; }
     }
-    el.innerHTML=s+'</svg><div class="al-leg"><span><i style="background:#2f8f74"></i>Semanas anteriores</span><span><i style="background:#dc2626"></i>Últimas 2 semanas de datos</span></div>';
+    cap.style.width=W+'px'; cap.innerHTML=s+'</svg>';
+    const lb=el.querySelector('.cz-lbl'); if(lb) lb.textContent=Math.round(z*100)+'%';
   }
   let _rz; window.addEventListener('resize',()=>{ clearTimeout(_rz); _rz=setTimeout(()=>{ const sec=$('sec-alertas'); if(sec&&sec.classList.contains('active')) chart(filtered()); },150); });
   function card(a){
