@@ -393,7 +393,24 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
 .al-kpi b{display:block;font-size:1.4rem;font-weight:800;color:var(--imss-d);line-height:1.1;}
 .al-kpi span{font-size:.68rem;color:#64748b;font-weight:600;}
 .al-kpi.red b{color:#b91c1c;}
-#sec-alertas .ccard svg{width:100%;height:150px;display:block;}
+.al-fbox{position:relative;z-index:200;}
+#sec-alertas .al-svg{display:block;width:100%;height:auto;max-width:100%;}
+.al-ax{fill:#64748b;font:500 11px 'DM Sans',Arial,sans-serif;}
+.al-leg{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;font-size:.7rem;color:#64748b;font-weight:600;}
+.al-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.al-sel-l{display:block;font-size:.64rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
+.al-dd{position:relative;}
+.al-dd-b{display:flex;justify-content:space-between;align-items:center;gap:10px;min-width:190px;max-width:260px;padding:8px 12px !important;cursor:pointer;text-align:left;}
+.al-dd-b .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.al-dd-p{display:none;position:absolute;top:100%;left:0;margin-top:4px;z-index:400;background:#fff;border:1px solid #cfe3d8;border-radius:12px;padding:8px;min-width:260px;max-width:340px;box-shadow:0 14px 30px -12px rgba(0,50,40,.35);}
+.al-dd.open .al-dd-p{display:block;animation:syDrop .18s both;}
+.al-dd-s{width:100%;box-sizing:border-box;padding:7px 10px;margin-bottom:6px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:.78rem;}
+.al-dd-a{display:flex;justify-content:space-between;padding:2px 4px 6px;font-size:.7rem;}
+.al-dd-a a{color:var(--imss);font-weight:700;cursor:pointer;}
+.al-dd-l{max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:1px;}
+.al-dd-i{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:7px;cursor:pointer;font-size:.76rem;color:#374151;text-transform:none;letter-spacing:0;font-weight:500;}
+.al-dd-i:hover{background:#eef6f1;}
+.al-dd-i input{accent-color:var(--imss);width:15px;height:15px;margin:0;}
 .al-bar{position:sticky;top:0;z-index:60;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 24px -16px rgba(0,50,40,.4);}
 .al-bar .al-count{font-size:.78rem;font-weight:700;color:var(--imss-d);margin-right:auto;}
 .al-btn{padding:8px 15px;border-radius:999px;border:1px solid var(--line);background:#fff;color:#374151;font:inherit;font-size:.76rem;font-weight:600;cursor:pointer;transition:background .2s,color .2s,border-color .2s,transform .2s,box-shadow .2s;}
@@ -442,6 +459,10 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
 .al-cmp-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
 .al-cmp-h h2{margin:0 !important;margin-right:auto !important;}
 @media(max-width:700px){#sec-alertas{padding:16px;}#banner-alertas{padding:8px 16px;}.al-lbl{min-width:100%;}}
+
+.fq-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;}
+@media(max-width:1000px){.fq-grid{grid-template-columns:minmax(0,1fr);}}
+.fq-grid .ccard{min-width:0;}
 </style>
 </head>
 <body class="sy-locked">
@@ -1982,16 +2003,16 @@ function buildSRICompactChart(data, cid){
 }
 
 // ── VERTICAL STACKED CHART (frecuencias) ──
-function buildFreqChart(data, cid){
+function buildFreqChart(data, cid, opts){
   const el=document.getElementById(cid); if(!el) return;
   if(!data||!data.order||!data.order.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
 
   const stackCount={};
   data.order.forEach(row=>Object.entries(data.stacks[row]||{}).forEach(([col,n])=>{stackCount[col]=(stackCount[col]||0)+n;}));
   const stackKeys=Object.keys(stackCount).sort((a,b)=>stackCount[b]-stackCount[a]);
-  const cmap={}; stackKeys.forEach((k,i)=>{cmap[k]=PALETTE[i%PALETTE.length];});
+  const cmap=(opts&&opts.cmap)||{}; if(!(opts&&opts.cmap)) stackKeys.forEach((k,i)=>{cmap[k]=PALETTE[i%PALETTE.length];});
 
-  const maxVal=Math.max(...data.order.map(r=>data.totals[r]||0),1);
+  const maxVal=Math.max(...data.order.map(r=>data.totals[r]||0),1,(opts&&opts.maxVal)||0);
   const targetTickCount=7;
   const roughStep=maxVal/targetTickCount;
   const magnitude=Math.pow(10,Math.floor(Math.log10(Math.max(roughStep,1))));
@@ -2003,10 +2024,10 @@ function buildFreqChart(data, cid){
 
   const isMobile=(window.innerWidth||1200)<768;
   const sidePad=isMobile?32:96;
-  const availW=Math.max(isMobile?300:600,(window.innerWidth||1200)-sidePad);
+  const availW=(opts&&opts.availW)||Math.max(isMobile?300:600,(window.innerWidth||1200)-sidePad);
   const CH=isMobile?220:300, YW=isMobile?36:44, XLABELH=isMobile?120:155, PADTOP=12;
   const n=data.order.length;
-  const SLOT=Math.max(isMobile?26:48,Math.min(isMobile?70:110,Math.floor(availW/n)));
+  const SLOT=Math.max((opts&&opts.minSlot)||(isMobile?26:48),Math.min(isMobile?70:110,Math.floor(availW/n)));
   const BW=Math.round(SLOT*0.70);
   const slotPad=Math.round((SLOT-BW)/2);
   const totalW=YW+n*SLOT+slotPad;
@@ -2458,31 +2479,6 @@ function freqCmpBarHTML(){
   return h+'</div>';
 }
 function esc2(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function buildFreqCompare(series,cid,metric,top){
-  const el=document.getElementById(cid); if(!el) return;
-  const S=series.filter(x=>x.data&&x.data.order&&x.data.order.length);
-  if(!S.length){ el.innerHTML='<div class="empty">Sin datos para las series seleccionadas</div>'; return; }
-  S.forEach(x=>{ x.sum=Object.values(x.data.totals).reduce((a,b)=>a+b,0)||1; });
-  const val=(x,row)=>{ const n=(x.data.totals[row]||0); return metric==='pct'?n*100/x.sum:n; };
-  const rows=[...new Set(S.flatMap(x=>x.data.order))];
-  rows.sort((a,b)=>S.reduce((t,x)=>t+val(x,b),0)-S.reduce((t,x)=>t+val(x,a),0));
-  const shown=rows.slice(0,top);
-  const mx=Math.max(...shown.flatMap(r=>S.map(x=>val(x,r))),0.0001);
-  const fmt=v=>metric==='pct'?(Math.round(v*10)/10>=10?Math.round(v):Math.round(v*10)/10)+'%':String(v);
-  let h='<div id="'+cid+'__cap" style="background:#fff;padding:6px 4px 10px;">';
-  h+='<div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:10px;">'+S.map(x=>
-    `<div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:#374151;"><span style="width:13px;height:13px;border-radius:3px;background:${x.color};"></span><b>${esc2(x.label)}</b><span style="color:#94a3b8;">(${x.sum} aislamientos)</span></div>`).join('')+'</div>';
-  shown.forEach(r=>{
-    h+=`<div style="display:grid;grid-template-columns:minmax(150px,270px) 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid #eef3f0;">`+
-      `<div title="${esc2(r)}" style="font-size:.72rem;color:#1f2937;font-weight:600;word-break:break-word;">${esc2(r)}</div><div>`+
-      S.map(x=>{ const v=val(x,r),n=x.data.totals[r]||0;
-        return `<div title="${esc2(x.label)}: ${n} (${(n*100/x.sum).toFixed(1)}%)" style="display:flex;align-items:center;gap:6px;height:15px;margin:1px 0;"><div style="width:${(v*100/mx).toFixed(2)}%;min-width:${v>0?2:0}px;height:12px;background:${x.color};border-radius:3px;"></div><span style="font-size:.64rem;color:${v>0?'#475569':'#cbd5e1'};">${fmt(v>0?(metric==='pct'?v:n):0)}</span></div>`; }).join('')+
-      `</div></div>`;
-  });
-  h+=`<div style="font-size:.64rem;color:#94a3b8;margin-top:8px;">Se muestran las ${shown.length} categorías con mayor ${metric==='pct'?'proporción':'frecuencia'} combinada de ${rows.length}.</div></div>`;
-  el.innerHTML=h;
-  _insertarBotonDescarga(el,cid,'comparacion_frecuencias_'+cid);
-}
 function renderFreq(){
   const cfg=FREQ_CFG[activeFreqTab];
   const body=document.getElementById('freq-body'); if(!body) return;
@@ -2512,9 +2508,39 @@ function renderFreq(){
       return {label:getHospitalDisplayName(k).replace(/^[^A-Za-zÁÉÍÓÚ]+/,''),color:FQ_COLORS[i%FQ_COLORS.length],data:freqSpec((hd.freq||{})[cfg.key],spec)};
     });
   }
-  const ttl=cfg.title+' — comparación '+(FQ.mode==='per'?'por periodos':'por hospitales y ambulatorios');
-  body.innerHTML=bar+`<div class="ccard"><h2>${ttl}</h2><div id="fcmp"></div></div>`+(approx?_fqApproxHint():'');
-  buildFreqCompare(series,'fcmp',FQ.metric,FQ.top);
+  // Una gráfica por serie (periodo u hospital), una al lado de la otra, con las mismas
+  // categorías, la misma paleta y la misma escala para poder compararlas de un vistazo.
+  const S=series.filter(x=>x.data&&x.data.order&&x.data.order.length);
+  S.forEach(x=>{ x.sum=Object.values(x.data.totals).reduce((q,w)=>q+w,0)||1; });
+  const pct=FQ.metric==='pct';
+  const val=(x,row)=>{ const n=x.data.totals[row]||0; return pct?n*100/x.sum:n; };
+  const rows=[...new Set(S.flatMap(x=>x.data.order))].sort((a,b)=>S.reduce((t,x)=>t+val(x,b),0)-S.reduce((t,x)=>t+val(x,a),0)).slice(0,FQ.top);
+  const colTot={};
+  S.forEach(x=>rows.forEach(r=>Object.entries(x.data.stacks[r]||{}).forEach(([c,n])=>{colTot[c]=(colTot[c]||0)+n;})));
+  const cmap={}; Object.keys(colTot).sort((a,b)=>colTot[b]-colTot[a]).forEach((k,i)=>{cmap[k]=PALETTE[i%PALETTE.length];});
+  const conv=x=>{
+    const st={},tt={};
+    rows.forEach(r=>{
+      st[r]={}; let t=0;
+      Object.entries(x.data.stacks[r]||{}).forEach(([c,n])=>{ const v=pct?Math.round(n*1000/x.sum)/10:n; st[r][c]=v; t+=v; });
+      tt[r]=pct?Math.round(t*10)/10:t;
+    });
+    return {order:rows,stacks:st,totals:tt};
+  };
+  const conv_=S.map(conv);
+  const maxVal=Math.max(1,...conv_.flatMap(d=>rows.map(r=>d.totals[r]||0)));
+  let h=`<div class="fq-grid">`;
+  series.forEach((x,i)=>{
+    h+=`<div class="ccard"><h2>${esc2(cfg.title)} · ${esc2(x.label)}${x.sum?` <small style="font-family:'DM Sans',sans-serif;font-size:.7rem;color:#94a3b8;font-weight:500;">(${x.sum} aislamientos${pct?' · valores en %':''})</small>`:''}</h2><div id="fcmp-${i}"></div></div>`;
+  });
+  h+='</div>';
+  body.innerHTML=bar+h+(approx?_fqApproxHint():'');
+  series.forEach((x,i)=>{
+    const el=document.getElementById('fcmp-'+i); if(!el) return;
+    const k=S.indexOf(x);
+    buildFreqChart(k>=0?conv_[k]:null,'fcmp-'+i,{cmap,maxVal,minSlot:34,availW:Math.max(300,(el.clientWidth||520)-6)});
+    attachOtrosTooltips(el);
+  });
 }
 function _fqApproxHint(){
   return '<div class="al-hint" style="padding:0 6px;">⚠ Los conteos por año de este JSON son aproximados (solo aislamientos con antibiograma). Vuelve a correr <code>procesar_excel_v2.py</code> y sube el <code>dashboard_data.json</code> nuevo para el conteo completo.</div>';
@@ -10652,7 +10678,7 @@ if (window.__sakuraWanted) window.sakuraStart();
 /* ═══ Alertas SyRA: perfiles S/I/R idénticos (datos: RAW.data[h].alertas, calculados en procesar_excel_v2.py) ═══ */
 (function(){
   const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-  const F={hs:new Set(),y:'',m:'',fr:'',n:'2'};
+  const F={hs:new Set(),y:new Set(),m:new Set(),fr:new Set(),n:'2'};
   const SEL=new Set();           // ids de alertas seleccionadas
   let ALL=null,SHOW=40,CMP=false;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -10691,7 +10717,7 @@ if (window.__sakuraWanted) window.sakuraStart();
     return all.filter(a=>a.ini>=lim);
   }
   window.updateAlertBadge=function(){
-    ALL=null; SEL.clear();
+    ALL=null; SEL.clear(); try{ $('al-sels').innerHTML=''; }catch(e){}
     const r=recent(),b=$('alert-badge'),bn=$('banner-alertas');
     if(b){ b.textContent=r.length; b.hidden=!r.length; }
     if(bn){
@@ -10704,8 +10730,8 @@ if (window.__sakuraWanted) window.sakuraStart();
   };
   function base(){   // filtros excepto hospital (para contar por hospital)
     return load().filter(a=>
-      (!F.y||a.sem.slice(0,4)===F.y)&&(!F.m||a.m===F.m)&&a.n>=(+F.n||2)&&
-      (!F.fr||(F.fr==='raro'?a.fr<5:a.fr>=5)));
+      (!F.y.size||F.y.has(a.sem.slice(0,4)))&&(!F.m.size||F.m.has(a.m))&&a.n>=(+F.n||2)&&
+      (!F.fr.size||(F.fr.has('raro')&&a.fr<5)||(F.fr.has('comun')&&a.fr>=5)));
   }
   const filtered=()=>base().filter(a=>!F.hs.size||F.hs.has(a.h));
 
@@ -10725,14 +10751,39 @@ if (window.__sakuraWanted) window.sakuraStart();
     };
     mk('','Todos',Object.values(cnt).reduce((s,x)=>s+x,0),!F.hs.size);
     hs.forEach(h=>mk(h,hname(h),cnt[h]||0,F.hs.has(h)));
-    const S=$('al-sels'); const uniq=f=>[...new Set(all.map(f))].sort();
-    const opt=(arr,cur,all0)=>'<option value="">'+all0+'</option>'+arr.map(v=>'<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(v)+'</option>').join('');
-    S.innerHTML=
-      '<label class="al-sel">Año<select class="csel" data-k="y">'+opt(uniq(a=>a.sem.slice(0,4)).reverse(),F.y,'Todos')+'</select></label>'+
-      '<label class="al-sel">Microorganismo<select class="csel" data-k="m">'+opt(uniq(a=>a.m),F.m,'Todos')+'</select></label>'+
-      '<label class="al-sel">Frecuencia del perfil<select class="csel" data-k="fr"><option value="">Todos</option><option value="raro"'+(F.fr==='raro'?' selected':'')+'>Poco comunes (&lt;5% de los aislamientos)</option><option value="comun"'+(F.fr==='comun'?' selected':'')+'>Comunes (≥5%)</option></select></label>'+
-      '<label class="al-sel">Mínimo de pacientes<select class="csel" data-k="n">'+[2,3,4,5].map(n=>'<option value="'+n+'"'+(String(n)===F.n?' selected':'')+'>'+n+' o más</option>').join('')+'</select></label>';
-    S.querySelectorAll('select').forEach(s=>s.onchange=()=>{F[s.dataset.k]=s.value;SHOW=40;window.renderAlertas(true);});
+    const S=$('al-sels'); if(S.children.length) return;       // los desplegables se crean una sola vez (para que no se cierren al marcar)
+    const uniq=f=>[...new Set(all.map(f))].sort();
+    S.appendChild(mkDD('Año',uniq(a=>a.sem.slice(0,4)).reverse().map(v=>[v,v]),F.y));
+    S.appendChild(mkDD('Microorganismo',uniq(a=>a.m).map(v=>[v,v]),F.m,true));
+    S.appendChild(mkDD('Frecuencia del perfil',[['raro','Poco comunes (<5% de los aislamientos)'],['comun','Comunes (≥5%)']],F.fr));
+    const l=document.createElement('label'); l.className='al-sel';
+    l.innerHTML='Mínimo de pacientes<select class="csel">'+[2,3,4,5].map(n=>'<option value="'+n+'"'+(String(n)===F.n?' selected':'')+'>'+n+' o más</option>').join('')+'</select>';
+    l.querySelector('select').onchange=e=>{F.n=e.target.value;SHOW=40;window.renderAlertas(true);};
+    S.appendChild(l);
+  }
+  /* desplegable con casillas (selección múltiple) */
+  function mkDD(label,opts,set,search){
+    const w=document.createElement('div'); w.className='al-dd';
+    w.innerHTML='<span class="al-sel-l">'+esc(label)+'</span><button type="button" class="csel al-dd-b"><span class="t"></span><span>▾</span></button>'+
+      '<div class="al-dd-p">'+(search?'<input class="al-dd-s" placeholder="Buscar…">':'')+
+      '<div class="al-dd-a"><a data-a="all">Seleccionar todos</a><a data-a="none">Limpiar</a></div><div class="al-dd-l"></div></div>';
+    const btn=w.querySelector('.al-dd-b'),panel=w.querySelector('.al-dd-p'),list=w.querySelector('.al-dd-l'),txt=w.querySelector('.t');
+    const lab=()=>{ txt.textContent=!set.size?'Todos':set.size===1?(opts.find(o=>set.has(o[0]))||[,''])[1]:set.size+' seleccionados'; };
+    const draw=(q)=>{
+      list.innerHTML=opts.filter(o=>!q||o[1].toLowerCase().includes(q)).map(o=>'<label class="al-dd-i"><input type="checkbox" value="'+esc(o[0])+'"'+(set.has(o[0])?' checked':'')+'><span>'+esc(o[1])+'</span></label>').join('')||'<div class="al-hint" style="padding:6px">Sin resultados</div>';
+    };
+    const changed=()=>{ lab(); SHOW=40; window.renderAlertas(true); };
+    list.addEventListener('change',e=>{ const v=e.target.value; e.target.checked?set.add(v):set.delete(v); changed(); });
+    panel.querySelector('.al-dd-a').addEventListener('click',e=>{
+      const k=e.target.dataset.a; if(!k) return;
+      if(k==='all') opts.forEach(o=>set.add(o[0])); else set.clear();
+      draw((panel.querySelector('.al-dd-s')||{}).value||''); changed();
+    });
+    const si=panel.querySelector('.al-dd-s'); if(si) si.oninput=()=>draw(si.value.toLowerCase());
+    btn.onclick=e=>{ e.stopPropagation(); const open=!w.classList.contains('open'); document.querySelectorAll('.al-dd.open').forEach(x=>x.classList.remove('open')); w.classList.toggle('open',open); };
+    panel.onclick=e=>e.stopPropagation();
+    if(!window.__alDdBound){ window.__alDdBound=true; document.addEventListener('click',()=>document.querySelectorAll('.al-dd.open').forEach(x=>x.classList.remove('open'))); }
+    draw(''); lab(); return w;
   }
   function chart(list){
     const el=$('al-chart'); if(!el) return;
@@ -10740,17 +10791,22 @@ if (window.__sakuraWanted) window.sakuraStart();
     const by={}; list.forEach(a=>{by[a.ini]=(by[a.ini]||0)+1;});
     const ks=Object.keys(by).sort(), t0=new Date(ks[0]+'T12:00:00').getTime(), t1=new Date(ks[ks.length-1]+'T12:00:00').getTime();
     const N=Math.round((t1-t0)/(7*864e5))+1, mx=Math.max(...Object.values(by));
-    const W=1000,H=150,pl=28,pb=20,bw=(W-pl)/N;
-    let s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">';
-    [0,.5,1].forEach(f=>{const y=(H-pb)-(H-pb-10)*f;s+='<line x1="'+pl+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="#e5ece8" stroke-width="1"/><text x="2" y="'+(y+3)+'" font-size="9" fill="#94a3b8">'+Math.round(mx*f)+'</text>';});
-    const rc=new Set(recent().map(a=>a.ini));
+    const W=Math.max(320,Math.floor(el.clientWidth||el.parentElement.clientWidth||900)), H=190, pl=34, pr=8, pt=10, pb=30;
+    const iw=W-pl-pr, ih=H-pt-pb, bw=iw/N;
+    // eje Y con valores enteros "bonitos"
+    const step=mx<=5?1:mx<=10?2:mx<=25?5:mx<=60?10:Math.ceil(mx/5/10)*10, top=Math.ceil(mx/step)*step;
+    let s='<svg class="al-svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Alertas por semana epidemiológica">';
+    for(let v=0;v<=top;v+=step){ const y=pt+ih-ih*v/top;
+      s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="'+(v?'#e5ece8':'#9fb3aa')+'"/><text class="al-ax" x="'+(pl-6)+'" y="'+(y+4)+'" text-anchor="end">'+v+'</text>'; }
+    const rc=new Set(recent().map(a=>a.ini)), every=Math.max(1,Math.ceil(N/Math.max(2,Math.floor(iw/62))));
     for(let i=0;i<N;i++){
-      const d=new Date(t0+i*7*864e5).toISOString().slice(0,10), v=by[d]||0, h=(H-pb-10)*v/mx;
-      if(v) s+='<rect x="'+(pl+i*bw+bw*.12)+'" y="'+(H-pb-h)+'" width="'+(bw*.76)+'" height="'+h+'" rx="2" fill="'+(rc.has(d)?'#dc2626':'#2f8f74')+'"><title>'+dRange(d)+': '+v+' alerta(s)</title></rect>';
-      if(i%Math.max(1,Math.ceil(N/12))===0){const dd=new Date(d+'T12:00:00');s+='<text x="'+(pl+i*bw)+'" y="'+(H-5)+'" font-size="9" fill="#94a3b8">'+dd.getDate()+' '+MESES[dd.getMonth()]+' '+String(dd.getFullYear()).slice(2)+'</text>';}
+      const d=new Date(t0+i*7*864e5).toISOString().slice(0,10), v=by[d]||0, h=ih*v/top, x=pl+i*bw, w=Math.max(2,bw*.74);
+      if(v) s+='<rect x="'+(x+(bw-w)/2).toFixed(1)+'" y="'+(pt+ih-h).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="'+Math.min(3,w/2).toFixed(1)+'" fill="'+(rc.has(d)?'#dc2626':'#2f8f74')+'"><title>'+dRange(d)+': '+v+' alerta(s)</title></rect>';
+      if(i%every===0){ const dd=new Date(d+'T12:00:00'); s+='<text class="al-ax" x="'+(x+bw/2).toFixed(1)+'" y="'+(H-10)+'" text-anchor="middle">'+dd.getDate()+' '+MESES[dd.getMonth()]+' '+String(dd.getFullYear()).slice(2)+'</text>'; }
     }
-    el.innerHTML=s+'</svg>';
+    el.innerHTML=s+'</svg><div class="al-leg"><span><i style="background:#2f8f74"></i>Semanas anteriores</span><span><i style="background:#dc2626"></i>Últimas 2 semanas de datos</span></div>';
   }
+  let _rz; window.addEventListener('resize',()=>{ clearTimeout(_rz); _rz=setTimeout(()=>{ const sec=$('sec-alertas'); if(sec&&sec.classList.contains('active')) chart(filtered()); },150); });
   function card(a){
     const sev=a.n>=4||a.nR>=6?'hi':a.n>=3?'mid':'';
     const fr=a.fr<5?'<span class="al-tag red">Perfil poco común · '+a.fr+'%</span>':'<span class="al-tag ok">Perfil común · '+a.fr+'%</span>';
