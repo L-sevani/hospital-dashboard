@@ -366,6 +366,48 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
 } }
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Alertas SyRA ── */
+.ntab .alert-badge{display:inline-block;min-width:18px;padding:1px 6px;margin-left:6px;border-radius:999px;background:#dc2626;color:#fff;font-size:.66rem;font-weight:800;line-height:1.4;text-align:center;vertical-align:1px;}
+.ntab .alert-badge[hidden]{display:none;}
+#banner-alertas{display:none;background:linear-gradient(90deg,#7f1d1d,#b45309);color:#fff;padding:8px 32px;font-size:.78rem;font-weight:600;align-items:center;gap:10px;cursor:pointer;}
+#banner-alertas b{background:#fff;color:#7f1d1d;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:800;}
+#banner-alertas u{margin-left:auto;opacity:.9;}
+#sec-alertas{padding:24px 32px;gap:16px;}
+.al-head h2{font-size:1.1rem;font-weight:800;color:#1e293b;margin:0;}
+.al-head p{font-size:.76rem;color:#64748b;margin:4px 0 0;max-width:880px;line-height:1.5;}
+.al-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.al-filters label{display:flex;flex-direction:column;gap:3px;font-size:.66rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;}
+.al-filters select{padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;background:#fff;font:inherit;font-size:.8rem;font-weight:500;color:var(--ink);text-transform:none;letter-spacing:0;min-width:150px;}
+.al-kpis{display:flex;gap:10px;flex-wrap:wrap;}
+.al-kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;min-width:130px;}
+.al-kpi b{display:block;font-size:1.35rem;font-weight:800;color:var(--imss-d);line-height:1.1;}
+.al-kpi span{font-size:.68rem;color:#64748b;font-weight:600;}
+.al-kpi.red b{color:#b91c1c;}
+.al-chart{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
+.al-chart h3{font-size:.8rem;font-weight:800;color:#1e293b;margin:0 0 8px;}
+.al-chart svg{width:100%;height:150px;display:block;}
+.al-list{display:flex;flex-direction:column;gap:10px;}
+.al-card{background:#fff;border:1px solid var(--line);border-left:5px solid var(--imss);border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
+.al-card.hi{border-left-color:#dc2626;}.al-card.mid{border-left-color:#f59e0b;}
+.al-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.al-micro{font-weight:800;font-size:.92rem;color:#1e293b;}
+.al-n{background:#dc2626;color:#fff;border-radius:999px;padding:2px 10px;font-size:.72rem;font-weight:800;}
+.al-meta{font-size:.72rem;color:#64748b;font-weight:600;}
+.al-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.al-tag{font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:999px;background:#eef4f0;color:#2f5b4c;}
+.al-tag.warn{background:#fef3c7;color:#92400e;}.al-tag.red{background:#fee2e2;color:#991b1b;}.al-tag.ok{background:#e0f2fe;color:#075985;}
+.al-strip{display:flex;gap:2px;flex-wrap:wrap;cursor:pointer;padding:2px 0;}
+.al-strip i{width:13px;height:18px;border-radius:3px;display:block;}
+.al-S{background:#2f8f74;}.al-I{background:#f59e0b;}.al-R{background:#dc2626;}
+.al-detail{display:none;flex-wrap:wrap;gap:5px;padding-top:2px;}
+.al-card.open .al-detail{display:flex;}
+.al-chip{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:7px;color:#fff;}
+.al-hint{font-size:.66rem;color:#94a3b8;}
+.al-empty{padding:40px;text-align:center;color:#94a3b8;background:#fff;border:1px dashed var(--line);border-radius:14px;font-size:.85rem;}
+.al-more{align-self:center;padding:9px 22px;border:1.5px solid var(--imss);border-radius:10px;background:#fff;color:var(--imss-d);font:inherit;font-weight:700;font-size:.78rem;cursor:pointer;}
+@media(max-width:700px){#sec-alertas{padding:16px;}#banner-alertas{padding:8px 16px;}}
+</style>
 </head>
 <body class="sy-locked">
 
@@ -449,6 +491,7 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
   <div class="ntab" onclick="setSection('frecuencias',this)">Frecuencias</div>
   <div class="ntab" onclick="setSection('avanzado',this)">Análisis Avanzado</div>
   <div class="ntab" onclick="setSection('comparar',this)">Comparar Hospitales</div>
+  <div class="ntab" onclick="setSection('alertas',this)">🚨 Alertas<span class="alert-badge" id="alert-badge" hidden></span></div>
   <div class="ntab" onclick="setSection('aware',this)">Clasificación AWaRe</div>
   <div class="ntab" onclick="setSection('consumo',this)">Consumo (DDD)</div>
   <div class="ntab" onclick="setSection('sakura',this)">QR</div>
@@ -613,6 +656,7 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
   <span style="background:#f59e0b;color:#1c1917;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:800;">NO IAAS</span>
   <span>Infecciones No Asociadas a Atención en Salud — Nivel Ambulatorio · Tlaxcala · <span id="noiaas-rango">2023–2026</span></span>
 </div>
+<div id="banner-alertas" onclick="setSection('alertas',document.querySelector('.ntab[onclick*=alertas]'))"><b>ALERTA</b><span id="banner-alertas-txt"></span><u>Ver alertas →</u></div>
 <div id="context-bar" class="context-bar"></div>
 
 <div class="sections">
@@ -654,6 +698,17 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
   </div>
 
   <!-- CLASIFICACIÓN AWaRe -->
+  <div class="section" id="sec-alertas">
+    <div class="al-head">
+      <h2>🚨 Alertas SyRA — perfiles de resistencia idénticos</h2>
+      <p>Se alerta cuando <b>2 o más pacientes distintos</b> del mismo hospital, en la <b>misma semana epidemiológica</b>, aíslan el <b>mismo microorganismo</b> con <b>exactamente el mismo perfil</b> S/I/R (ni un antibiótico distinto). Se omiten perfiles triviales (sin resistencias o con menos de 5 antibióticos). Por privacidad no se publica ningún dato de pacientes: solo conteos, semana, servicio y perfil.</p>
+    </div>
+    <div class="al-filters" id="al-filters"></div>
+    <div class="al-kpis" id="al-kpis"></div>
+    <div class="al-chart"><h3>Alertas por semana epidemiológica</h3><div id="al-chart"></div></div>
+    <div class="al-list" id="al-list"></div>
+  </div>
+
   <div class="section" id="sec-aware" style="padding:28px 32px;flex-direction:column;gap:16px;background:transparent;">
     <!-- Buscador arriba prominente -->
     <div style="position:relative;">
@@ -2577,9 +2632,10 @@ function setSection(sec,el){
   const isAware=sec==='aware';
   const isConsumo=sec==='consumo';
   const isIris=sec==='sakura';
-  if(fb) fb.style.display=(isFreq||isAdv||isCmp||isAware||isConsumo||isIris)?'none':'flex';
-  if(ctrl) ctrl.style.display=(isAdv||isCmp||isAware||isConsumo||isIris)?'none':'flex';
-  if(cmp) cmp.style.display=(isFreq||isAdv||isCmp||isAware||isConsumo||isIris)?'none':'flex';
+  const isAlert=sec==='alertas';
+  if(fb) fb.style.display=(isFreq||isAdv||isCmp||isAware||isConsumo||isIris||isAlert)?'none':'flex';
+  if(ctrl) ctrl.style.display=(isAdv||isCmp||isAware||isConsumo||isIris||isAlert)?'none':'flex';
+  if(cmp) cmp.style.display=(isFreq||isAdv||isCmp||isAware||isConsumo||isIris||isAlert)?'none':'flex';
   if(legSri) legSri.style.display='none'; // siempre oculto — leyenda dentro de cada gráfica
   // Restaurar período de la nueva pestaña
   if(_DATA_TABS.has(sec)){
@@ -2593,10 +2649,11 @@ function setSection(sec,el){
   if(isAdv){ buildAdvPills(); buildAdvAbxSelect(); buildAdvHospitalSelector(); }
   if(isAware){ initAwareTab(); }
   if(isConsumo){ renderConsumo(); }
+  if(isAlert){ renderAlertas(); }
   if(isIris){ if(window.sakuraStart) window.sakuraStart(); else window.__sakuraWanted=true; }
   activeSection=sec;
   renderContextBar();
-  if(!isAdv&&!isAware&&!isConsumo&&!isIris) renderAll();
+  if(!isAdv&&!isAware&&!isConsumo&&!isIris&&!isAlert) renderAll();
 }
 
 function setMode(m){mode=m;p1='TODOS';p2=null;renderPills();renderAll();}
@@ -3968,6 +4025,7 @@ async function initDashboard(){
   renderPills();
   renderAll();
   buildAdvHospitalSelector();
+  try{ updateAlertBadge(); }catch(e){}
   if(loadFailed) setLoadErrorUI('No se pudieron cargar períodos desde dashboard_data.json.');
 
   try {
@@ -10408,5 +10466,116 @@ window.sakuraStart = async function () {
 
 if (window.__sakuraWanted) window.sakuraStart();
 </script>
+<script>
+/* ═══ Alertas SyRA: perfiles S/I/R idénticos (datos: RAW.data[h].alertas, calculados en procesar_excel_v2.py) ═══ */
+(function(){
+  const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const F={h:'',y:'',m:'',fr:'',n:'2'};
+  let ALL=null,SHOW=40;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const $=id=>document.getElementById(id);
+  const hname=h=>(typeof getHospitalDisplayName==='function'?getHospitalDisplayName(h):h).replace(/^[^A-Za-zÁÉÍÓÚ]+/,'');
+  const abxName=a=>String(a).replace(/^(G\+|G-|Hongo)\s*/,'').replace(/[,\s]+$/,'');
+  function dRange(ini){
+    const a=new Date(ini+'T12:00:00'),b=new Date(a.getTime()+6*864e5);
+    return a.getDate()+(a.getMonth()!==b.getMonth()?' '+MESES[a.getMonth()]:'')+'–'+b.getDate()+' '+MESES[b.getMonth()]+' '+b.getFullYear();
+  }
+  function load(){
+    if(ALL) return ALL;
+    ALL=[];
+    try{
+      Object.entries((typeof RAW!=='undefined'&&RAW&&RAW.data)||{}).forEach(([h,hd])=>{
+        ((hd&&hd.alertas)||[]).forEach(a=>ALL.push(Object.assign({h},a)));
+      });
+    }catch(e){}
+    return ALL;
+  }
+  function recent(){
+    const all=load(); if(!all.length) return [];
+    const mx=all.reduce((m,a)=>a.ini>m?a.ini:m,'');
+    const lim=new Date(new Date(mx+'T12:00:00').getTime()-7*864e5).toISOString().slice(0,10);
+    return all.filter(a=>a.ini>=lim);
+  }
+  window.updateAlertBadge=function(){
+    ALL=null;
+    const r=recent(),b=$('alert-badge'),bn=$('banner-alertas');
+    if(b){ b.textContent=r.length; b.hidden=!r.length; }
+    if(bn){
+      if(r.length){
+        const w=r.reduce((m,a)=>a.ini>m?a.ini:m,'');
+        $('banner-alertas-txt').textContent=r.length+(r.length===1?' alerta':' alertas')+' de perfiles idénticos en las últimas 2 semanas de datos (última: '+dRange(w)+')';
+        bn.style.display='flex';
+      } else bn.style.display='none';
+    }
+  };
+  function filtered(){
+    return load().filter(a=>
+      (!F.h||a.h===F.h)&&(!F.y||a.sem.slice(0,4)===F.y)&&(!F.m||a.m===F.m)&&
+      a.n>=(+F.n||2)&&
+      (!F.fr||(F.fr==='raro'?a.fr<5:F.fr==='comun'?a.fr>=5:true)));
+  }
+  function buildFilters(){
+    const all=load(),el=$('al-filters'); if(!el) return;
+    const uniq=f=>[...new Set(all.map(f))].sort();
+    const opt=(arr,cur,all0,lab)=>'<option value="">'+all0+'</option>'+arr.map(v=>'<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(lab?lab(v):v)+'</option>').join('');
+    el.innerHTML=
+      '<label>Hospital<select data-k="h">'+opt(uniq(a=>a.h),F.h,'Todos',hname)+'</select></label>'+
+      '<label>Año<select data-k="y">'+opt(uniq(a=>a.sem.slice(0,4)).reverse(),F.y,'Todos')+'</select></label>'+
+      '<label>Microorganismo<select data-k="m">'+opt(uniq(a=>a.m),F.m,'Todos')+'</select></label>'+
+      '<label>Frecuencia del perfil<select data-k="fr"><option value="">Todos</option><option value="raro"'+(F.fr==='raro'?' selected':'')+'>Poco comunes (&lt;5% de los aislamientos)</option><option value="comun"'+(F.fr==='comun'?' selected':'')+'>Comunes (≥5%)</option></select></label>'+
+      '<label>Mínimo de pacientes<select data-k="n">'+[2,3,4,5].map(n=>'<option value="'+n+'"'+(String(n)===F.n?' selected':'')+'>'+n+' o más</option>').join('')+'</select></label>';
+    el.querySelectorAll('select').forEach(s=>s.onchange=()=>{F[s.dataset.k]=s.value;SHOW=40;window.renderAlertas(true);});
+  }
+  function chart(list){
+    const el=$('al-chart'); if(!el) return;
+    if(!list.length){ el.innerHTML='<div class="al-hint">Sin datos para graficar.</div>'; return; }
+    const by={}; list.forEach(a=>{by[a.ini]=(by[a.ini]||0)+1;});
+    const ks=Object.keys(by).sort(), t0=new Date(ks[0]+'T12:00:00').getTime(), t1=new Date(ks[ks.length-1]+'T12:00:00').getTime();
+    const N=Math.round((t1-t0)/(7*864e5))+1, mx=Math.max(...Object.values(by));
+    const W=1000,H=150,pl=28,pb=20,bw=(W-pl)/N;
+    let s='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">';
+    [0,.5,1].forEach(f=>{const y=(H-pb)-(H-pb-10)*f;s+='<line x1="'+pl+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="#e5ece8" stroke-width="1"/><text x="2" y="'+(y+3)+'" font-size="9" fill="#94a3b8">'+Math.round(mx*f)+'</text>';});
+    const rc=new Set(recent().map(a=>a.ini));
+    for(let i=0;i<N;i++){
+      const d=new Date(t0+i*7*864e5).toISOString().slice(0,10), v=by[d]||0, h=(H-pb-10)*v/mx;
+      if(v) s+='<rect x="'+(pl+i*bw+bw*.12)+'" y="'+(H-pb-h)+'" width="'+(bw*.76)+'" height="'+h+'" rx="2" fill="'+(rc.has(d)?'#dc2626':'#2f8f74')+'"><title>'+dRange(d)+': '+v+' alerta(s)</title></rect>';
+      if(i%Math.max(1,Math.ceil(N/12))===0){const dd=new Date(d+'T12:00:00');s+='<text x="'+(pl+i*bw)+'" y="'+(H-5)+'" font-size="9" fill="#94a3b8">'+dd.getDate()+' '+MESES[dd.getMonth()]+' '+String(dd.getFullYear()).slice(2)+'</text>';}
+    }
+    el.innerHTML=s+'</svg>';
+  }
+  function card(a){
+    const sev=a.n>=4||a.nR>=6?'hi':a.n>=3?'mid':'';
+    const fr=a.fr<5?'<span class="al-tag red">Perfil poco común · '+a.fr+'%</span>':'<span class="al-tag ok">Perfil común · '+a.fr+'%</span>';
+    return '<div class="al-card '+sev+'" onclick="this.classList.toggle(\'open\')">'+
+      '<div class="al-top"><span class="al-n">'+a.n+' pacientes</span><span class="al-micro">'+esc(a.m)+'</span>'+
+      '<span class="al-meta">Semana '+esc(a.sem.slice(5))+' · '+dRange(a.ini)+' · '+esc(hname(a.h))+'</span></div>'+
+      '<div class="al-tags">'+fr+
+        '<span class="al-tag warn">'+a.nR+' R'+(a.nI?' · '+a.nI+' I':'')+' de '+a.nT+' antibióticos</span>'+
+        (a.svc||[]).map(x=>'<span class="al-tag">'+esc(x[0])+' ('+x[1]+')</span>').join('')+
+        (a.cul||[]).map(x=>'<span class="al-tag">🧫 '+esc(x[0])+' ('+x[1]+')</span>').join('')+'</div>'+
+      '<div class="al-strip" title="Clic para ver antibióticos">'+a.perfil.map(p=>'<i class="al-'+p[1]+'" title="'+esc(abxName(p[0]))+': '+p[1]+'"></i>').join('')+'</div>'+
+      '<div class="al-detail">'+a.perfil.map(p=>'<span class="al-chip al-'+p[1]+'">'+esc(abxName(p[0]))+' · '+p[1]+'</span>').join('')+'</div>'+
+      '<div class="al-hint">Este mismo perfil lo tienen '+a.tp+' aislamientos de '+esc(a.m)+' en el hospital (histórico). Clic en la tarjeta para ver el detalle.</div>'+
+    '</div>';
+  }
+  window.renderAlertas=function(keepFilters){
+    if(!keepFilters||!$('al-filters').children.length) buildFilters();
+    const list=filtered(), tot=load();
+    const sems=new Set(list.map(a=>a.sem)), pac=list.reduce((s,a)=>s+a.n,0);
+    $('al-kpis').innerHTML=
+      '<div class="al-kpi red"><b>'+list.length+'</b><span>alertas (filtro actual)</span></div>'+
+      '<div class="al-kpi"><b>'+pac+'</b><span>pacientes involucrados</span></div>'+
+      '<div class="al-kpi"><b>'+sems.size+'</b><span>semanas con alertas</span></div>'+
+      '<div class="al-kpi"><b>'+recent().length+'</b><span>en las últimas 2 semanas</span></div>';
+    chart(list);
+    const L=$('al-list');
+    if(!tot.length){ L.innerHTML='<div class="al-empty">Aún no hay alertas en <code>dashboard_data.json</code>.<br>Vuelve a correr <code>procesar_excel_v2.py</code> con la versión nueva y sube el JSON.</div>'; return; }
+    if(!list.length){ L.innerHTML='<div class="al-empty">Ninguna alerta con estos filtros.</div>'; return; }
+    L.innerHTML=list.slice(0,SHOW).map(card).join('')+(list.length>SHOW?'<button class="al-more" id="al-more">Mostrar más ('+(list.length-SHOW)+' restantes)</button>':'');
+    const mb=$('al-more'); if(mb) mb.onclick=()=>{SHOW+=40;window.renderAlertas(true);};
+  };
+})();
+</script>
+
 </body>
 </html>
