@@ -78,7 +78,7 @@ body{font-family:'DM Sans',sans-serif;background:#f0f2f5;color:#1a1a2e;}
 .ccard{background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:22px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
 .ccard h2{font-family:'DM Serif Display',serif;font-size:1.05rem;color:#1a1a2e;margin-bottom:16px;}
 
-.atag{font-size:.65rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;}
+.atag{font-size:calc(.65rem*var(--cf,1));font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;}
 .tA{background:#dcfce7;color:#15803d;}.tW{background:#fef3c7;color:#92400e;}.tR{background:#fee2e2;color:#991b1b;}
 
 .nodata-box{background:#fff8f0;border:1px dashed #fed7aa;border-radius:10px;padding:16px 24px;font-size:.82rem;color:#92400e;}
@@ -1728,6 +1728,8 @@ function _truncNombre(txt, maxChars){
 const _CZ={};
 function _czReg(cid,fn){ const s=_CZ[cid]||(_CZ[cid]={z:1}); if(!s.busy) s.z=1; s.fn=fn; }
 function _czZ(cid){ return (_CZ[cid]&&_CZ[cid].z)||1; }
+/* escala del texto con el zoom: crece proporcional (la mitad que las barras) y con tope, para que nunca se desborde */
+function _czF(cid){ const z=_czZ(cid); return z<=1?1:Math.min(2.0,1+(z-1)*0.5); }
 function _czAvail(el,isMobile,sidePad){
   const w=el&&el.clientWidth;
   return Math.max(isMobile?240:320, w>60 ? w-52 : (window.innerWidth||1200)-sidePad);
@@ -1738,7 +1740,7 @@ function _czBind(el,cid){
   const sc=el.querySelector('.cz-scroll'); if(!sc) return;
   const lbl=el.querySelector('.cz-lbl'), btn=el.querySelector('.cz-reset');
   if(lbl) lbl.textContent=Math.round(s.z*100)+'%';
-  const fixY=()=>{ const x=sc.scrollLeft; sc.querySelectorAll('.cz-y').forEach(d=>{ d.style.transform=x>1?'translate('+x+'px,-50%)':'translateY(-50%)'; }); sc.querySelectorAll('.ck-yfix').forEach(g=>{g.setAttribute('transform','translate('+(x>1?x:0)+',0)');if(g.firstChild&&g.firstChild.setAttribute)g.firstChild.setAttribute('opacity',x>1?1:0);}); };
+  const fixY=()=>{ const x=sc.scrollLeft; sc.querySelectorAll('.cz-y').forEach(d=>{ d.style.transform=x>1?'translate('+x+'px,-50%)':'translateY(-50%)'; }); sc.querySelectorAll('.cz-ybg').forEach(d=>{ d.style.transform=x>1?'translateX('+x+'px)':'none'; d.style.opacity=x>1?1:0; }); sc.querySelectorAll('.ck-yfix').forEach(g=>{g.setAttribute('transform','translate('+(x>1?x:0)+',0)');if(g.firstChild&&g.firstChild.setAttribute)g.firstChild.setAttribute('opacity',x>1?1:0);}); };
   if(sc.dataset.czb) return; sc.dataset.czb='1';
   sc.addEventListener('scroll',fixY); fixY();
   const apply=(z,keepX)=>{
@@ -1786,15 +1788,15 @@ function ckLine(cfg){
 function ckLineDraw(id){
   const el=document.getElementById(id), c=_CKL[id]; if(!el||!c) return;
   const cap=el.querySelector('.ck-cap'), z=_czZ(id);
-  const n=Math.max(1,c.xLabels.length), H=c.H||180, padL=c.padL||40, padR=14, padT=12, padB=26;
+  const F=_czF(id), n=Math.max(1,c.xLabels.length), H=Math.round((c.H||180)+(F-1)*40), padL=Math.round((c.padL||40)*F), padR=14, padT=12, padB=Math.round(26*F);
   const base=Math.max(el.clientWidth||560, n*(c.minPx||64)+padL+padR);
   const W=Math.round(base*z), iw=W-padL-padR, ih=H-padT-padB;
   const X=i=>padL+(n>1?i*iw/(n-1):iw/2), Y=v=>padT+ih*(1-v/(c.yMax||1));
   const fmt=c.yFmt||(v=>String(v));
   let g='',gy='';
-  (c.yTicks||[0,.25,.5,.75,1].map(f=>c.yMax*f)).forEach(v=>{ g+=`<line x1="${padL}" y1="${Y(v)}" x2="${W-padR}" y2="${Y(v)}" stroke="${v===0?'#cbd5e1':'#f1f5f9'}" stroke-width="1"/>`; gy+=`<text class="ck-ax" x="${padL-6}" y="${Y(v)+4}" text-anchor="end">${fmt(v)}</text>`; });
-  const every=Math.max(1,Math.ceil(n/Math.max(2,Math.floor(iw/54))));
-  const xl=c.xLabels.map((t,i)=>i%every===0?`<text class="ck-ax" x="${X(i)}" y="${H-8}" text-anchor="middle">${t}</text>`:'').join('');
+  (c.yTicks||[0,.25,.5,.75,1].map(f=>c.yMax*f)).forEach(v=>{ g+=`<line x1="${padL}" y1="${Y(v)}" x2="${W-padR}" y2="${Y(v)}" stroke="${v===0?'#cbd5e1':'#f1f5f9'}" stroke-width="1"/>`; gy+=`<text class="ck-ax" style="font-size:${(11*F).toFixed(1)}px" x="${padL-6}" y="${Y(v)+Math.round(4*F)}" text-anchor="end">${fmt(v)}</text>`; });
+  const every=Math.max(1,Math.ceil(n/Math.max(2,Math.floor(iw/(54*F)))));
+  const xl=c.xLabels.map((t,i)=>i%every===0?`<text class="ck-ax" style="font-size:${(11*F).toFixed(1)}px" x="${X(i)}" y="${H-Math.round(8*F)}" text-anchor="middle">${t}</text>`:'').join('');
   let ln='';
   c.series.forEach(s=>{
     const pts=s.pts.map(p=>`${X(p.i)},${Y(p.v)}`).join(' ');
@@ -1858,7 +1860,7 @@ async function descargarGraficaImagen(cid, nombreArchivo){
   const _zs=_CZ[cid]; let _prevZ=1;
   if(_zs&&_zs.z>1){ _prevZ=_zs.z; _zs.z=1; _czRerender(cid); }          // la imagen siempre sale al 100 %
   const capEl=document.getElementById(cid+'__cap') || document.getElementById(cid);
-  if(capEl) capEl.querySelectorAll('.cz-y').forEach(d=>{ d.style.transform='translateY(-50%)'; });
+  if(capEl) capEl.querySelectorAll('.cz-y').forEach(d=>{ d.style.transform='translateY(-50%)'; }); capEl.querySelectorAll('.cz-ybg').forEach(d=>{ d.style.transform='none'; d.style.opacity=0; });
   if(!capEl || typeof html2canvas==='undefined'){
     alert('No se pudo generar la imagen (falta conexión a internet para cargar la librería de descarga).');
     return;
@@ -1907,7 +1909,8 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   const isMobile=(window.innerWidth||1200)<768;
   const sidePad=isMobile?32:96;
   const availW=_czAvail(el,isMobile,sidePad);
-  const CH=isMobile?220:300, YW=isMobile?36:44, XLABELH=isMobile?120:155, PADTOP=12;
+  const F=_czF(cid);
+  const CH=isMobile?220:300, YW=Math.round((isMobile?36:44)*F), XLABELH=Math.round((isMobile?120:155)*F), PADTOP=12;
   const n=data1.length;
   const SLOT=Math.round(_czZ(cid)*Math.max(isMobile?(hasCmp?28:20):(hasCmp?48:34),Math.min(isMobile?(hasCmp?70:55):(hasCmp?100:80),Math.floor(availW/n))));
   const BW=hasCmp?Math.round(SLOT*0.43):Math.round(SLOT*0.72);
@@ -1918,7 +1921,8 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
   const totalH=PADTOP+CH+XLABELH;
 
   let h=`<div class="cz-scroll" style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div id="${cid}__cap" style="--cf:${F};position:relative;width:${totalW}px;height:${totalH}px;font-size:${(.68*F).toFixed(3)}rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div class="cz-ybg" style="position:absolute;left:0;top:0;width:${YW}px;height:${totalH}px;background:#fff;opacity:0;z-index:3;border-right:1px solid #e5e7eb;"></div>`;
 
   // Y gridlines
   [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].forEach(t=>{
@@ -1953,9 +1957,9 @@ function buildSRIChart(data1, data2, cid, lbl1, lbl2){
 
     // Total + x label (sin precio en el nombre)
     const tot=hasCmp&&d2?`${d.t}/${d2.t}`:d.t;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${zoneW}px;text-align:center;font-size:.6rem;color:#6b7280;">${tot}</div>`;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${zoneW}px;height:${XLABELH-18}px;display:flex;align-items:center;justify-content:center;">
-      <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:.61rem;color:#374151;">${tagStr}${_truncNombre(name,20)}</span>
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+Math.round(2*F)}px;width:${zoneW}px;text-align:center;font-size:${(.6*F).toFixed(3)}rem;color:#6b7280;">${tot}</div>`;
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+Math.round(18*F)}px;width:${zoneW}px;height:${XLABELH-Math.round(18*F)}px;display:flex;align-items:center;justify-content:center;">
+      <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:${(.61*F).toFixed(3)}rem;color:#374151;">${tagStr}${_truncNombre(name,20)}</span>
     </div>`;
   });
 
@@ -2013,7 +2017,8 @@ function buildSRIMultiChart(datasets, cid){
   const isMobile=(window.innerWidth||1200)<768;
   const sidePad=isMobile?32:96;
   const availW=_czAvail(el,isMobile,sidePad);
-  const CH=isMobile?220:300, YW=isMobile?36:44, XLABELH=isMobile?120:155, PADTOP=12;
+  const F=_czF(cid);
+  const CH=isMobile?220:300, YW=Math.round((isMobile?36:44)*F), XLABELH=Math.round((isMobile?120:155)*F), PADTOP=12;
   const n=allAbx.length;
   const _Z=_czZ(cid);
   const BW=Math.round(_Z*Math.max(12,Math.min(22,Math.floor((availW-YW)/Math.max(n,1)/N*0.65))));
@@ -2026,7 +2031,8 @@ function buildSRIMultiChart(datasets, cid){
   const HCOLORS=['#1d4ed8','#15803d','#b45309'];
 
   let h=`<div class="cz-scroll" style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div id="${cid}__cap" style="--cf:${F};position:relative;width:${totalW}px;height:${totalH}px;font-size:${(.68*F).toFixed(3)}rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div class="cz-ybg" style="position:absolute;left:0;top:0;width:${YW}px;height:${totalH}px;background:#fff;opacity:0;z-index:3;border-right:1px solid #e5e7eb;"></div>`;
   [0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1].forEach(t=>{
     const y=PADTOP+Math.round((1-t)*CH);
     h+=`<div style="position:absolute;left:${YW}px;right:0;top:${y}px;border-top:1px solid ${t===0?'#9ca3af':'#e5e7eb'};"></div>`;
@@ -2057,16 +2063,16 @@ function buildSRIMultiChart(datasets, cid){
         // Nombre hospital dentro de la barra — clip estricto al área de barra
         h+=`<div style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;overflow:hidden;clip-path:inset(0 0 0 0);pointer-events:none;">
           <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-            <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:.6rem;font-weight:700;color:rgba(0,0,0,0.72);">${_truncNombre(shortLabel,Math.floor((CH-4)/6))}</span>
+            <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:${(.6*F).toFixed(3)}rem;font-weight:700;color:rgba(0,0,0,0.72);">${_truncNombre(shortLabel,Math.floor((CH-4)/(6*F)))}</span>
           </div>
         </div>`;
         const tipData=JSON.stringify({abx:meta.a,hosp:label,S:d.S,R:d.R,I:d.I,T:d.t,pS:pct(d.pS),pR:pct(d.pR),pI:pct(d.pI)}).replace(/'/g,'&apos;');
         h+=`<div class="vbh" data-tip='${tipData}' data-multi="1" style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
       }
     });
-    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+4}px;width:${groupW}px;text-align:center;font-size:.58rem;color:#9ca3af;">${totalN||''}</div>`;
-    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+16}px;width:${groupW}px;height:${XLABELH-16}px;display:flex;align-items:center;justify-content:center;">
-      <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:.61rem;color:#374151;">${tagStr}${_truncNombre(name,20)}</span>
+    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+Math.round(4*F)}px;width:${groupW}px;text-align:center;font-size:${(.58*F).toFixed(3)}rem;color:#9ca3af;">${totalN||''}</div>`;
+    h+=`<div style="position:absolute;left:${xGroup}px;top:${PADTOP+CH+Math.round(16*F)}px;width:${groupW}px;height:${XLABELH-Math.round(16*F)}px;display:flex;align-items:center;justify-content:center;">
+      <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:${(.61*F).toFixed(3)}rem;color:#374151;">${tagStr}${_truncNombre(name,20)}</span>
     </div>`;
   });
   h+=`</div></div>`;
@@ -2107,7 +2113,8 @@ function buildSRICompactChart(data, cid){
   const el=document.getElementById(cid); if(!el) return;
   const _a=arguments; _czReg(cid,()=>buildSRICompactChart.apply(null,_a));
   if(!data||!data.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
-  const CH=180, YW=32, PADTOP=10, XLABELH=56;
+  const F=_czF(cid);
+  const CH=180, YW=Math.round(32*F), PADTOP=10, XLABELH=Math.round(56*F);
   const n=data.length;
   const _cw=(el.clientWidth>60?el.clientWidth-44:560);
   const SLOT=Math.round(_czZ(cid)*Math.max(72,Math.min(110,Math.floor(_cw/Math.max(n,1)))));
@@ -2118,7 +2125,8 @@ function buildSRICompactChart(data, cid){
   const pct=v=>v!=null?(v*100).toFixed(1)+'%':'–';
 
   let h=`<div class="cz-scroll" style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.66rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div id="${cid}__cap" style="--cf:${F};position:relative;width:${totalW}px;height:${totalH}px;font-size:${(.66*F).toFixed(3)}rem;color:#374151;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div class="cz-ybg" style="position:absolute;left:0;top:0;width:${YW}px;height:${totalH}px;background:#fff;opacity:0;z-index:3;border-right:1px solid #e5e7eb;"></div>`;
 
   [0,.2,.4,.6,.8,1].forEach(t=>{
     const y=PADTOP+Math.round((1-t)*CH);
@@ -2132,8 +2140,8 @@ function buildSRICompactChart(data, cid){
     if(d.pS>0){const h2=Math.max(1,Math.round(d.pS*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#22c55e;"></div>`;}
     if(d.pR>0){const h2=Math.max(1,Math.round(d.pR*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#ef4444;"></div>`;}
     if(d.pI>0){const h2=Math.max(1,Math.round(d.pI*CH));yB-=h2;h+=`<div style="position:absolute;left:${x}px;top:${yB}px;width:${BW}px;height:${h2}px;background:#f59e0b;"></div>`;}
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${BW}px;text-align:center;font-size:.62rem;color:#6b7280;">${d.t||0}</div>`;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;text-align:center;font-size:.64rem;color:#334155;white-space:normal;line-height:1.2;">${d.a}</div>`;
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+Math.round(2*F)}px;width:${BW}px;text-align:center;font-size:${(.62*F).toFixed(3)}rem;color:#6b7280;">${d.t||0}</div>`;
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+Math.round(18*F)}px;width:${BW}px;text-align:center;font-size:${(.64*F).toFixed(3)}rem;color:#334155;white-space:normal;line-height:1.2;">${d.a}</div>`;
     // Tooltip zone
     const tipData=JSON.stringify({a:d.a,S:d.S,R:d.R,I:d.I,t:d.t,pS:pct(d.pS),pR:pct(d.pR),pI:pct(d.pI)}).replace(/'/g,'&apos;');
     h+=`<div class="vbh" data-tip='${tipData}' data-compact="1" style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
@@ -2186,7 +2194,8 @@ function buildFreqChart(data, cid, opts){
   const isMobile=(window.innerWidth||1200)<768;
   const sidePad=isMobile?32:96;
   const availW=(opts&&opts.availW)||_czAvail(el,isMobile,sidePad);
-  const CH=isMobile?220:300, YW=isMobile?36:44, XLABELH=isMobile?120:155, PADTOP=12;
+  const F=_czF(cid);
+  const CH=isMobile?220:300, YW=Math.round((isMobile?36:44)*F), XLABELH=Math.round((isMobile?120:155)*F), PADTOP=12;
   const n=data.order.length;
   const SLOT=Math.round(_czZ(cid)*Math.max((opts&&opts.minSlot)||(isMobile?26:48),Math.min(isMobile?70:110,Math.floor(availW/n))));
   const BW=Math.round(SLOT*0.70);
@@ -2195,7 +2204,8 @@ function buildFreqChart(data, cid, opts){
   const totalH=PADTOP+CH+XLABELH;
 
   let h=`<div class="cz-scroll" style="width:100%;overflow-x:auto;overflow-y:hidden;">`;
-  h+=`<div id="${cid}__cap" style="position:relative;width:${totalW}px;height:${totalH}px;font-size:.68rem;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div id="${cid}__cap" style="--cf:${F};position:relative;width:${totalW}px;height:${totalH}px;font-size:${(.68*F).toFixed(3)}rem;overflow:hidden;clip-path:inset(0);">`;
+  h+=`<div class="cz-ybg" style="position:absolute;left:0;top:0;width:${YW}px;height:${totalH}px;background:#fff;opacity:0;z-index:3;border-right:1px solid #e5e7eb;"></div>`;
 
   ticks.forEach(t=>{
     const y=PADTOP+Math.round((1-t/niceMax)*CH);
@@ -2225,9 +2235,9 @@ function buildFreqChart(data, cid, opts){
     const tipData=JSON.stringify({name:row,total,tipRows}).replace(/'/g,'&apos;');
 
     h+=`<div class="vbh" data-tip='${tipData}' style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+2}px;width:${BW}px;text-align:center;font-size:.6rem;color:#6b7280;">${total}</div>`;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+18}px;width:${BW}px;height:${XLABELH-18}px;display:flex;align-items:center;justify-content:center;">
-      <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:.61rem;color:#374151;">${_truncNombre(row,20)}</span>
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+Math.round(2*F)}px;width:${BW}px;text-align:center;font-size:${(.6*F).toFixed(3)}rem;color:#6b7280;">${total}</div>`;
+    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+Math.round(18*F)}px;width:${BW}px;height:${XLABELH-Math.round(18*F)}px;display:flex;align-items:center;justify-content:center;">
+      <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:${(.61*F).toFixed(3)}rem;color:#374151;">${_truncNombre(row,20)}</span>
     </div>`;
   });
 
@@ -2699,7 +2709,7 @@ function renderFreq(){
   series.forEach((x,i)=>{
     const el=document.getElementById('fcmp-'+i); if(!el) return;
     const k=S.indexOf(x);
-    buildFreqChart(k>=0?conv_[k]:null,'fcmp-'+i,{cmap,maxVal,minSlot:34,availW:Math.max(300,(el.clientWidth||520)-6)});
+    buildFreqChart(k>=0?conv_[k]:null,'fcmp-'+i,{cmap,minSlot:34,availW:Math.max(300,(el.clientWidth||520)-6)});
     attachOtrosTooltips(el);
   });
 }
@@ -10935,19 +10945,21 @@ if (window.__sakuraWanted) window.sakuraStart();
     const by={}; list.forEach(a=>{by[a.ini]=(by[a.ini]||0)+1;});
     const ks=Object.keys(by).sort(), t0=new Date(ks[0]+'T12:00:00').getTime(), t1=new Date(ks[ks.length-1]+'T12:00:00').getTime();
     const N=Math.round((t1-t0)/(7*864e5))+1, mx=Math.max(...Object.values(by));
-    const H=190, pl=34, pr=8, pt=10, pb=30;
+    const F=_czF('al-chart'), H=Math.round(190+(F-1)*40), pl=Math.round(34*F), pr=8, pt=10, pb=Math.round(30*F), fsz=' style="font-size:'+(11*F).toFixed(1)+'px"';
     const W=Math.round(Math.max(320,Math.floor(el.clientWidth||900), N*9+pl+pr)*z), iw=W-pl-pr, ih=H-pt-pb, bw=iw/N;
     const step=mx<=5?1:mx<=10?2:mx<=25?5:mx<=60?10:Math.ceil(mx/5/10)*10, top=Math.ceil(mx/step)*step;
-    let s='<svg class="al-svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" style="display:block;max-width:none;" role="img" aria-label="Alertas por semana epidemiológica">';
+    let gy=''; let s='<svg class="al-svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" style="display:block;max-width:none;" role="img" aria-label="Alertas por semana epidemiológica">';
     for(let v=0;v<=top;v+=step){ const y=pt+ih-ih*v/top;
-      s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="'+(v?'#e5ece8':'#9fb3aa')+'"/><text class="al-ax" x="'+(pl-6)+'" y="'+(y+4)+'" text-anchor="end">'+v+'</text>'; }
-    const rc=new Set(recent().map(a=>a.ini)), every=Math.max(1,Math.ceil(N/Math.max(2,Math.floor(iw/62))));
+      s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y+'" y2="'+y+'" stroke="'+(v?'#e5ece8':'#9fb3aa')+'"/>'; gy+='<text class="al-ax"'+fsz+' x="'+(pl-6)+'" y="'+(y+Math.round(4*F))+'" text-anchor="end">'+v+'</text>'; }
+    const rc=new Set(recent().map(a=>a.ini)), every=Math.max(1,Math.ceil(N/Math.max(2,Math.floor(iw/(62*F)))));
     for(let i=0;i<N;i++){
       const d=new Date(t0+i*7*864e5).toISOString().slice(0,10), v=by[d]||0, h=ih*v/top, x=pl+i*bw, w=Math.max(2,bw*.74);
       if(v) s+='<rect x="'+(x+(bw-w)/2).toFixed(1)+'" y="'+(pt+ih-h).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="'+Math.min(3,w/2).toFixed(1)+'" fill="'+(rc.has(d)?'#dc2626':'#2f8f74')+'"><title>'+dRange(d)+': '+v+' alerta(s)</title></rect>';
-      if(i%every===0){ const dd=new Date(d+'T12:00:00'); s+='<text class="al-ax" x="'+(x+bw/2).toFixed(1)+'" y="'+(H-10)+'" text-anchor="middle">'+dd.getDate()+' '+MESES[dd.getMonth()]+' '+String(dd.getFullYear()).slice(2)+'</text>'; }
+      if(i%every===0){ const dd=new Date(d+'T12:00:00'); s+='<text class="al-ax"'+fsz+' x="'+(x+bw/2).toFixed(1)+'" y="'+(H-Math.round(10*F))+'" text-anchor="middle">'+dd.getDate()+' '+MESES[dd.getMonth()]+' '+String(dd.getFullYear()).slice(2)+'</text>'; }
     }
+    s+='<g class="ck-yfix"><rect x="0" y="0" width="'+pl+'" height="'+(H-pb+4)+'" fill="#fff" opacity="0"/>'+gy+'</g>';
     cap.style.width=W+'px'; cap.innerHTML=s+'</svg>';
+    (function(){const sc2=el.querySelector('.cz-scroll'),x=sc2?sc2.scrollLeft:0;cap.querySelectorAll('.ck-yfix').forEach(g=>{g.setAttribute('transform','translate('+(x>1?x:0)+',0)');g.firstChild.setAttribute('opacity',x>1?1:0);});})();
     const lb=el.querySelector('.cz-lbl'); if(lb) lb.textContent=Math.round(z*100)+'%';
   }
   let _rz; window.addEventListener('resize',()=>{ clearTimeout(_rz); _rz=setTimeout(()=>{ const sec=$('sec-alertas'); if(sec&&sec.classList.contains('active')) chart(filtered()); },150); });
