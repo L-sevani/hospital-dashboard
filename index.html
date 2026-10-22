@@ -473,6 +473,17 @@ body.sy-enter .section.active>*{animation:syUp .28s .55s cubic-bezier(.2,.7,.2,1
 .cz-y{background:rgba(255,255,255,.95);z-index:4;}
 .ck-ax{fill:#64748b;font:500 11px 'DM Sans',Arial,sans-serif;}
 .ck-line{min-width:0;}
+/* Tamaño fijo de columnas: el zoom de una gráfica nunca empuja a la vecina */
+div[style*="display:grid"]>*{min-width:0;}
+@media(min-width:901px){
+div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;}
+div[style*="grid-template-columns:1.3fr 1fr"]{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) !important;}
+div[style*="grid-template-columns:1.4fr 1fr"]{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) !important;}
+}
+.ck-line,.cz-scroll{max-width:100%;}
+.ck-line{overflow:hidden;}
+@media(max-width:900px){div[style*="grid-template-columns:1.3fr 1fr"]{grid-template-columns:minmax(0,1fr) !important;}}
+
 @media(max-width:900px){
   div[style*="grid-template-columns:1fr 1fr"],div[style*="grid-template-columns:1.4fr 1fr"]{grid-template-columns:minmax(0,1fr) !important;}
   .adv-groups-grid{grid-template-columns:minmax(0,1fr);}
@@ -1693,7 +1704,7 @@ function _czBind(el,cid){
   const sc=el.querySelector('.cz-scroll'); if(!sc) return;
   const lbl=el.querySelector('.cz-lbl'), btn=el.querySelector('.cz-reset');
   if(lbl) lbl.textContent=Math.round(s.z*100)+'%';
-  const fixY=()=>{ const x=sc.scrollLeft; sc.querySelectorAll('.cz-y').forEach(d=>{ d.style.transform=x>1?'translate('+x+'px,-50%)':'translateY(-50%)'; }); };
+  const fixY=()=>{ const x=sc.scrollLeft; sc.querySelectorAll('.cz-y').forEach(d=>{ d.style.transform=x>1?'translate('+x+'px,-50%)':'translateY(-50%)'; }); sc.querySelectorAll('.ck-yfix').forEach(g=>{g.setAttribute('transform','translate('+(x>1?x:0)+',0)');if(g.firstChild&&g.firstChild.setAttribute)g.firstChild.setAttribute('opacity',x>1?1:0);}); };
   if(sc.dataset.czb) return; sc.dataset.czb='1';
   sc.addEventListener('scroll',fixY); fixY();
   const apply=(z,keepX)=>{
@@ -1729,8 +1740,8 @@ function ckLineDraw(id){
   const W=Math.round(base*z), iw=W-padL-padR, ih=H-padT-padB;
   const X=i=>padL+(n>1?i*iw/(n-1):iw/2), Y=v=>padT+ih*(1-v/(c.yMax||1));
   const fmt=c.yFmt||(v=>String(v));
-  let g='';
-  (c.yTicks||[0,.25,.5,.75,1].map(f=>c.yMax*f)).forEach(v=>{ g+=`<line x1="${padL}" y1="${Y(v)}" x2="${W-padR}" y2="${Y(v)}" stroke="${v===0?'#cbd5e1':'#f1f5f9'}" stroke-width="1"/><text class="ck-ax" x="${padL-6}" y="${Y(v)+4}" text-anchor="end">${fmt(v)}</text>`; });
+  let g='',gy='';
+  (c.yTicks||[0,.25,.5,.75,1].map(f=>c.yMax*f)).forEach(v=>{ g+=`<line x1="${padL}" y1="${Y(v)}" x2="${W-padR}" y2="${Y(v)}" stroke="${v===0?'#cbd5e1':'#f1f5f9'}" stroke-width="1"/>`; gy+=`<text class="ck-ax" x="${padL-6}" y="${Y(v)+4}" text-anchor="end">${fmt(v)}</text>`; });
   const every=Math.max(1,Math.ceil(n/Math.max(2,Math.floor(iw/54))));
   const xl=c.xLabels.map((t,i)=>i%every===0?`<text class="ck-ax" x="${X(i)}" y="${H-8}" text-anchor="middle">${t}</text>`:'').join('');
   let ln='';
@@ -1740,7 +1751,8 @@ function ckLineDraw(id){
     s.pts.forEach(p=>{ ln+=`<circle data-tipid="${registerTip(p.tip)}" cx="${X(p.i)}" cy="${Y(p.v)}" r="4" fill="${s.color}" stroke="#fff" stroke-width="1.5" style="cursor:pointer;"/>`; });
   });
   cap.style.width=W+'px';
-  cap.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;" role="img">${g}${ln}${xl}</svg>`;
+  cap.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;" role="img">${g}${ln}${xl}<g class="ck-yfix"><rect x="0" y="0" width="${padL}" height="${H-padB+4}" fill="${(function(){let n=el.parentElement,cl='';while(n&&n!==document.body){cl=getComputedStyle(n).backgroundColor;if(cl&&cl!=='rgba(0, 0, 0, 0)'&&cl!=='transparent')break;n=n.parentElement;}return cl&&cl!=='transparent'?cl:'#fff';})()}" opacity="0"/>${gy}</g></svg>`;
+  (function(){const sc=el.querySelector('.cz-scroll'),x=sc?sc.scrollLeft:0;cap.querySelectorAll('.ck-yfix').forEach(g=>{g.setAttribute('transform','translate('+(x>1?x:0)+',0)');g.firstChild.setAttribute('opacity',x>1?1:0);});})();
   wireTips(cap);
   const lb=el.querySelector('.cz-lbl'); if(lb) lb.textContent=Math.round(z*100)+'%';
 }
@@ -4834,6 +4846,7 @@ function getHospRawData(hid){
 }
 
 const MESES_ABBR={'01':'Ene','02':'Feb','03':'Mar','04':'Abr','05':'May','06':'Jun','07':'Jul','08':'Ago','09':'Sep','10':'Oct','11':'Nov','12':'Dic'};
+function mesNombre(p,conAnio){p=String(p||'');const m=/^(\d{4})-(\d{2})/.exec(p);if(!m)return p;return (MESES_ABBR[m[2]]||m[2])+(conAnio===false?'':' '+m[1]);}
 
 function mergeConsumoPeriodos(hosp, uptoPeriod){
   const per=CONSUMO_DATA[hosp] && CONSUMO_DATA[hosp].periodos;
@@ -5190,9 +5203,9 @@ function renderConsumoDDD(){
     const cargado=periodosMap[p].consumo_cargado;
     const estatus=periodosMap[p].estatus_periodo;
     const esPreliminar=estatus==='Abierto';
-    const tid=registerTip(cargado?`<div style="font-weight:700;">${p}</div><div>Consumo cargado${esPreliminar?' · dato preliminar (mes Abierto)':' · dato oficial (mes Cerrado)'}</div>`:`<div style="font-weight:700;">${p}</div><div>Solo PARTE II (camas/días paciente) — consumo aún no cargado</div><div style="color:#94a3b8;">Estatus: ${estatus||'—'}</div>`);
+    const tid=registerTip(cargado?`<div style="font-weight:700;">${mesNombre(p)}</div><div>Consumo cargado${esPreliminar?' · dato preliminar (mes Abierto)':' · dato oficial (mes Cerrado)'}</div>`:`<div style="font-weight:700;">${p}</div><div>Solo PARTE II (camas/días paciente) — consumo aún no cargado</div><div style="color:#94a3b8;">Estatus: ${estatus||'—'}</div>`);
     const badge=cargado&&esPreliminar?' <span style="opacity:.7;">~</span>':(cargado?'':' ○');
-    return `<button data-tipid="${tid}" onclick="_consumoPeriodo='${p}';renderConsumo();" style="position:relative;padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid ${p===_consumoPeriodo?'#154f39':'#e2e8f0'};background:${p===_consumoPeriodo?'#ecfdf5':'#fff'};color:${p===_consumoPeriodo?'#154f39':cargado?'#6b7280':'#cbd5e1'};">${p}${badge}</button>`;
+    return `<button data-tipid="${tid}" onclick="_consumoPeriodo='${p}';renderConsumo();" style="position:relative;padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid ${p===_consumoPeriodo?'#154f39':'#e2e8f0'};background:${p===_consumoPeriodo?'#ecfdf5':'#fff'};color:${p===_consumoPeriodo?'#154f39':cargado?'#6b7280':'#cbd5e1'};">${mesNombre(p)}${badge}</button>`;
   }).join('');
 
   // Mini-calendario de cobertura anual (12 meses, verde=oficial cargado, ámbar=preliminar cargado, gris=solo PARTE II, punteado=sin datos)
@@ -5562,7 +5575,7 @@ function renderConsumoDDD(){
         const maxVal=Math.max(...seriesPorEsp.flatMap(s=>s.pts.map(p=>p.v)),1);
         const xIndex={}; mesesDisponibles.forEach((m,i)=>{xIndex[m]=i;});
         const chartSvg=ckLine({H:180,minPx:64,xLabels:mesesDisponibles.map(m=>MESES_ABBR[m.slice(5)]),yMax:maxVal,yTicks:[0,0.25,0.5,0.75,1].map(f=>Math.round(maxVal*f)),
-          series:seriesPorEsp.map(s=>({name:s.nombre,color:s.color,pts:s.pts.map(p=>({i:xIndex[p.m],v:p.v,tip:`<div style="font-weight:700;">${s.nombre}</div><div>${p.m}: ${p.v.toLocaleString('es-MX',{maximumFractionDigits:1})} DDD/100 días pac. (estimado)</div>`}))}))});
+          series:seriesPorEsp.map(s=>({name:s.nombre,color:s.color,pts:s.pts.map(p=>({i:xIndex[p.m],v:p.v,tip:`<div style="font-weight:700;">${s.nombre}</div><div>${mesNombre(p.m)}: ${p.v.toLocaleString('es-MX',{maximumFractionDigits:1})} DDD/100 días pac. (estimado)</div>`}))}))});
         const legend=seriesPorEsp.map(s=>`<div style="display:flex;align-items:center;gap:5px;font-size:.68rem;color:#000;"><span style="width:9px;height:9px;border-radius:2px;background:${s.color};display:inline-block;"></span>${s.nombre}</div>`).join('');
         tendenciaEspecialidadHtml=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:16px 18px;">
           <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">📈 Tendencia DDD/100 días paciente por especialidad <span style="font-size:.62rem;font-weight:700;color:#92400e;background:#fef3c7;padding:2px 8px;border-radius:10px;">ESTIMACIÓN DERIVADA</span></div>
@@ -5587,8 +5600,8 @@ function renderConsumoDDD(){
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">📈 Tendencia DDD/100 camas ${_consumoModo==='acumulado'?'(acumulada)':'(mensual)'}</div>
       <div style="display:flex;align-items:flex-end;gap:10px;height:120px;">
         ${trendPoints.map(pt=>{
-          const tid=registerTip(`<div style="font-weight:700;">${pt.p}</div><div>DDD/100 camas: ${pt.v.toLocaleString('es-MX',{maximumFractionDigits:1})}</div>`);
-          return `<div data-tipid="${tid}" onclick="_consumoPeriodo='${pt.p}';renderConsumoDDD();" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;cursor:pointer;"><div style="font-size:.68rem;font-weight:700;color:#154f39;">${pt.v.toLocaleString('es-MX',{maximumFractionDigits:0})}</div><div style="width:100%;max-width:36px;background:linear-gradient(180deg,#1a6347,#154f39);border-radius:4px 4px 0 0;height:${Math.max(4,pt.v/maxTrend*90)}px;transition:height .3s;"></div><div style="font-size:.68rem;color:#94a3b8;">${pt.p.slice(5)}</div></div>`;
+          const tid=registerTip(`<div style="font-weight:700;">${mesNombre(pt.p)}</div><div>DDD/100 camas: ${pt.v.toLocaleString('es-MX',{maximumFractionDigits:1})}</div>`);
+          return `<div data-tipid="${tid}" onclick="_consumoPeriodo='${pt.p}';renderConsumoDDD();" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;cursor:pointer;"><div style="font-size:.68rem;font-weight:700;color:#154f39;">${pt.v.toLocaleString('es-MX',{maximumFractionDigits:0})}</div><div style="width:100%;max-width:36px;background:linear-gradient(180deg,#1a6347,#154f39);border-radius:4px 4px 0 0;height:${Math.max(4,pt.v/maxTrend*90)}px;transition:height .3s;"></div><div style="font-size:.68rem;color:#94a3b8;">${mesNombre(pt.p,false)}</div></div>`;
         }).join('')}
       </div>
     </div>`;
@@ -5616,8 +5629,8 @@ function renderConsumoDDD(){
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">📈 Tendencia DDD/100 días paciente ${_consumoModo==='acumulado'?'(acumulada)':'(mensual)'}</div>
       <div style="display:flex;align-items:flex-end;gap:10px;height:120px;">
         ${trendPointsDP.map(pt=>{
-          const tid=registerTip(`<div style="font-weight:700;">${pt.p}</div><div>DDD/100 días paciente: ${pt.v.toLocaleString('es-MX',{maximumFractionDigits:1})}</div>`);
-          return `<div data-tipid="${tid}" onclick="_consumoPeriodo='${pt.p}';renderConsumoDDD();" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;cursor:pointer;"><div style="font-size:.68rem;font-weight:700;color:#0369a1;">${pt.v.toLocaleString('es-MX',{maximumFractionDigits:0})}</div><div style="width:100%;max-width:36px;background:linear-gradient(180deg,#38bdf8,#0369a1);border-radius:4px 4px 0 0;height:${Math.max(4,pt.v/maxTrendDP*90)}px;transition:height .3s;"></div><div style="font-size:.68rem;color:#94a3b8;">${pt.p.slice(5)}</div></div>`;
+          const tid=registerTip(`<div style="font-weight:700;">${mesNombre(pt.p)}</div><div>DDD/100 días paciente: ${pt.v.toLocaleString('es-MX',{maximumFractionDigits:1})}</div>`);
+          return `<div data-tipid="${tid}" onclick="_consumoPeriodo='${pt.p}';renderConsumoDDD();" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;cursor:pointer;"><div style="font-size:.68rem;font-weight:700;color:#0369a1;">${pt.v.toLocaleString('es-MX',{maximumFractionDigits:0})}</div><div style="width:100%;max-width:36px;background:linear-gradient(180deg,#38bdf8,#0369a1);border-radius:4px 4px 0 0;height:${Math.max(4,pt.v/maxTrendDP*90)}px;transition:height .3s;"></div><div style="font-size:.68rem;color:#94a3b8;">${mesNombre(pt.p,false)}</div></div>`;
         }).join('')}
       </div>
     </div>`;
@@ -6237,7 +6250,7 @@ function renderRankingAntibioticos(){
 
   const perActual=periodosMap[_consumoPeriodo]&&periodosMap[_consumoPeriodo].consumo_cargado?_consumoPeriodo:null;
   if(!perActual){
-    inner.innerHTML=`${selectorMesHtml}<div style="padding:40px;text-align:center;color:#94a3b8;">El mes ${_consumoPeriodo} todavía no tiene CONSABI cargado (solo PARTE II) — elige otro mes arriba.</div>`;
+    inner.innerHTML=`${selectorMesHtml}<div style="padding:40px;text-align:center;color:#94a3b8;">El mes ${mesNombre(_consumoPeriodo)} todavía no tiene CONSABI cargado (solo PARTE II) — elige otro mes arriba.</div>`;
     return;
   }
 
@@ -6412,7 +6425,7 @@ function renderConsumoEspecialidad(){
   if(!_especialidadPeriodo || !ESPECIALIDAD_DATA.periodos[_especialidadPeriodo]) _especialidadPeriodo=periodosEsp[periodosEsp.length-1];
   const datosDelPeriodo=ESPECIALIDAD_DATA.periodos[_especialidadPeriodo];
 
-  const periodoTabs=periodosEsp.map(p=>`<button onclick="_especialidadPeriodo='${p}';_especialidadUnidad=null;renderConsumoEspecialidad();" style="padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid ${p===_especialidadPeriodo?'#154f39':'#e2e8f0'};background:${p===_especialidadPeriodo?'#ecfdf5':'#fff'};color:${p===_especialidadPeriodo?'#154f39':'#6b7280'};">${p}</button>`).join('');
+  const periodoTabs=periodosEsp.map(p=>`<button onclick="_especialidadPeriodo='${p}';_especialidadUnidad=null;renderConsumoEspecialidad();" style="padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid ${p===_especialidadPeriodo?'#154f39':'#e2e8f0'};background:${p===_especialidadPeriodo?'#ecfdf5':'#fff'};color:${p===_especialidadPeriodo?'#154f39':'#6b7280'};">${mesNombre(p)}</button>`).join('');
 
   const porUnidad=datosDelPeriodo.por_unidad||{};
   const unidades=Object.keys(porUnidad);
@@ -6783,7 +6796,7 @@ function renderIndicadoresPROA(){
 
   const mesesToggle=todosLosMeses.map(m=>{
     const activo=!_indicadoresMesesSel || _indicadoresMesesSel.has(m);
-    return `<button onclick="toggleIndicadoresMes('${m}')" style="padding:4px 10px;border-radius:14px;font-size:.68rem;font-weight:700;cursor:pointer;border:1px solid ${activo?'#154f39':'#e2e8f0'};background:${activo?'#ecfdf5':'#fff'};color:${activo?'#154f39':'#9ca3af'};">${m}</button>`;
+    return `<button onclick="toggleIndicadoresMes('${m}')" style="padding:4px 10px;border-radius:14px;font-size:.68rem;font-weight:700;cursor:pointer;border:1px solid ${activo?'#154f39':'#e2e8f0'};background:${activo?'#ecfdf5':'#fff'};color:${activo?'#154f39':'#9ca3af'};">${mesNombre(m)}</button>`;
   }).join('');
   const colLabels={num:'Numerador',den:'Denominador',pct:'%'};
   const colsToggle=['num','den','pct'].map(c=>{
@@ -10018,6 +10031,7 @@ window.sakuraStart = async function () {
   renderer.setClearColor(0x000000, 0);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false;   // la sombra se recalcula a mano (ver bucle): misma calidad, la mitad del trabajo en reposo
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(28, 1, 1, 500);
@@ -10676,7 +10690,7 @@ window.sakuraStart = async function () {
   document.addEventListener('keydown', ev => { if (ev.key === 'Escape') closeShare(); });
 
   /* ── bucle ── */
-  let visible = true, last = performance.now(), t = 0, firstFrame = true;
+  let visible = true, last = performance.now(), t = 0, firstFrame = true, nextT = 0, shadowTick = 0;
   if ('IntersectionObserver' in window) new IntersectionObserver(es => { visible = es[0].isIntersecting; }, { threshold: 0 }).observe(hero);
   if ('ResizeObserver' in window) new ResizeObserver(layout).observe(hero); else window.addEventListener('resize', layout);
   layout();
@@ -10684,6 +10698,8 @@ window.sakuraStart = async function () {
   function frame(now) {
     requestAnimationFrame(frame);
     if (!visible || document.hidden || hero.offsetParent === null) { last = now; return; }
+    if (now < nextT - 2) return;                                   // tope ~60 fps (pantallas de 120/144 Hz no gastan el doble)
+    nextT = Math.max(nextT + 16.667, now - 16.667);
     const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
     const M = MODES[mode];
 
@@ -10726,6 +10742,8 @@ window.sakuraStart = async function () {
     stepFall(fallL, flfMesh, M.leaves, dt, t, M, gust, fade);
 
     placeCamera();
+    // sombras: cada cuadro mientras algo cambia rápido (transición, crecimiento); en reposo basta con la mitad (el viento es lento)
+    if (firstFrame || qE !== qT || growG < 1 || pulse > 0 || bloomPop > 0 || (++shadowTick & 1)) renderer.shadowMap.needsUpdate = true;
     renderer.render(scene, camera);
     if (firstFrame) { firstFrame = false; loaderEl.classList.add('hide'); }
   }
