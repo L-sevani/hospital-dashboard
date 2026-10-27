@@ -5614,9 +5614,8 @@ function renderConsumoDDD(){
         });
         if(!huboMatch) return null;
         let diasPac=null;
-        Object.entries(consabiMes.servicios||{}).forEach(([serv,info])=>{
-          if(_aliasEspecialidadJS(_normalizarEspecialidadJS(serv))===_normalizarEspecialidadJS(especialidadNombre)) diasPac=info.dias_paciente;
-        });
+        const svTend=_serviciosPorClave(consabiMes.servicios)[_claveEspCatalogo(especialidadNombre)];
+        if(svTend) diasPac=svTend.dias_paciente;
         if(diasPac==null || diasPac<=0) return null;
         return Math.round(dddEst/diasPac*100*100)/100;
       }
@@ -5734,6 +5733,8 @@ function renderConsumoDDD(){
   // reportan el consumo desglosado por servicio (no se inventa un reparto proporcional).
   let servicioTablaHtml='';
   if(d && d.servicios && Object.keys(d.servicios).length){
+    const mesesDddServ=_consumoModo==='acumulado'?periodosConConsumo.filter(m=>m<=_consumoPeriodo):[_consumoPeriodo];
+    const dddServ=_dddEstimadoPorServicio(_consumoHospital,mesesDddServ);
     const filasServicio=Object.entries(d.servicios)
       .sort((a,b)=>(b[1].dias_paciente||0)-(a[1].dias_paciente||0))
       .map(([serv,info])=>`
@@ -5742,18 +5743,24 @@ function renderConsumoDDD(){
           <td style="text-align:center;padding:6px 10px;color:#000;">${info.camas!=null?info.camas.toLocaleString('es-MX',{maximumFractionDigits:1}):'<span style="color:#cbd5e1;">N/D</span>'}</td>
           <td style="text-align:center;padding:6px 10px;color:#000;">${info.dias_paciente!=null?Math.round(info.dias_paciente).toLocaleString('es-MX'):'<span style="color:#cbd5e1;">N/D</span>'}</td>
           <td style="text-align:center;padding:6px 10px;color:#000;">${info.ocupacion!=null?info.ocupacion.toLocaleString('es-MX',{maximumFractionDigits:1})+'%':'<span style="color:#cbd5e1;">N/D</span>'}</td>
-          <td style="text-align:center;padding:6px 10px;"><span style="color:#cbd5e1;">N/D</span></td>
+          ${(()=>{
+            const e=dddServ[_claveServicioParteII(serv)];
+            if(!e||!(e.dias>0)) return '<td style="text-align:center;padding:6px 10px;"><span style="color:#cbd5e1;">N/D</span></td><td style="text-align:center;padding:6px 10px;"><span style="color:#cbd5e1;">N/D</span></td>';
+            const comb=_claveServicioParteII(serv)==='GINECO_OBST'?' <span title="Ginecología + Obstetricia sumadas (el catálogo las junta en una sola especialidad)" style="font-size:.6rem;color:#92400e;">(G+O)</span>':'';
+            return `<td style="text-align:center;padding:6px 10px;color:#000;">${e.ddd.toLocaleString('es-MX',{maximumFractionDigits:1})}${comb}</td><td style="text-align:center;padding:6px 10px;color:#000;font-weight:700;">${(e.ddd/e.dias*100).toLocaleString('es-MX',{maximumFractionDigits:1})}${comb}</td>`;
+          })()}
         </tr>`).join('');
     servicioTablaHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow-x:auto;">
       <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🏥 Consumo por servicio</div>
-      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Camas, días paciente y ocupación reales por Especialidad (fuente: PARTE II). La columna DDD se deja explícitamente N/D: CONSABI/Recetas no reportan el consumo desglosado por servicio, así que no se inventa un reparto proporcional.</div>
-      <table style="width:100%;border-collapse:collapse;font-size:.74rem;min-width:520px;">
+      <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">Camas, días paciente y ocupación reales por Especialidad (fuente: PARTE II). Las columnas DDD son una <b style="color:#92400e;">estimación derivada</b> (no dato oficial): piezas de Recetas de esa especialidad × factor DDD÷pieza del hospital. Solo aparece cuando el servicio de PARTE II tiene su especialidad equivalente en el Catálogo; si no, queda N/D y no se inventa un reparto.</div>
+      <table style="width:100%;border-collapse:collapse;font-size:.74rem;min-width:600px;">
         <thead><tr style="background:#154f39;">
           <th style="text-align:left;padding:7px 10px;color:#fff;">Especialidad</th>
           <th style="text-align:center;padding:7px 10px;color:#fff;">Camas</th>
           <th style="text-align:center;padding:7px 10px;color:#fff;">Días paciente</th>
           <th style="text-align:center;padding:7px 10px;color:#fff;">Ocupación</th>
-          <th style="text-align:center;padding:7px 10px;color:#fff;">DDD</th>
+          <th style="text-align:center;padding:7px 10px;color:#fff;">DDD est.</th>
+          <th style="text-align:center;padding:7px 10px;color:#fff;">DDD/100 d.p. est.</th>
         </tr></thead>
         <tbody>${filasServicio}</tbody>
       </table>
@@ -6458,6 +6465,63 @@ const ESPECIALIDAD_ALIAS_JS={
 function _aliasEspecialidadJS(normalizado){
   return ESPECIALIDAD_ALIAS_JS[normalizado] || normalizado;
 }
+// Ginecología y Obstetricia: PARTE II las separa en 2 servicios, el Catálogo las junta en 1
+// especialidad. No se reparte nada: se SUMAN los dos servicios de PARTE II para compararlos
+// contra la especialidad única del catálogo.
+function _claveServicioParteII(serv){
+  const n=_normalizarEspecialidadJS(serv);
+  if(n==='GINECOLOGIA'||n==='OBSTETRICIA') return 'GINECO_OBST';
+  return _aliasEspecialidadJS(n);
+}
+function _claveEspCatalogo(norm){
+  const n=_normalizarEspecialidadJS(norm);
+  if(/^GINECOLOGIA Y OBSTETRIC/.test(n)) return 'GINECO_OBST';
+  return n;
+}
+// Suma camas/días paciente de PARTE II por clave de cruce (Gineco+Obst quedan juntas).
+function _serviciosPorClave(servicios){
+  const out={};
+  Object.entries(servicios||{}).forEach(([serv,info])=>{
+    const k=_claveServicioParteII(serv);
+    if(!out[k]) out[k]={camas:null,dias_paciente:null,ocupacion:null};
+    const o=out[k];
+    if(info.camas!=null) o.camas=(o.camas||0)+info.camas;
+    if(info.dias_paciente!=null) o.dias_paciente=(o.dias_paciente||0)+info.dias_paciente;
+    o.ocupacion=info.ocupacion;
+  });
+  return out;
+}
+// ESTIMACIÓN DERIVADA (no es dato oficial de CONSABI): DDD por servicio = piezas de Recetas de
+// esa especialidad × factor DDD÷pieza de ese hospital/mes. Se suma en los meses indicados.
+function _dddEstimadoPorServicio(hosp, meses){
+  const out={};
+  if(!hosp||hosp==='DELEGACIONAL'||!ESPECIALIDAD_DATA||!ESPECIALIDAD_DATA.periodos) return out;
+  meses.forEach(mes=>{
+    const espMes=ESPECIALIDAD_DATA.periodos[mes]; if(!espMes) return;
+    let uni=null; Object.values(espMes.por_unidad||{}).forEach(u=>{ if(u.hospital_id===hosp) uni=u; });
+    const cm=consumoParaHospitalV2(hosp,mes,'mensual');
+    if(!uni||!cm||!cm.top_antibioticos) return;
+    const factorMap={}; cm.top_antibioticos.forEach(a=>{ if(a.piezas>0) factorMap[a.antibiotico]=a.ddd/a.piezas; });
+    const nombres=Object.keys(factorMap);
+    const tmp={};
+    (uni.especialidades||[]).forEach(e=>{
+      let ddd=0,hubo=false;
+      Object.entries(e.por_antibiotico||{}).forEach(([nab,pz])=>{
+        const m=matchConsumoName(nab,nombres);
+        if(m&&factorMap[m]!=null){ ddd+=pz*factorMap[m]; hubo=true; }
+      });
+      if(hubo){ const k=_claveEspCatalogo(e.especialidad); tmp[k]=(tmp[k]||0)+ddd; }
+    });
+    const sv=_serviciosPorClave(cm.servicios);
+    Object.keys(tmp).forEach(k=>{
+      const dias=sv[k]&&sv[k].dias_paciente;
+      if(!(dias>0)) return;
+      if(!out[k]) out[k]={ddd:0,dias:0};
+      out[k].ddd+=tmp[k]; out[k].dias+=dias;
+    });
+  });
+  return out;
+}
 
 function setEspecialidadUnidad(u){
   _especialidadUnidad=u;
@@ -6526,14 +6590,13 @@ function renderConsumoEspecialidad(){
   const totalUnidad=filas.reduce((s,f)=>s+f.piezas,0);
 
   const hospitalId=infoUnidad.hospital_id;
-  const serviciosNormalizados={};
-  if(hospitalId && CONSUMO_DATA[hospitalId] && _consumoPeriodo){
-    const per=CONSUMO_DATA[hospitalId].periodos[_consumoPeriodo];
-    if(per && per.servicios){
-      Object.entries(per.servicios).forEach(([serv,info2])=>{
-        serviciosNormalizados[_aliasEspecialidadJS(_normalizarEspecialidadJS(serv))]=info2;
-      });
-    }
+  let serviciosNormalizados={};
+  if(hospitalId && _consumoPeriodo){
+    // PARTE II por mes: primero consumo_data_v2.json (trae todos los meses), si no el CONSABI viejo.
+    const perV2=CONSUMO_DATA_V2[hospitalId] && CONSUMO_DATA_V2[hospitalId].periodos[_consumoPeriodo];
+    const perOld=CONSUMO_DATA[hospitalId] && CONSUMO_DATA[hospitalId].periodos[_consumoPeriodo];
+    const per=(perV2 && perV2.servicios && Object.keys(perV2.servicios).length)?perV2:perOld;
+    if(per && per.servicios) serviciosNormalizados=_serviciosPorClave(per.servicios);
   }
 
   const kpis=[
@@ -6554,7 +6617,7 @@ function renderConsumoEspecialidad(){
   const filasTabla=filasFiltradas.map(f=>{
     const entradasAware=Object.entries(f.por_aware||{}).sort((a,b)=>b[1]-a[1]);
     const dominante=entradasAware[0];
-    const cruzada=serviciosNormalizados[f.especialidad_normalizada];
+    const cruzada=serviciosNormalizados[_claveEspCatalogo(f.especialidad_normalizada||f.especialidad)];
     const diasPaciente=(cruzada && cruzada.dias_paciente!=null)?cruzada.dias_paciente:null;
     const piezasPorCama=(cruzada && cruzada.camas)?Math.round(f.piezas/cruzada.camas*10)/10:null;
     const piezasPor100DiasPac=(diasPaciente)?Math.round(f.piezas/diasPaciente*100*10)/10:null;
@@ -6654,7 +6717,7 @@ function renderConsumoEspecialidad(){
   // comparando cada especialidad contra el promedio de la propia unidad.
   const tasasPorEspecialidad={};
   filas.forEach(f=>{
-    const cruzada=serviciosNormalizados[f.especialidad_normalizada];
+    const cruzada=serviciosNormalizados[_claveEspCatalogo(f.especialidad_normalizada||f.especialidad)];
     if(cruzada && cruzada.dias_paciente){
       tasasPorEspecialidad[f.especialidad]=Math.round(f.piezas/cruzada.dias_paciente*100*10)/10;
     }
