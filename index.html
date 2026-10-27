@@ -3357,6 +3357,7 @@ function initDrillPanel(){
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
               <span style="font-size:.66rem;font-weight:700;color:${isMicro?col.main:'#475569'};text-transform:uppercase;letter-spacing:.04em;">${label}</span>
               <label style="display:flex;align-items:center;gap:3px;font-size:.6rem;color:#64748b;cursor:pointer;white-space:nowrap;">
+                ${isMicro?`<span style="display:flex;align-items:center;gap:3px;margin-right:6px;"><input type="checkbox" id="drill-micro-eskape-${i}" onchange="drillToggleEskape(${i},this.checked)" style="width:11px;height:11px;accent-color:#b91c1c;" title="${ESKAPE_TXT}"><span title="${ESKAPE_TXT}" style="color:#b91c1c;font-weight:700;">ESKAPE</span></span>`:''}
                 <input type="checkbox" id="drill-${key}-all-${i}" onchange="drillToggleAll('${key}',${i},this.checked)" style="width:11px;height:11px;accent-color:${col.main};">
                 <span>Todo</span>
               </label>
@@ -3371,6 +3372,12 @@ function initDrillPanel(){
   }).join('');
   _drillMapsArr=new Array(hospIds.length).fill(null);
   rebuildAllDrillCascades();
+}
+
+function drillToggleEskape(i, checked){
+  const box=document.getElementById(`drill-micro-checks-${i}`);
+  if(!box) return;
+  box.querySelectorAll('label input').forEach(c=>{ if(_esEskape(c.value)) c.checked=checked; });
 }
 
 function drillToggleAll(key, i, checked){
@@ -3784,6 +3791,7 @@ function clearDrill(){
     ['svc','inf','cul','micro'].forEach(key=>{
       document.getElementById(`drill-${key}-checks-${i}`)?.querySelectorAll('input').forEach(c=>c.checked=false);
     });
+    const ek=document.getElementById(`drill-micro-eskape-${i}`); if(ek) ek.checked=false;
   });
   const r=document.getElementById('drill-result');if(r)r.innerHTML='';
   const st=document.getElementById('drill-status');if(st)st.textContent='';
@@ -4891,7 +4899,7 @@ function setOoadPieSel(sel){
   _ooadPieSel = (_ooadPieSel===sel) ? null : sel;
   renderConsumoDDD();
 }
-let _coberturaCultivo=null, _coberturaAbxSel=null, _coberturaSortCol=null, _coberturaDim='cultivos', _coberturaFiltroCB='todos';
+let _coberturaCultivo=null, _coberturaAbxSel=null, _coberturaSortCol=null, _coberturaDim='cultivos', _coberturaFiltroCB='todos', _coberturaEskape=false;
 let _consumoAwareFilter=null; // Set de categorías activas, null = todas
 let _consumoTopMetrica='ddd'; // métrica de la gráfica 'Antimicrobianos con mayor consumo': 'ddd'|'costo'|'piezas'
 
@@ -5759,8 +5767,8 @@ function renderConsumoDDD(){
           <th style="text-align:center;padding:7px 10px;color:#fff;">Camas</th>
           <th style="text-align:center;padding:7px 10px;color:#fff;">Días paciente</th>
           <th style="text-align:center;padding:7px 10px;color:#fff;">Ocupación</th>
-          <th style="text-align:center;padding:7px 10px;color:#fff;">DDD est.</th>
-          <th style="text-align:center;padding:7px 10px;color:#fff;">DDD/100 d.p. est.</th>
+          <th title="DDD = Dosis Diaria Definida (OMS). Estimación derivada" style="text-align:center;padding:7px 10px;color:#fff;">DDD est.</th>
+          <th title="DDD por 100 días paciente (d.p.). Estimación derivada" style="text-align:center;padding:7px 10px;color:#fff;">DDD/100 d.p. est.</th>
         </tr></thead>
         <tbody>${filasServicio}</tbody>
       </table>
@@ -5779,6 +5787,7 @@ function renderConsumoDDD(){
     <div style="display:flex;gap:5px;align-items:center;padding-top:10px;flex-wrap:wrap;">
       <span style="font-size:.7rem;color:#94a3b8;font-weight:600;margin-right:4px;">Cobertura del año:</span>${calHtml}
     </div>
+    <div style="margin-top:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:8px 12px;font-size:.72rem;color:#1e3a8a;line-height:1.5;"><b>ℹ️ DDD = Dosis Diaria Definida</b> (<i>Defined Daily Dose</i>): dosis media de mantenimiento, por día, de un antibiótico en un adulto para su indicación principal, fijada por la OMS (sistema ATC/DDD). <b>ΣDDD</b> es la suma de las DDD consumidas; <b>DDD/100 camas</b> (o <b>/100 días paciente</b>) lo expresa por tamaño del hospital para poder comparar.</div>
     ${_consumoModo==='acumulado'?`<div style="font-size:.7rem;color:#154f39;font-weight:700;padding-top:6px;">📊 Acumulado ${d.meses?MESES_ABBR[d.meses[0].slice(5)]+'–'+MESES_ABBR[d.meses[d.meses.length-1].slice(5)]:''} ${_consumoPeriodo.slice(0,4)} (${d.meses?d.meses.length:0} mes${d.meses&&d.meses.length===1?'':'es'} con consumo cargado)</div>`:(!mesActualCargado?`<div style="font-size:.7rem;color:#92400e;font-weight:700;padding-top:6px;">○ ${_consumoPeriodo}: aún no se ha cargado CONSABI de este mes — solo se muestran camas y días paciente de PARTE II.</div>`:(mesActualPreliminar?`<div style="font-size:.7rem;color:#d97706;font-weight:700;padding-top:6px;">~ ${_consumoPeriodo}: mes con estatus "Abierto" en PARTE II — dato PRELIMINAR, puede cambiar cuando IMSS lo cierre oficialmente.</div>`:''))}
     <div style="padding-top:14px;">${resumenHtml}</div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;">${kpiHtml}</div>
@@ -5920,6 +5929,7 @@ function coberturaColor(pct){
   return {c:'#991b1b',bg:'#fee2e2'};
 }
 
+function toggleCoberturaEskape(){ _coberturaEskape=!_coberturaEskape; renderCobertura(); }
 function toggleCoberturaAbx(name){
   if(!_coberturaAbxSel) _coberturaAbxSel=[];
   const i=_coberturaAbxSel.indexOf(name);
@@ -6005,9 +6015,9 @@ function renderCobertura(){
   if(chart4 && chart4.stacks){
     topMicros = Object.entries(chart4.stacks)
       .map(([micro,cols])=>({micro,n:cols[_coberturaCultivo]||0}))
-      .filter(x=>x.n>0)
-      .sort((a,b)=>b.n-a.n)
-      .slice(0,8);
+      .filter(x=>x.n>0 && (!_coberturaEskape || _esEskape(x.micro)))
+      .sort((a,b)=>b.n-a.n);
+    if(!_coberturaEskape) topMicros=topMicros.slice(0,8);
   }
 
   // Antibióticos elegibles (con n>=3 en este cultivo), filtrados por Cuadro Básico si aplica.
@@ -6028,7 +6038,7 @@ function renderCobertura(){
   let tablaHtml='';
   let microRowsData=[];
   if(!topMicros.length){
-    tablaHtml=`<div style="padding:20px;text-align:center;color:#94a3b8;font-size:.78rem;">No hay suficiente información de microorganismos por cultivo para esta unidad.</div>`;
+    tablaHtml=`<div style="padding:20px;text-align:center;color:#94a3b8;font-size:.78rem;">${_coberturaEskape?'No hay aislamientos del grupo ESKAPE registrados en '+_coberturaCultivo+' para esta unidad.':'No hay suficiente información de microorganismos por cultivo para esta unidad.'}</div>`;
   } else if(!_coberturaAbxSel.length){
     tablaHtml=`<div style="padding:20px;text-align:center;color:#94a3b8;font-size:.78rem;">${_coberturaFiltroCB==='cb'&&!abxOptions.length?'No hay antibióticos de Cuadro Básico con datos suficientes (n≥3) en este cultivo/servicio — prueba con "Todos los antibióticos".':'Selecciona al menos un antibiótico arriba.'}</div>`;
   } else {
@@ -6271,8 +6281,11 @@ function renderCobertura(){
     ${_coberturaFiltroCB==='cb'?`<div style="font-size:.66rem;color:#94a3b8;padding-top:4px;">📋 Mostrando solo antibióticos de Cuadro Básico — es el conjunto del que hoy tenemos precios de referencia.</div>`:''}
     <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">🦠 ¿Qué cubre cada opción empírica? · ${_coberturaCultivo}</div>
-        <div style="font-size:.7rem;color:#94a3b8;margin-bottom:10px;">Sensibilidad por microorganismo (verde ≥80%, ámbar 60–79%, rojo &lt;60%). Microorganismos según frecuencia registrada en ${dimCfg.label.toLowerCase()}.</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+          <div style="font-size:.85rem;font-weight:800;color:#1e293b;">🦠 ¿Qué cubre cada opción empírica? · ${_coberturaCultivo}</div>
+          <button onclick="toggleCoberturaEskape()" title="${ESKAPE_TXT}" style="padding:4px 12px;border-radius:14px;font-size:.7rem;font-weight:800;cursor:pointer;border:1.5px solid ${_coberturaEskape?'#b91c1c':'#e2e8f0'};background:${_coberturaEskape?'#fef2f2':'#fff'};color:${_coberturaEskape?'#b91c1c':'#475569'};">🛡️ ESKAPE${_coberturaEskape?' ✓':''}</button>
+        </div>
+        <div style="font-size:.7rem;color:#94a3b8;margin-bottom:10px;">Sensibilidad por microorganismo (verde ≥80%, ámbar 60–79%, rojo &lt;60%). ${_coberturaEskape?'<b style="color:#b91c1c;">Solo grupo ESKAPE</b> ('+ESKAPE_TXT+').':'Microorganismos según frecuencia registrada en '+dimCfg.label.toLowerCase()+'.'}</div>
         ${tablaHtml}
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
@@ -6462,6 +6475,20 @@ const ESPECIALIDAD_ALIAS_JS={
   'UNIDAD DE CUIDADOS INTENSIVOS':'TERAPIA INTENSIVA', // mismo servicio, nombre institucional distinto
   'PEDIATRIA':'PEDIATRIA MEDICA', // catálogo agrega "Médica" al nombre
 };
+// Grupo ESKAPE (patógenos de mayor riesgo de resistencia): Enterococcus faecium, Staphylococcus aureus,
+// Klebsiella pneumoniae, Acinetobacter baumannii, Pseudomonas aeruginosa y Enterobacter spp.
+// (se incluye Klebsiella aerogenes por ser el antiguo Enterobacter aerogenes).
+function _esEskape(nombre){
+  const n=(nombre||'').toString().toUpperCase().replace(/\s+/g,' ').trim();
+  return /^ENTEROCOCCUS FAECIUM/.test(n)
+      || /^STAPHYLOCOCCUS AUREUS/.test(n)
+      || /^KLEBSIELLA PNEUMONIAE/.test(n)
+      || /^KLEBSIELLA AEROGENES/.test(n)
+      || /^ACINETOBACTER BAUMANN/.test(n)
+      || /^PSEUDOMONAS AERUGINOSA/.test(n)
+      || /^ENTEROBACTER\b/.test(n);
+}
+const ESKAPE_TXT='Enterococcus faecium · Staphylococcus aureus · Klebsiella pneumoniae · Acinetobacter baumannii · Pseudomonas aeruginosa · Enterobacter spp.';
 function _aliasEspecialidadJS(normalizado){
   return ESPECIALIDAD_ALIAS_JS[normalizado] || normalizado;
 }
@@ -6794,6 +6821,7 @@ function renderConsumoEspecialidad(){
         }).join('');
         dddEstimadoHtml=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:16px 18px;margin-top:14px;">
           <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:6px;">🧮 DDD estimado por especialidad <span style="font-size:.68rem;font-weight:700;color:#92400e;background:#fef3c7;padding:2px 8px;border-radius:10px;">ESTIMACIÓN DERIVADA — NO ES DATO OFICIAL DE CONSABI</span></div>
+        <div style="font-size:.66rem;color:#64748b;margin-bottom:6px;"><b>DDD</b> = Dosis Diaria Definida: dosis media diaria de mantenimiento de un antibiótico en adultos, según la OMS.</div>
           <p style="font-size:.72rem;color:#374151;line-height:1.6;margin:0 0 12px;">
             CONSABI reporta, por cada antibiótico, tanto el <b>DDD</b> como las <b>piezas</b> consumidas — pero a nivel de todo el hospital, sin desglose por especialidad. Aquí se calcula el factor implícito <b>DDD ÷ pieza</b> de cada antibiótico usando esos dos números oficiales de CONSABI (${_especialidadPeriodo}), y ese mismo factor se aplica a las piezas que la Plantilla de Recetas sí tiene desglosadas por especialidad. Así se estima cuántos DDD le corresponderían a cada especialidad, asumiendo que la presentación/dosis del medicamento es la misma sin importar quién lo recete. <b>Es una aproximación razonable, no una cifra que CONSABI calcule ni certifique.</b> Solo se muestran especialidades donde al menos un antibiótico coincidió por nombre entre ambas fuentes.
           </p>
