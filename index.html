@@ -4426,6 +4426,21 @@ async function fetchEspecialidadData(){
   throw lastErr||new Error('No se pudo cargar consumo_especialidad_data.json');
 }
 
+async function fetchAbastoData(){
+  const stamp='?ts='+Date.now();
+  const basePath=(window.location.pathname||'').replace(/[^/]*$/, '');
+  const tries=[basePath+'abasto_data.json'+stamp,'abasto_data.json'+stamp,'./abasto_data.json'+stamp,'/abasto_data.json'+stamp];
+  let lastErr=null;
+  for(const url of [...new Set(tries)]){
+    try{
+      const resp=await fetch(url,{cache:'no-store'});
+      if(!resp.ok) throw new Error(`HTTP ${resp.status} @ ${url}`);
+      return await resp.json();
+    }catch(err){ lastErr=err; }
+  }
+  throw lastErr||new Error('No se pudo cargar abasto_data.json');
+}
+
 async function initDashboard(){
   let loadFailed=false;
   try {
@@ -4490,6 +4505,8 @@ async function initDashboard(){
     console.warn('No se pudo cargar consumo_especialidad_data.json (el módulo de Consumo por Especialidad quedará vacío hasta que exista ese archivo):', e);
     ESPECIALIDAD_DATA = null;
   }
+  try { ABASTO_DATA = await fetchAbastoData(); }
+  catch (e) { console.warn('No se pudo cargar abasto_data.json (la pestaña Abasto quedará vacía hasta que exista ese archivo):', e); ABASTO_DATA = null; }
   if(activeSection==='consumo') renderConsumo();
 }
 async function reloadData(){
@@ -4871,6 +4888,7 @@ let CONSUMO_DATA_V2={}; // datos crudos por antibiótico, calculados directo de 
 let _consumoFiltroVia='endovenoso'; // 'endovenoso'|'oral'|'ambos'
 let _consumoFiltroTipo='ambas'; // 'individual'|'colectiva'|'ambas'
 let ESPECIALIDAD_DATA=null;
+let ABASTO_DATA=null, _abastoMeses=null, _abastoAware=null, _abastoVia='todas';
 let _especialidadUnidad=null;
 let _especialidadPeriodo=null;
 let _especialidadAwareFiltro=null; // null = todos; o un Set con las categorías activas (selección múltiple)
@@ -4910,23 +4928,26 @@ function wireTips(root){
 /* ─── Clasificación por grupo farmacológico (para consumo agregado) */
 const GRUPO_FARM_RULES=[
   {re:/carbapenem|meropenem|imipenem|ertapenem|doripenem/,g:'Carbapenémicos'},
-  {re:/cefalotina|cefazolina/,g:'Cefalosporinas 1ª gen'},
-  {re:/cefuroxima|cefoxitina|cefotetan/,g:'Cefalosporinas 2ª gen'},
+  {re:/cefalotina|cefazolina|cefalexina/,g:'Cefalosporinas 1ª gen'},
+  {re:/cefuroxima|cefoxitina|cefotetan|cefaclor/,g:'Cefalosporinas 2ª gen'},
   {re:/cefotaxima|ceftriaxona|ceftazidima(?!.avibactam)/,g:'Cefalosporinas 3ª gen'},
-  {re:/cefepime/,g:'Cefalosporinas 4ª gen'},
+  {re:/cefepim|cefpirom/,g:'Cefalosporinas 4ª gen'},
   {re:/ceftolozano|ceftarolina|avibactam/,g:'Cefalosporinas + inhibidor'},
-  {re:/amika|gentamic|estreptomicina|tobramicina/,g:'Aminoglucósidos'},
-  {re:/ciprofloxac|levofloxac|moxifloxac|norfloxac/,g:'Quinolonas'},
+  {re:/amika|gentamic|estreptomicina|tobramicina|kanamicina/,g:'Aminoglucósidos'},
+  {re:/ciprofloxac|levofloxac|moxifloxac|norfloxac|ofloxacin/,g:'Quinolonas'},
   {re:/vancomicina|teicoplanina/,g:'Glucopéptidos'},
   {re:/clindamicina/,g:'Lincosamidas'},
   {re:/metronidazol/,g:'Nitroimidazoles'},
   {re:/nitrofurantoin/,g:'Nitrofuranos'},
-  {re:/azitromicina|claritromicina|eritromicina/,g:'Macrólidos'},
+  {re:/azitromicina|claritromicina|eritromicina|roxitromicina/,g:'Macrólidos'},
   {re:/trimetoprim/,g:'Sulfonamidas'},
   {re:/tigeciclina/,g:'Glicilciclinas'},
   {re:/doxiciclina|tetraciclina|minociclina/,g:'Tetraciclinas'},
   {re:/linezolid/,g:'Oxazolidinonas'},
-  {re:/colistina|polimixina/,g:'Polimixinas'},
+  {re:/colisti|polimixina/,g:'Polimixinas'},
+  {re:/quinupristina|dalfopristina/,g:'Estreptograminas'},
+  {re:/rifampicina|rifaximina/,g:'Rifamicinas'},
+  {re:/cloranfenicol/,g:'Anfenicoles'},
   {re:/piperacilina|amoxicilina|ampicilina|penicilina|dicloxacilina|bencilpenicilina/,g:'Penicilinas'},
 ];
 const GRUPO_COLORS={
@@ -4935,7 +4956,7 @@ const GRUPO_COLORS={
   'Aminoglucósidos':'#16a34a','Quinolonas':'#d97706','Glucopéptidos':'#dc2626','Lincosamidas':'#0d9488',
   'Nitroimidazoles':'#65a30d','Nitrofuranos':'#15803d','Macrólidos':'#c2410c','Sulfonamidas':'#9333ea',
   'Glicilciclinas':'#be185d','Tetraciclinas':'#b45309','Oxazolidinonas':'#991b1b','Polimixinas':'#4b5563',
-  'Penicilinas':'#0891b2','Otros':'#94a3b8'
+  'Penicilinas':'#0891b2','Estreptograminas':'#a21caf','Rifamicinas':'#ea580c','Anfenicoles':'#57534e','Otros':'#94a3b8'
 };
 function grupoFarmacologico(nombre){
   const n=_stripAccents(nombre||'').toLowerCase();
@@ -5331,6 +5352,7 @@ function renderConsumo(){
       ${tabBtn('ranking','🏆 Ranking de Antibióticos')}
       ${tabBtn('especialidad','🩺 Consumo por Especialidad')}
       ${tabBtn('indicadores','📐 Indicadores PROA')}
+      ${tabBtn('abasto','📦 Abasto')}
     </div>
     <div id="consumo-inner"></div>
   `;
@@ -5338,6 +5360,7 @@ function renderConsumo(){
   else if(_consumoView==='cobertura') renderCobertura();
   else if(_consumoView==='ranking') renderRankingAntibioticos();
   else if(_consumoView==='especialidad') renderConsumoEspecialidad();
+  else if(_consumoView==='abasto') renderAbasto();
   else renderIndicadoresPROA();
 }
 
@@ -6006,6 +6029,208 @@ function renderConsumoDDD(){
     </div>
 
     ${servicioTablaHtml?`<div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">🏥 Detalle por servicio</div><div style="padding-top:14px;">${servicioTablaHtml}</div>`:''}
+  `;
+  wireTips(inner);
+}
+
+
+/* ─── ABASTO: altas a almacén vs remisionado a unidades (abasto_data.json) ─── */
+function setAbastoMeses(arr){ _abastoMeses=(arr||[]).slice().sort(); renderAbasto(); }
+function toggleAbastoMes(m){
+  const base=(_abastoMeses&&_abastoMeses.length)?_abastoMeses.slice():((ABASTO_DATA&&ABASTO_DATA.meses)||[]).slice();
+  const i=base.indexOf(m);
+  if(i>=0){ if(base.length>1) base.splice(i,1); } else base.push(m);
+  setAbastoMeses(base);
+}
+function setAbastoAware(k){
+  const cur=_abastoAware?new Set(_abastoAware):new Set();
+  if(cur.has(k)) cur.delete(k); else cur.add(k);
+  _abastoAware=(cur.size===0||cur.size>=3)?null:cur;
+  renderAbasto();
+}
+function setAbastoVia(v){ _abastoVia=v; renderAbasto(); }
+
+function renderAbasto(){
+  const inner=document.getElementById('consumo-inner');
+  if(!inner) return;
+  _tipRegistry={};
+  if(!ABASTO_DATA||!ABASTO_DATA.claves||!ABASTO_DATA.claves.length){
+    inner.innerHTML=`<div style="padding:40px;text-align:center;color:#94a3b8;">Aún no hay datos de abasto cargados.<br><span style="font-size:.78rem;">Genera <code>abasto_data.json</code> con <code>abasto_antimicrobianos.py "archivo.xlsx"</code> y colócalo junto a <code>index.html</code>.</span></div>`;
+    return;
+  }
+  const D=ABASTO_DATA, todos=D.meses||[];
+  let ms=(_abastoMeses||todos).filter(m=>todos.includes(m));
+  if(!ms.length) ms=todos.slice();
+  ms.sort(); _abastoMeses=ms;
+  const etq=_etiquetaMeses(ms);
+  const unidad=D.unidad||'OOAD Tlaxcala';
+  const ctx=`<span style="font-size:.64rem;font-weight:600;color:#64748b;"> · ${unidad} · ${etq}</span>`;
+  const fmt=n=>Math.round(n).toLocaleString('es-MX');
+  const mesActual=new Date().toISOString().slice(0,7);
+
+  const viaOk=f=>_abastoVia==='todas'||f.via===_abastoVia;
+  const awOk=f=>!_abastoAware||_abastoAware.has(f.aware);
+  const filas=D.claves.filter(f=>viaOk(f)&&awOk(f));
+  const suma=(rows,meses)=>{let rec=0,rem=0;rows.forEach(f=>meses.forEach(m=>{rec+=f.altas[m]||0;rem+=f.remisionado[m]||0;}));return {rec,rem};};
+  const tot=suma(filas,ms);
+  const filasRes=D.claves.filter(f=>f.aware==='Reserve'&&viaOk(f));
+  const totRes=suma(filasRes,ms);
+  const pct=(a,b)=>b>0?Math.round(a/b*1000)/10:null;
+
+  // ── filtros ──
+  const chipMes=m=>{
+    const sel=ms.includes(m); const parcial=m===mesActual;
+    return `<button onclick="toggleAbastoMes('${m}')" style="padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:${sel?700:600};cursor:pointer;border:1.5px solid ${sel?'#154f39':'#e2e8f0'};background:${sel?'#154f39':'#fff'};color:${sel?'#fff':'#6b7280'};" title="${parcial?'Mes en curso: las cifras pueden seguir cambiando':'Clic para sumar o quitar este mes'}">${sel?'✓ ':''}${mesNombre(m)}${parcial?' <span style="opacity:.7;">~</span>':''}</button>`;
+  };
+  const atajo=(label,arr,title)=>{
+    const act=arr.length>0&&arr.length===ms.length&&arr.every(x=>ms.includes(x));
+    return `<button ${arr.length?'':'disabled'} title="${title}" onclick="setAbastoMeses(${JSON.stringify(arr).replace(/"/g,'&quot;')})" style="padding:4px 10px;border-radius:8px;font-size:.68rem;font-weight:700;cursor:${arr.length?'pointer':'default'};border:1.5px solid ${act?'#0369a1':'#bfdbfe'};background:${act?'#0369a1':'#eff6ff'};color:${act?'#fff':(arr.length?'#1e40af':'#cbd5e1')};">${label}</button>`;
+  };
+  const anios=[...new Set(todos.map(m=>m.slice(0,4)))];
+  const atajos=[
+    ...anios.flatMap(y=>[1,2,3,4].map(q=>{const arr=todos.filter(m=>m.slice(0,4)===y&&Math.ceil(parseInt(m.slice(5,7),10)/3)===q);return arr.length?atajo('T'+q+' '+y,arr,'Suma de '+arr.map(x=>mesNombre(x)).join(', ')):'';})),
+    ...anios.map(y=>atajo('Año '+y,todos.filter(m=>m.slice(0,4)===y),'Todos los meses de '+y)),
+    atajo('Solo el último',todos.slice(-1),'Quedarse con el último mes del archivo')
+  ].join('');
+  const awChip=k=>{const act=!!_abastoAware&&_abastoAware.has(k);return `<button onclick="setAbastoAware('${k}')" style="padding:5px 12px;border-radius:8px;font-size:.72rem;font-weight:700;cursor:pointer;border:1.5px solid ${AWARE_COLORS[k]};background:${act?AWARE_COLORS[k]:'#fff'};color:${act?'#fff':AWARE_COLORS[k]};">${k}</button>`;};
+  const viaChip=(v,l)=>`<button onclick="setAbastoVia('${v}')" style="padding:5px 12px;border-radius:8px;font-size:.72rem;font-weight:700;cursor:pointer;border:1.5px solid #0369a1;background:${_abastoVia===v?'#0369a1':'#fff'};color:${_abastoVia===v?'#fff':'#0369a1'};">${l}</button>`;
+
+  // ── barras pareadas: claro = recibido en almacén, oscuro = remitido a unidades ──
+  const pares=(items,labelW)=>{
+    const max=Math.max(1,...items.map(i=>Math.max(i.rec,i.rem)));
+    return items.map(it=>{
+      const c=it.color||'#0ea5e9', cd=_darkenHex(c,.38);
+      const dif=it.rec-it.rem, p=pct(it.rem,it.rec);
+      const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${it.label}</div><div>📥 Recibido en almacén: <b>${fmt(it.rec)}</b> pzas</div><div>📤 Remitido a unidades: <b>${fmt(it.rem)}</b> pzas</div><div>Diferencia (recibido − remitido): <b>${dif>0?'+':''}${fmt(dif)}</b></div>${p!=null?`<div>Remitido / recibido: ${p}%</div>`:''}<div style="color:#94a3b8;font-size:.66rem;margin-top:3px;">${unidad} · ${etq}</div>${it.tipExtra||''}`);
+      const cero=it.rec===0&&it.rem===0;
+      return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:${labelW}px 1fr 122px;align-items:center;gap:8px;cursor:pointer;padding:2px 0;">
+        <span style="font-size:.74rem;color:#000;font-weight:600;line-height:1.25;">${it.badge||''}${it.label}${cero?' <span style="font-size:.64rem;color:#dc2626;font-weight:700;">· sin movimiento</span>':''}</span>
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          <div style="background:#f1f5f9;border-radius:4px;height:10px;"><div style="width:${(it.rec/max*100).toFixed(1)}%;background:${c};height:10px;border-radius:4px;transition:width .3s;"></div></div>
+          <div style="background:#f1f5f9;border-radius:4px;height:10px;"><div style="width:${(it.rem/max*100).toFixed(1)}%;background:${cd};height:10px;border-radius:4px;transition:width .3s;"></div></div>
+        </div>
+        <div style="font-size:.68rem;line-height:1.4;text-align:right;color:#1e293b;">Recibido <b>${fmt(it.rec)}</b><br>Remitido <b>${fmt(it.rem)}</b></div>
+      </div>`;
+    }).join('');
+  };
+  const leyenda=(c)=>`<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.68rem;color:#000;margin-bottom:10px;"><span><span style="display:inline-block;width:18px;height:8px;border-radius:3px;background:${c||'#0ea5e9'};vertical-align:middle;"></span> Recibido en almacén (altas) — color claro</span><span><span style="display:inline-block;width:18px;height:8px;border-radius:3px;background:${_darkenHex(c||'#0ea5e9',.38)};vertical-align:middle;"></span> Remitido a unidades — tono oscuro</span></div>`;
+  const card=(titulo,sub,body,extraStyle)=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;${extraStyle||''}"><div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">${titulo}</div>${sub?`<div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;line-height:1.5;">${sub}</div>`:'<div style="margin-bottom:10px;"></div>'}${body}</div>`;
+
+  // ── por grupo farmacológico ──
+  const gMap={};
+  filas.forEach(f=>{
+    const g=grupoFarmacologico(f.nombre);
+    if(!gMap[g]) gMap[g]={rec:0,rem:0,abx:{}};
+    const r=suma([f],ms);
+    gMap[g].rec+=r.rec; gMap[g].rem+=r.rem;
+    const k=f.nombre+(f.via?' ('+f.via+')':'');
+    if(!gMap[g].abx[k]) gMap[g].abx[k]={rec:0,rem:0};
+    gMap[g].abx[k].rec+=r.rec; gMap[g].abx[k].rem+=r.rem;
+  });
+  const gItems=Object.entries(gMap).filter(([,v])=>v.rec>0||v.rem>0).sort((a,b)=>(b[1].rec+b[1].rem)-(a[1].rec+a[1].rem)).map(([g,v])=>({
+    label:g,rec:v.rec,rem:v.rem,color:GRUPO_COLORS[g]||'#94a3b8',
+    tipExtra:`<div style="margin-top:5px;padding-top:4px;border-top:1px solid rgba(148,163,184,.35);font-size:.66rem;">${Object.entries(v.abx).filter(([,x])=>x.rec||x.rem).sort((a,b)=>(b[1].rec+b[1].rem)-(a[1].rec+a[1].rem)).slice(0,8).map(([n,x])=>`<div>${n}: rec. ${fmt(x.rec)} · rem. ${fmt(x.rem)}</div>`).join('')}</div>`
+  }));
+  const gTabla=gItems.length?`<div style="overflow-x:auto;margin-top:14px;"><table style="width:100%;border-collapse:collapse;font-size:.74rem;min-width:560px;"><thead><tr style="background:#154f39;"><th style="text-align:left;padding:7px 10px;color:#fff;">Grupo</th><th style="text-align:right;padding:7px 10px;color:#fff;">Recibido en almacén</th><th style="text-align:right;padding:7px 10px;color:#fff;">Remitido (surtido) a unidades</th><th style="text-align:right;padding:7px 10px;color:#fff;" title="Recibido − remitido. Es un balance de movimientos, no el inventario físico.">Balance de piezas</th><th style="text-align:right;padding:7px 10px;color:#fff;" title="Recibido ÷ remitido × 100. Menos de 100% = se surtió más de lo que se recibió en el período.">Cobertura (recibido ÷ surtido)</th></tr></thead><tbody>${gItems.map(g=>{const dif=g.rec-g.rem;const cob=g.rem>0?Math.round(g.rec/g.rem*1000)/10:null;return `<tr style="border-top:1px solid #f1f5f9;"><td style="padding:6px 10px;color:#000;font-weight:600;"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${g.color};margin-right:6px;"></span>${g.label}</td><td style="text-align:right;padding:6px 10px;color:#000;">${fmt(g.rec)}</td><td style="text-align:right;padding:6px 10px;color:#000;">${fmt(g.rem)}</td><td style="text-align:right;padding:6px 10px;font-weight:700;color:${dif<0?'#dc2626':'#000'};">${dif>0?'+':''}${fmt(dif)}</td><td style="text-align:right;padding:6px 10px;font-weight:700;color:${cob!=null&&cob<100?'#dc2626':'#000'};">${cob!=null?cob+'%':'<span style="color:#94a3b8;font-weight:600;">N/A (sin surtido)</span>'}</td></tr>`;}).join('')}</tbody></table><div style="font-size:.64rem;color:#94a3b8;margin-top:5px;">Cobertura &lt; 100% (rojo): en el período se surtió más de lo que se recibió, es decir, se usó existencia previa del almacén. Si no hubo surtido, la cobertura no se puede calcular (N/A).</div></div>`:'';
+  const gHtml=gItems.length?pares(gItems,170):`<div style="color:#94a3b8;font-size:.78rem;">Sin movimiento en el filtro seleccionado.</div>`;
+
+  // ── antibióticos de reserva (todos, con ceros explícitos) ──
+  const rMap={};
+  filasRes.forEach(f=>{
+    const k=f.nombre+'|'+f.via;
+    if(!rMap[k]) rMap[k]={nombre:f.nombre,via:f.via,rec:0,rem:0,claves:[],vacias:0};
+    const r=suma([f],ms); rMap[k].rec+=r.rec; rMap[k].rem+=r.rem; rMap[k].claves.push(f.clave); if(f.sin_captura) rMap[k].vacias++;
+  });
+  const rItems=Object.values(rMap).sort((a,b)=>((b.rec+b.rem)-(a.rec+a.rem))||a.nombre.localeCompare(b.nombre)).map(x=>({
+    label:`${x.nombre} · ${x.via}`,rec:x.rec,rem:x.rem,color:'#dc2626',badge:awareBadge('Reserve'),
+    tipExtra:`<div style="color:#94a3b8;font-size:.66rem;">Claves: ${x.claves.join(', ')}</div>${x.vacias===x.claves.length?'<div style="color:#fbbf24;font-size:.66rem;">El archivo no trae ningún dato de esta clave (celdas vacías); se muestra como 0 por indicación de Jefatura.</div>':''}`
+  }));
+  const rHtml=rItems.length?pares(rItems,230):`<div style="color:#94a3b8;font-size:.78rem;">No hay antibióticos de reserva en el archivo.</div>`;
+
+  // ── tendencia mensual ──
+  const tendencia=(rows,c,titulo,sub)=>{
+    const pts=todos.map(m=>({m,...suma(rows,[m])}));
+    const max=Math.max(1,...pts.map(p=>Math.max(p.rec,p.rem)));
+    const cd=_darkenHex(c,.38);
+    const cols=pts.map(p=>{
+      const sel=ms.includes(p.m);
+      const tid=registerTip(`<div style="font-weight:700;">${mesNombre(p.m)}${p.m===mesActual?' (mes en curso)':''}</div><div>📥 Recibido en almacén: <b>${fmt(p.rec)}</b></div><div>📤 Remitido a unidades: <b>${fmt(p.rem)}</b></div><div>Diferencia: <b>${p.rec-p.rem>0?'+':''}${fmt(p.rec-p.rem)}</b></div><div style="color:#94a3b8;font-size:.66rem;">Clic para ver solo este mes</div>`);
+      return `<div data-tipid="${tid}" onclick="setAbastoMeses(['${p.m}'])" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;opacity:${sel?1:.45};min-width:0;">
+        <div style="display:flex;align-items:flex-end;gap:3px;height:110px;width:100%;justify-content:center;">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;"><span style="font-size:.58rem;color:#475569;font-weight:700;">${fmt(p.rec)}</span><div style="width:14px;background:${c};border-radius:3px 3px 0 0;height:${Math.max(p.rec?3:1,p.rec/max*88)}px;"></div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;"><span style="font-size:.58rem;color:#475569;font-weight:700;">${fmt(p.rem)}</span><div style="width:14px;background:${cd};border-radius:3px 3px 0 0;height:${Math.max(p.rem?3:1,p.rem/max*88)}px;"></div></div>
+        </div>
+        <div style="font-size:.68rem;color:#94a3b8;">${mesNombre(p.m,false)}${p.m===mesActual?'~':''}</div>
+      </div>`;
+    }).join('');
+    return card(titulo+ctx,sub,leyenda(c)+`<div style="display:flex;gap:4px;">${cols}</div>`);
+  };
+  const tendTodo=tendencia(filas,'#0ea5e9','📈 Tendencia mensual — recibido vs remitido'+((_abastoAware||_abastoVia!=='todas')?' (filtro actual)':''),'Cada mes con sus dos barras. Los meses marcados arriba se ven más intensos; clic en un mes para verlo solo.');
+  const tendRes=tendencia(filasRes,'#dc2626','🔴 Tendencia mensual — antibióticos de reserva','Solo clasificación Reserve (no depende del filtro AWaRe).');
+
+  // ── detalle por antibiótico ──
+  const dMap={};
+  filas.concat(filasRes.filter(f=>!filas.includes(f))).forEach(f=>{
+    const k=f.nombre+'|'+f.via;
+    if(!dMap[k]) dMap[k]={nombre:f.nombre,via:f.via,aware:f.aware,rec:0,rem:0,claves:[],fuente:f.aware_fuente};
+    const r=suma([f],ms); dMap[k].rec+=r.rec; dMap[k].rem+=r.rem; dMap[k].claves.push(f.clave);
+  });
+  const dRows=Object.values(dMap).filter(x=>x.rec>0||x.rem>0||(x.aware==='Reserve')).sort((a,b)=>((b.rec+b.rem)-(a.rec+a.rem))||a.nombre.localeCompare(b.nombre));
+  const tabla=dRows.map(x=>{
+    const dif=x.rec-x.rem, p=pct(x.rem,x.rec);
+    const tid=registerTip(`<div style="font-weight:700;">${x.nombre} · ${x.via}</div><div style="font-size:.66rem;color:#94a3b8;">Claves: ${x.claves.join(', ')}</div>${x.fuente==='orden_del_archivo'?'<div style="font-size:.66rem;color:#fbbf24;">AWaRe tomado del orden del archivo (sin consumo en Recetas)</div>':''}`);
+    return `<tr data-tipid="${tid}" style="border-top:1px solid #f1f5f9;">
+      <td style="text-align:left;padding:6px 10px;color:#000;font-weight:600;">${x.nombre}</td>
+      <td style="text-align:center;padding:6px 10px;">${awareBadge(x.aware)}</td>
+      <td style="text-align:left;padding:6px 10px;color:#000;">${grupoFarmacologico(x.nombre)}</td>
+      <td style="text-align:center;padding:6px 10px;color:#000;">${x.via}</td>
+      <td style="text-align:right;padding:6px 10px;color:#000;">${fmt(x.rec)}</td>
+      <td style="text-align:right;padding:6px 10px;color:#000;">${fmt(x.rem)}</td>
+      <td style="text-align:right;padding:6px 10px;color:${dif<0?'#dc2626':'#000'};font-weight:700;">${dif>0?'+':''}${fmt(dif)}</td>
+      <td style="text-align:right;padding:6px 10px;color:#000;">${p!=null?p+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+  const th=(t,al)=>`<th style="text-align:${al||'center'};padding:7px 10px;color:#fff;">${t}</th>`;
+  const tablaHtml=card('🧾 Detalle por antibiótico'+ctx,'Suma de todas las claves (presentaciones) de cada antibiótico y vía. Se listan los que tuvieron movimiento y todos los de reserva (aunque estén en cero).',`<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:.74rem;min-width:720px;"><thead><tr style="background:#154f39;">${th('Antibiótico','left')}${th('AWaRe')}${th('Grupo','left')}${th('Vía')}${th('Recibido en almacén','right')}${th('Remitido a unidades','right')}${th('Diferencia','right')}${th('Remitido / recibido','right')}</tr></thead><tbody>${tabla||'<tr><td colspan="8" style="padding:14px;color:#94a3b8;text-align:center;">Sin movimiento en el filtro seleccionado.</td></tr>'}</tbody><tfoot><tr style="border-top:2px solid #154f39;font-weight:800;"><td style="padding:7px 10px;color:#154f39;" colspan="4">Total del filtro</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${fmt(tot.rec)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${fmt(tot.rem)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${tot.rec-tot.rem>0?'+':''}${fmt(tot.rec-tot.rem)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${pct(tot.rem,tot.rec)!=null?pct(tot.rem,tot.rec)+'%':'—'}</td></tr></tfoot></table></div>`,'');
+
+  // ── KPIs ──
+  const kpi=(l,v,sub)=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;flex:1;min-width:170px;"><div style="font-size:.68rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.03em;">${l}</div><div style="font-size:1.5rem;font-weight:800;color:#154f39;margin:2px 0;">${v}</div><div style="font-size:.68rem;color:#94a3b8;">${sub}</div></div>`;
+  const filtroTxt=[_abastoAware?[..._abastoAware].join(' + '):'',_abastoVia!=='todas'?_abastoVia:''].filter(Boolean).join(' · ');
+  const kpis=[
+    kpi('📥 Recibido en almacén',fmt(tot.rec),'piezas (altas de almacén)'),
+    kpi('📤 Remitido a unidades',fmt(tot.rem),'piezas (remisiones a las unidades)'),
+    kpi('Diferencia',(tot.rec-tot.rem>0?'+':'')+fmt(tot.rec-tot.rem),'recibido − remitido'),
+    kpi('🔴 Reserve: recibido / remitido',`${fmt(totRes.rec)} / ${fmt(totRes.rem)}`,'piezas · antibióticos de reserva'),
+  ].join('');
+
+  const mesesParciales=ms.includes(mesActual);
+  inner.innerHTML=`
+    <div style="padding-top:14px;">
+      <div style="font-size:1rem;font-weight:800;color:#1e293b;">📦 Abasto de antimicrobianos — almacén → unidades</div>
+      <div style="font-size:.72rem;color:#64748b;margin-top:2px;">Piezas que llegaron al almacén (altas) frente a las que el almacén remitió a las unidades. Fuente: ${D.fuente||'archivo de abasto'}${D.generado?` · generado ${D.generado}`:''}.</div>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:10px;background:#f8fafc;border-radius:10px;padding:8px 12px;">
+      <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;"><span style="font-size:.68rem;color:#94a3b8;font-weight:700;">Vía:</span>${viaChip('todas','↔️ Todas')}${viaChip('Inyectable','💉 Inyectable')}${viaChip('Oral','💊 Oral')}</div>
+      <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;"><span style="font-size:.68rem;color:#94a3b8;font-weight:700;">AWaRe:</span>${awChip('Access')}${awChip('Watch')}${awChip('Reserve')}<button onclick="_abastoAware=null;renderAbasto();" style="padding:5px 12px;border-radius:8px;font-size:.72rem;font-weight:700;cursor:pointer;border:1.5px solid #64748b;background:${_abastoAware?'#fff':'#64748b'};color:${_abastoAware?'#64748b':'#fff'};">Todos</button></div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:10px;"><span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Mes:</span>${todos.map(chipMes).join('')}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:8px;"><span style="font-size:.68rem;color:#94a3b8;font-weight:700;">Sumar rápido:</span>${atajos}<span style="font-size:.64rem;color:#94a3b8;">Los meses marcados se suman.</span></div>
+    ${mesesParciales?`<div style="font-size:.7rem;color:#d97706;font-weight:700;padding-top:6px;">~ ${mesNombre(mesActual)} es el mes en curso: sus cifras pueden seguir cambiando.</div>`:''}
+    <div style="padding-top:14px;font-size:.74rem;font-weight:800;color:#154f39;">📍 ${unidad} · ${etq}${filtroTxt?' · '+filtroTxt:''}</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:6px;">${kpis}</div>
+
+    <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">🧪 Por grupo farmacológico</div>
+    <div style="padding-top:14px;">${card('🧪 Recibido vs remitido por grupo farmacológico'+ctx+(filtroTxt?` <span style="font-size:.64rem;font-weight:600;color:#64748b;">· ${filtroTxt}</span>`:''),'Ordenado de mayor a menor movimiento. Piezas = unidades de cada presentación (clave); un grupo suma sus presentaciones.',leyenda('#2563eb')+`<div style="display:flex;flex-direction:column;gap:6px;">${gHtml}</div>`+gTabla)}</div>
+
+    <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">🔴 Antibióticos de reserva</div>
+    <div style="padding-top:14px;">${card('🔴 Reserve: ¿hay solvencia entre lo recibido y lo remitido?'+ctx,'Todos los antibióticos de reserva del archivo. Si no hubo movimiento se muestra explícitamente en cero (0 recibidos y 0 remitidos).',leyenda('#dc2626')+`<div style="display:flex;flex-direction:column;gap:8px;">${rHtml}</div><div style="font-size:.7rem;color:#7f1d1d;margin-top:10px;font-weight:700;">Total reserve: recibido ${fmt(totRes.rec)} · remitido ${fmt(totRes.rem)} · balance ${totRes.rec-totRes.rem>0?'+':''}${fmt(totRes.rec-totRes.rem)}${totRes.rem>0?` · cobertura ${Math.round(totRes.rec/totRes.rem*1000)/10}%`:' · cobertura N/A (sin surtido)'}</div>`,'background:#fef2f2;border-color:#fecaca;')}</div>
+
+    <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">📈 Tendencias en el tiempo</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">${tendTodo}${tendRes}</div>
+
+    <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">🧾 Detalle</div>
+    <div style="padding-top:14px;">${tablaHtml}</div>
+    <div style="margin-top:12px;font-size:.66rem;color:#94a3b8;line-height:1.6;">Notas: celda vacía en el Excel = 0 (no se estima ni se inventa). "Diferencia" es recibido − remitido del período elegido; no es el inventario (el almacén puede remitir existencias de meses anteriores). Las piezas de presentaciones distintas (mg, envase) se suman tal cual, como pidió Jefatura (piezas por grupo); para comparar potencia use DDD en la pestaña principal. La clasificación AWaRe sale de Plantilla de Recetas por nombre; las claves sin ningún movimiento usan el orden del archivo (Access → Watch → Reserve).</div>
   `;
   wireTips(inner);
 }
