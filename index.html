@@ -10908,7 +10908,7 @@ if (window.__sakuraWanted) window.sakuraStart();
 /* ═══ Alertas SyRA: perfiles S/I/R idénticos (datos: RAW.data[h].alertas, calculados en procesar_excel_v2.py) ═══ */
 (function(){
   const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-  const F={hs:new Set(),y:new Set(),m:new Set(),fr:new Set(),n:'2'};
+  const F={hs:new Set(),y:new Set(),m:new Set(),fr:new Set(),w:new Set()};
   const SEL=new Set();           // ids de alertas seleccionadas
   let ALL=null,SHOW=40,CMP=false;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -10937,6 +10937,10 @@ if (window.__sakuraWanted) window.sakuraStart();
       Object.entries((typeof RAW!=='undefined'&&RAW&&RAW.data)||{}).forEach(([h,hd])=>{
         ((hd&&hd.alertas)||[]).forEach((a,i)=>ALL.push(Object.assign({h,id:h+'#'+i},a)));
       });
+      // semanas distintas en que el mismo perfil (mismo hospital + microorganismo + S/I/R idéntico) generó alerta
+      const wk={};
+      ALL.forEach(a=>{ const k=a.h+'|'+a.m+'|'+JSON.stringify(a.perfil); (wk[k]=wk[k]||new Set()).add(a.sem); });
+      ALL.forEach(a=>{ a.sw=wk[a.h+'|'+a.m+'|'+JSON.stringify(a.perfil)].size; a.rp=a.nT?Math.round(a.nR/a.nT*100):0; });
     }catch(e){}
     return ALL;
   }
@@ -10960,8 +10964,9 @@ if (window.__sakuraWanted) window.sakuraStart();
   };
   function base(){   // filtros excepto hospital (para contar por hospital)
     return load().filter(a=>
-      (!F.y.size||F.y.has(a.sem.slice(0,4)))&&(!F.m.size||F.m.has(a.m))&&a.n>=(+F.n||2)&&
-      (!F.fr.size||(F.fr.has('raro')&&a.fr<5)||(F.fr.has('comun')&&a.fr>=5)));
+      (!F.y.size||F.y.has(a.sem.slice(0,4)))&&(!F.m.size||F.m.has(a.m))&&
+      (!F.w.size||F.w.has(String(Math.min(5,a.sw))))&&
+      (!F.fr.size||(F.fr.has('0')&&a.rp<=25)||(F.fr.has('1')&&a.rp>25&&a.rp<=50)||(F.fr.has('2')&&a.rp>50&&a.rp<=75)||(F.fr.has('3')&&a.rp>75)));
   }
   const filtered=()=>base().filter(a=>!F.hs.size||F.hs.has(a.h));
 
@@ -10985,11 +10990,8 @@ if (window.__sakuraWanted) window.sakuraStart();
     const uniq=f=>[...new Set(all.map(f))].sort();
     S.appendChild(mkDD('Año',uniq(a=>a.sem.slice(0,4)).reverse().map(v=>[v,v]),F.y));
     S.appendChild(mkDD('Microorganismo',uniq(a=>a.m).map(v=>[v,v]),F.m,true));
-    S.appendChild(mkDD('Frecuencia del perfil',[['raro','Poco comunes (<5% de los aislamientos)'],['comun','Comunes (≥5%)']],F.fr));
-    const l=document.createElement('label'); l.className='al-sel';
-    l.innerHTML='Mínimo de pacientes<select class="csel">'+[2,3,4,5].map(n=>'<option value="'+n+'"'+(String(n)===F.n?' selected':'')+'>'+n+' o más</option>').join('')+'</select>';
-    l.querySelector('select').onchange=e=>{F.n=e.target.value;SHOW=40;window.renderAlertas(true);};
-    S.appendChild(l);
+    S.appendChild(mkDD('Porcentaje de Resistentes',[['0','0-25%'],['1','26-50%'],['2','51-75%'],['3','76-100%']],F.fr));
+    S.appendChild(mkDD('Mínimo de semanas',[['1','1 semana'],['2','2 semanas'],['3','3 semanas'],['4','4 semanas'],['5','5 semanas o más']],F.w));
   }
   /* desplegable con casillas (selección múltiple) */
   function mkDD(label,opts,set,search){
