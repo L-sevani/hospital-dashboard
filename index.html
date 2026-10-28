@@ -5631,12 +5631,12 @@ function renderConsumoDDD(){
       Object.entries(awareSum).forEach(([k,v])=>{awarePct[k]=ddSum?Math.round(v/ddSum*1000)/10:0;});
 
       // Datos activos para el gráfico 3D: OOAD consolidado, o el hospital seleccionado
-      const selValido=false;   // el consolidado OOAD ya no se cambia por unidad (la unidad se elige arriba)
-      const dSel=null;
+      const selValido=ids.includes(_consumoHospital);   // el gráfico sigue al hospital elegido arriba; con OOAD muestra el consolidado
+      const dSel=selValido?consumoMesesV2(_consumoHospital,msC):null;
       const awareSumActivo=selValido?(dSel.por_aware||{}):awareSum;
       const awarePctActivo=selValido?(dSel.por_aware_pct||{}):awarePct;
       const ddSumActivo=selValido?(dSel.ddd_total||0):ddSum;
-      const tituloActivo=selValido?getHospitalDisplayName(_ooadPieSel):'Consolidado OOAD Tlaxcala';
+      const tituloActivo=selValido?getHospitalDisplayName(_consumoHospital):'Consolidado OOAD Tlaxcala';
 
       const segsOrdenActivo=Object.keys(awarePctActivo).sort((a,b)=>awarePctActivo[b]-awarePctActivo[a]);
       const legendOoad=segsOrdenActivo.map(k=>{
@@ -5662,8 +5662,8 @@ function renderConsumoDDD(){
       }).join('');
       const totalesT1=[{sum:ddSum},...ids.map(h=>{const dh=consumoMesesV2(h,msC);return {sum:(dh&&dh.ddd_total)||0};})];
       const filaTotalT1=`<tr style="border-top:1.5px solid #cbd5e1;"><td style="padding:5px 10px;font-weight:800;color:#154f39;">∑ Total DDD</td>${totalesT1.map(c=>`<td style="text-align:center;padding:5px 6px;font-weight:800;color:#154f39;">${c.sum.toLocaleString('es-MX',{maximumFractionDigits:1})}</td>`).join('')}</tr>`;
-      const thStyle=(activo)=>`padding:6px 6px;color:#fff;user-select:none;`;
-      const headerT1=`<th style="${thStyle()}">OOAD</th>${ids.map(h=>`<th style="${thStyle()}">${getHospitalDisplayName(h)}</th>`).join('')}`;
+      const thStyle=(activo)=>`padding:6px 6px;color:#fff;user-select:none;${activo?'background:rgba(255,255,255,.22);border-radius:4px;':''}`;
+      const headerT1=`<th style="${thStyle(!selValido)}">OOAD</th>${ids.map(h=>`<th style="${thStyle(selValido&&_consumoHospital===h)}">${getHospitalDisplayName(h)}</th>`).join('')}`;
       const tablaT1Html=`<table style="width:100%;border-collapse:collapse;font-size:.72rem;margin-top:14px;">
         <thead><tr style="background:linear-gradient(135deg,#154f39,#1a6347);">
           <th style="text-align:left;padding:6px 10px;color:#fff;">Clasificación</th>${headerT1}
