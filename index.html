@@ -6475,18 +6475,17 @@ const ESPECIALIDAD_ALIAS_JS={
   'UNIDAD DE CUIDADOS INTENSIVOS':'TERAPIA INTENSIVA', // mismo servicio, nombre institucional distinto
   'PEDIATRIA':'PEDIATRIA MEDICA', // catálogo agrega "Médica" al nombre
 };
-// Grupo ESKAPE (patógenos de mayor riesgo de resistencia): Enterococcus faecium, Staphylococcus aureus,
-// Klebsiella pneumoniae, Acinetobacter baumannii, Pseudomonas aeruginosa y Enterobacter spp.
-// (se incluye Klebsiella aerogenes por ser el antiguo Enterobacter aerogenes).
+// Grupo ESKAPE (solo estos 6, nombre exacto salvo Enterobacter que va por género):
+// Enterococcus faecium, Staphylococcus aureus, Klebsiella pneumoniae, Acinetobacter baumannii,
+// Pseudomonas aeruginosa y Enterobacter spp. Las demás variantes/complejos/subespecies NO entran.
 function _esEskape(nombre){
   const n=(nombre||'').toString().toUpperCase().replace(/\s+/g,' ').trim();
-  return /^ENTEROCOCCUS FAECIUM/.test(n)
-      || /^STAPHYLOCOCCUS AUREUS/.test(n)
-      || /^KLEBSIELLA PNEUMONIAE/.test(n)
-      || /^KLEBSIELLA AEROGENES/.test(n)
-      || /^ACINETOBACTER BAUMANN/.test(n)
-      || /^PSEUDOMONAS AERUGINOSA/.test(n)
-      || /^ENTEROBACTER\b/.test(n);
+  return n==='ENTEROCOCCUS FAECIUM'
+      || n==='STAPHYLOCOCCUS AUREUS'
+      || n==='KLEBSIELLA PNEUMONIAE'
+      || n==='ACINETOBACTER BAUMANNI' || n==='ACINETOBACTER BAUMANNII'
+      || n==='PSEUDOMONAS AERUGINOSA'
+      || /^ENTEROBACTER /.test(n);
 }
 const ESKAPE_TXT='Enterococcus faecium · Staphylococcus aureus · Klebsiella pneumoniae · Acinetobacter baumannii · Pseudomonas aeruginosa · Enterobacter spp.';
 function _aliasEspecialidadJS(normalizado){
