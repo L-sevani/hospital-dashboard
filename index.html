@@ -4888,7 +4888,7 @@ let CONSUMO_DATA_V2={}; // datos crudos por antibiótico, calculados directo de 
 let _consumoFiltroVia='endovenoso'; // 'endovenoso'|'oral'|'ambos'
 let _consumoFiltroTipo='ambas'; // 'individual'|'colectiva'|'ambas'
 let ESPECIALIDAD_DATA=null;
-let ABASTO_DATA=null, _abastoMeses=null, _abastoAware=null, _abastoVia='todas';
+let ABASTO_DATA=null, _abastoMeses=null, _abastoAware=null, _abastoVia='todas', _abastoGrupos=null;
 let _especialidadUnidad=null;
 let _especialidadPeriodo=null;
 let _especialidadAwareFiltro=null; // null = todos; o un Set con las categorías activas (selección múltiple)
@@ -6049,6 +6049,12 @@ function setAbastoAware(k){
   renderAbasto();
 }
 function setAbastoVia(v){ _abastoVia=v; renderAbasto(); }
+function toggleAbastoGrupo(g){
+  const cur=_abastoGrupos?new Set(_abastoGrupos):new Set();
+  if(cur.has(g)) cur.delete(g); else cur.add(g);
+  _abastoGrupos=cur.size?cur:null;
+  renderAbasto();
+}
 
 function renderAbasto(){
   const inner=document.getElementById('consumo-inner');
@@ -6175,7 +6181,9 @@ function renderAbasto(){
     if(!dMap[k]) dMap[k]={nombre:f.nombre,via:f.via,aware:f.aware,rec:0,rem:0,claves:[],fuente:f.aware_fuente};
     const r=suma([f],ms); dMap[k].rec+=r.rec; dMap[k].rem+=r.rem; dMap[k].claves.push(f.clave);
   });
-  const dRows=Object.values(dMap).filter(x=>x.rec>0||x.rem>0||(x.aware==='Reserve')).sort((a,b)=>((b.rec+b.rem)-(a.rec+a.rem))||a.nombre.localeCompare(b.nombre));
+  const gruposTabla=[...new Set(Object.values(dMap).filter(x=>x.rec>0||x.rem>0||x.aware==='Reserve').map(x=>grupoFarmacologico(x.nombre)))].sort((a,b)=>a.localeCompare(b));
+  if(_abastoGrupos&&![..._abastoGrupos].some(g=>gruposTabla.includes(g))) _abastoGrupos=null;
+  const dRows=Object.values(dMap).filter(x=>(x.rec>0||x.rem>0||(x.aware==='Reserve'))&&(!_abastoGrupos||_abastoGrupos.has(grupoFarmacologico(x.nombre)))).sort((a,b)=>((b.rec+b.rem)-(a.rec+a.rem))||a.nombre.localeCompare(b.nombre));
   const tabla=dRows.map(x=>{
     const dif=x.rec-x.rem, p=pct(x.rem,x.rec);
     const tid=registerTip(`<div style="font-weight:700;">${x.nombre} · ${x.via}</div><div style="font-size:.66rem;color:#94a3b8;">Claves: ${x.claves.join(', ')}</div>${x.fuente==='orden_del_archivo'?'<div style="font-size:.66rem;color:#fbbf24;">AWaRe tomado del orden del archivo (sin consumo en Recetas)</div>':''}`);
@@ -6190,8 +6198,11 @@ function renderAbasto(){
       <td style="text-align:right;padding:6px 10px;color:#000;">${p!=null?p+'%':'—'}</td>
     </tr>`;
   }).join('');
+  const totTabla=dRows.reduce((o,x)=>({rec:o.rec+x.rec,rem:o.rem+x.rem}),{rec:0,rem:0});
+  const grupoChips=gruposTabla.map(g=>{const act=!!_abastoGrupos&&_abastoGrupos.has(g);const c=GRUPO_COLORS[g]||'#94a3b8';return `<button onclick="toggleAbastoGrupo(${JSON.stringify(g).replace(/"/g,'&quot;')})" style="padding:4px 10px;border-radius:14px;font-size:.68rem;font-weight:700;cursor:pointer;border:1.5px solid ${c};background:${act?c:'#fff'};color:${act?'#fff':c};">${g}</button>`;}).join('');
+  const filtroGrupos=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;"><span style="font-size:.68rem;color:#94a3b8;font-weight:700;">Grupo:</span>${grupoChips}<button onclick="_abastoGrupos=null;renderAbasto();" style="padding:4px 10px;border-radius:14px;font-size:.68rem;font-weight:700;cursor:pointer;border:1.5px solid #64748b;background:${_abastoGrupos?'#fff':'#64748b'};color:${_abastoGrupos?'#64748b':'#fff'};">Todos</button><span style="font-size:.64rem;color:#94a3b8;">Puedes marcar uno o varios.</span></div>`;
   const th=(t,al)=>`<th style="text-align:${al||'center'};padding:7px 10px;color:#fff;">${t}</th>`;
-  const tablaHtml=card('🧾 Detalle por antibiótico'+ctx,'Suma de todas las claves (presentaciones) de cada antibiótico y vía. Se listan los que tuvieron movimiento y todos los de reserva (aunque estén en cero).',`<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:.74rem;min-width:720px;"><thead><tr style="background:#154f39;">${th('Antibiótico','left')}${th('AWaRe')}${th('Grupo','left')}${th('Vía')}${th('Recibido en almacén','right')}${th('Remitido a unidades','right')}${th('Diferencia','right')}${th('Remitido / recibido','right')}</tr></thead><tbody>${tabla||'<tr><td colspan="8" style="padding:14px;color:#94a3b8;text-align:center;">Sin movimiento en el filtro seleccionado.</td></tr>'}</tbody><tfoot><tr style="border-top:2px solid #154f39;font-weight:800;"><td style="padding:7px 10px;color:#154f39;" colspan="4">Total del filtro</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${fmt(tot.rec)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${fmt(tot.rem)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${tot.rec-tot.rem>0?'+':''}${fmt(tot.rec-tot.rem)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${pct(tot.rem,tot.rec)!=null?pct(tot.rem,tot.rec)+'%':'—'}</td></tr></tfoot></table></div>`,'');
+  const tablaHtml=card('🧾 Detalle por antibiótico'+ctx,'Suma de todas las claves (presentaciones) de cada antibiótico y vía. Se listan los que tuvieron movimiento y todos los de reserva (aunque estén en cero).',filtroGrupos+`<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:.74rem;min-width:720px;"><thead><tr style="background:#154f39;">${th('Antibiótico','left')}${th('AWaRe')}${th('Grupo','left')}${th('Vía')}${th('Recibido en almacén','right')}${th('Remitido a unidades','right')}${th('Diferencia','right')}${th('Remitido / recibido','right')}</tr></thead><tbody>${tabla||'<tr><td colspan="8" style="padding:14px;color:#94a3b8;text-align:center;">Sin movimiento en el filtro seleccionado.</td></tr>'}</tbody><tfoot><tr style="border-top:2px solid #154f39;font-weight:800;"><td style="padding:7px 10px;color:#154f39;" colspan="4">Total del filtro${_abastoGrupos?' · '+[..._abastoGrupos].join(' + '):''}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${fmt(totTabla.rec)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${fmt(totTabla.rem)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${totTabla.rec-totTabla.rem>0?'+':''}${fmt(totTabla.rec-totTabla.rem)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${pct(totTabla.rem,totTabla.rec)!=null?pct(totTabla.rem,totTabla.rec)+'%':'—'}</td></tr></tfoot></table></div>`,'');
 
   // ── KPIs ──
   const kpi=(l,v,sub)=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;flex:1;min-width:170px;"><div style="font-size:.68rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.03em;">${l}</div><div style="font-size:1.5rem;font-weight:800;color:#154f39;margin:2px 0;">${v}</div><div style="font-size:.68rem;color:#94a3b8;">${sub}</div></div>`;
