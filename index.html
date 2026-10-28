@@ -2176,12 +2176,21 @@ function buildFreqChart(data, cid, opts){
   const _a=arguments; _czReg(cid,()=>buildFreqChart.apply(null,_a));
   if(!data||!data.order||!data.order.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
 
+  // Series: la principal (barra lisa) + opcionales para comparar (barras sombreadas al lado).
+  const SER=[data].concat((opts&&opts.extra)||[]);
+  const SLBL=(opts&&opts.labels)||[];
+  const kSer=SER.length;
+  // Orden: siempre de mayor a menor (por el total de todas las series juntas).
+  const sumRow=r=>SER.reduce((t,d)=>t+((d&&d.totals&&d.totals[r])||0),0);
+  const order=((opts&&opts.order)||[...new Set(SER.flatMap(d=>(d&&d.order)||[]))]).slice().sort((a,b)=>sumRow(b)-sumRow(a));
+  const SERSTYLE=['','background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.55) 0 3px,rgba(255,255,255,0) 3px 6px);filter:brightness(.82);','filter:brightness(.62);','background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.45) 0 3px,rgba(255,255,255,0) 3px 6px);filter:brightness(.55);'];
+
   const stackCount={};
-  data.order.forEach(row=>Object.entries(data.stacks[row]||{}).forEach(([col,n])=>{stackCount[col]=(stackCount[col]||0)+n;}));
+  SER.forEach(d=>{ if(!d) return; order.forEach(row=>Object.entries((d.stacks||{})[row]||{}).forEach(([col,n])=>{stackCount[col]=(stackCount[col]||0)+n;})); });
   const stackKeys=Object.keys(stackCount).sort((a,b)=>stackCount[b]-stackCount[a]);
   const cmap=(opts&&opts.cmap)||{}; if(!(opts&&opts.cmap)) stackKeys.forEach((k,i)=>{cmap[k]=PALETTE[i%PALETTE.length];});
 
-  const maxVal=Math.max(...data.order.map(r=>data.totals[r]||0),1,(opts&&opts.maxVal)||0);
+  const maxVal=Math.max(...SER.flatMap(d=>order.map(r=>(d&&d.totals&&d.totals[r])||0)),1,(opts&&opts.maxVal)||0);
   const targetTickCount=7;
   const roughStep=maxVal/targetTickCount;
   const magnitude=Math.pow(10,Math.floor(Math.log10(Math.max(roughStep,1))));
@@ -2196,10 +2205,12 @@ function buildFreqChart(data, cid, opts){
   const availW=(opts&&opts.availW)||_czAvail(el,isMobile,sidePad);
   const F=_czF(cid);
   const CH=isMobile?220:300, YW=Math.round((isMobile?36:44)*F), XLABELH=Math.round((isMobile?120:155)*F), PADTOP=12;
-  const n=data.order.length;
-  const SLOT=Math.round(_czZ(cid)*Math.max((opts&&opts.minSlot)||(isMobile?26:48),Math.min(isMobile?70:110,Math.floor(availW/n))));
-  const BW=Math.round(SLOT*0.70);
-  const slotPad=Math.round((SLOT-BW)/2);
+  const n=order.length;
+  const kf=kSer>1?kSer*.8:1, GAP2=kSer>1?3:0;
+  const SLOT=Math.round(_czZ(cid)*Math.max(((opts&&opts.minSlot)||(isMobile?26:48))*kf,Math.min((isMobile?70:110)*kf,Math.floor(availW/n))));
+  const BW=kSer>1?Math.max(5,Math.floor((SLOT*0.86-GAP2*(kSer-1))/kSer)):Math.round(SLOT*0.70);
+  const zoneW=BW*kSer+GAP2*(kSer-1);
+  const slotPad=Math.round((SLOT-zoneW)/2);
   const totalW=YW+n*SLOT+slotPad;
   const totalH=PADTOP+CH+XLABELH;
 
@@ -2213,30 +2224,32 @@ function buildFreqChart(data, cid, opts){
     h+=`<div class="cz-y" style="position:absolute;left:0;width:${YW-4}px;top:${y}px;transform:translateY(-50%);text-align:right;padding-right:4px;color:#6b7280;">${t}</div>`;
   });
 
-  data.order.forEach((row,i)=>{
-    const rowData=data.stacks[row]||{};
-    const total=data.totals[row]||0;
-    const x=YW+i*SLOT+slotPad;
-    const sorted=Object.entries(rowData).sort((a,b)=>b[1]-a[1]);
-
-    let yB=PADTOP+CH;
-    sorted.forEach(([col,n])=>{
-      const segH=(n/niceMax)*CH;
-      if(segH<=0) return;
-      yB-=segH;
-      h+=`<div style="position:absolute;left:${x}px;top:${yB.toFixed(2)}px;width:${BW}px;height:${segH.toFixed(2)}px;background:${cmap[col]};"></div>`;
+  order.forEach((row,i)=>{
+    const x0=YW+i*SLOT+slotPad;
+    const totLbl=[];
+    SER.forEach((d,si)=>{
+      const rowData=(d&&d.stacks&&d.stacks[row])||{};
+      const total=(d&&d.totals&&d.totals[row])||0;
+      const x=x0+si*(BW+GAP2);
+      const sorted=Object.entries(rowData).sort((a,b)=>b[1]-a[1]);
+      totLbl.push(total);
+      let yB=PADTOP+CH;
+      sorted.forEach(([col,nn])=>{
+        const segH=(nn/niceMax)*CH;
+        if(segH<=0) return;
+        yB-=segH;
+        h+=`<div style="position:absolute;left:${x}px;top:${yB.toFixed(2)}px;width:${BW}px;height:${segH.toFixed(2)}px;background-color:${cmap[col]};${si?SERSTYLE[Math.min(si,3)]:''}"></div>`;
+      });
+      const tipRows=sorted.map(([col,nn])=>
+        `<div style="display:flex;justify-content:space-between;gap:8px;margin-top:2px;">
+          <span style="color:${cmap[col]};font-weight:600;font-size:.67rem;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${col}</span>
+          <span style="font-size:.67rem;flex-shrink:0;">${nn}</span>
+        </div>`).join('');
+      const tipData=JSON.stringify({name:row+(kSer>1&&SLBL[si]?' · '+SLBL[si]:''),total,tipRows}).replace(/'/g,'&apos;');
+      h+=`<div class="vbh" data-tip='${tipData}' style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
     });
-
-    const tipRows=sorted.map(([col,n])=>
-      `<div style="display:flex;justify-content:space-between;gap:8px;margin-top:2px;">
-        <span style="color:${cmap[col]};font-weight:600;font-size:.67rem;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${col}</span>
-        <span style="font-size:.67rem;flex-shrink:0;">${n}</span>
-      </div>`).join('');
-    const tipData=JSON.stringify({name:row,total,tipRows}).replace(/'/g,'&apos;');
-
-    h+=`<div class="vbh" data-tip='${tipData}' style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+Math.round(2*F)}px;width:${BW}px;text-align:center;font-size:${(.6*F).toFixed(3)}rem;color:#6b7280;">${total}</div>`;
-    h+=`<div style="position:absolute;left:${x}px;top:${PADTOP+CH+Math.round(18*F)}px;width:${BW}px;height:${XLABELH-Math.round(18*F)}px;display:flex;align-items:center;justify-content:center;">
+    h+=`<div style="position:absolute;left:${x0}px;top:${PADTOP+CH+Math.round(2*F)}px;width:${zoneW}px;text-align:center;font-size:${(.6*F).toFixed(3)}rem;color:#6b7280;white-space:nowrap;">${totLbl.join('/')}</div>`;
+    h+=`<div style="position:absolute;left:${x0}px;top:${PADTOP+CH+Math.round(18*F)}px;width:${zoneW}px;height:${XLABELH-Math.round(18*F)}px;display:flex;align-items:center;justify-content:center;">
       <span style="display:inline-block;transform:rotate(-90deg);white-space:nowrap;font-size:${(.61*F).toFixed(3)}rem;color:#374151;">${_truncNombre(row,20)}</span>
     </div>`;
   });
@@ -2244,7 +2257,11 @@ function buildFreqChart(data, cid, opts){
   h+=`</div></div>`;
 
   // Legend below
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;">`;
+  if(kSer>1){
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:.72rem;color:#374151;font-weight:700;">`+
+      SER.map((d,si)=>`<div style="display:flex;align-items:center;gap:5px;"><span style="width:16px;height:12px;border-radius:2px;background-color:#64748b;${si?SERSTYLE[Math.min(si,3)]:''}"></span>${esc2(SLBL[si]||('Serie '+(si+1)))}${si===0?' (barra lisa)':' (barra sombreada)'}</div>`).join('')+`</div>`;
+  }
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:${kSer>1?'8':'14'}px;padding-top:12px;border-top:1px solid #e2e8f0;">`;
   stackKeys.forEach(col=>{
     h+=`<div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:#374151;">
       <div style="width:12px;height:12px;border-radius:2px;background:${cmap[col]};flex-shrink:0;"></div><span>${col}</span></div>`;
@@ -2659,7 +2676,7 @@ function renderFreq(){
     let data=freqForPeriod(cfg.key,p1);
     // Limitar a top 20 filas para Microorg. en Servicios y Cultivos
     if(data&&data.order&&(cfg.key==='chart1'||cfg.key==='chart4')&&data.order.length>20){
-      const top20=data.order.slice(0,20);
+      const top20=data.order.slice().sort((a,b)=>(data.totals[b]||0)-(data.totals[a]||0)).slice(0,20);
       data={...data, order:top20};
     }
     buildFreqChart(data,'fchart');
@@ -2676,20 +2693,14 @@ function renderFreq(){
     series=(FQ.hs||[]).map((k,i)=>{
       const hd=RAW._derivedByHospital[k]||{};
       if(spec!=='TODOS'&&hd._freqApprox) approx=true;
-      return {label:getHospitalDisplayName(k).replace(/^[^A-Za-zÁÉÍÓÚ]+/,''),color:FQ_COLORS[i%FQ_COLORS.length],data:freqSpec((hd.freq||{})[cfg.key],spec)};
+      return {key:k,label:getHospitalDisplayName(k).replace(/^[^A-Za-zÁÉÍÓÚ]+/,''),color:FQ_COLORS[i%FQ_COLORS.length],data:freqSpec((hd.freq||{})[cfg.key],spec)};
     });
   }
-  // Una gráfica por serie (periodo u hospital), una al lado de la otra, con las mismas
-  // categorías, la misma paleta y la misma escala para poder compararlas de un vistazo.
   const S=series.filter(x=>x.data&&x.data.order&&x.data.order.length);
   S.forEach(x=>{ x.sum=Object.values(x.data.totals).reduce((q,w)=>q+w,0)||1; });
   const pct=FQ.metric==='pct';
   const val=(x,row)=>{ const n=x.data.totals[row]||0; return pct?n*100/x.sum:n; };
-  const rows=[...new Set(S.flatMap(x=>x.data.order))].sort((a,b)=>S.reduce((t,x)=>t+val(x,b),0)-S.reduce((t,x)=>t+val(x,a),0)).slice(0,FQ.top);
-  const colTot={};
-  S.forEach(x=>rows.forEach(r=>Object.entries(x.data.stacks[r]||{}).forEach(([c,n])=>{colTot[c]=(colTot[c]||0)+n;})));
-  const cmap={}; Object.keys(colTot).sort((a,b)=>colTot[b]-colTot[a]).forEach((k,i)=>{cmap[k]=PALETTE[i%PALETTE.length];});
-  const conv=x=>{
+  const convRows=(x,rows)=>{
     const st={},tt={};
     rows.forEach(r=>{
       st[r]={}; let t=0;
@@ -2698,18 +2709,61 @@ function renderFreq(){
     });
     return {order:rows,stacks:st,totals:tt};
   };
-  const conv_=S.map(conv);
-  const maxVal=Math.max(1,...conv_.flatMap(d=>rows.map(r=>d.totals[r]||0)));
-  let h=`<div class="fq-grid">`;
+  const mkCmap=(list,rowsOf)=>{
+    const colTot={};
+    list.forEach(x=>rowsOf(x).forEach(r=>Object.entries(x.data.stacks[r]||{}).forEach(([c,n])=>{colTot[c]=(colTot[c]||0)+n;})));
+    const cm={}; Object.keys(colTot).sort((a,b)=>colTot[b]-colTot[a]).forEach((k,i)=>{cm[k]=PALETTE[i%PALETTE.length];});
+    return cm;
+  };
+  const note=x=>x.sum?` <small style="font-family:'DM Sans',sans-serif;font-size:.7rem;color:#94a3b8;font-weight:500;">(${x.sum} aislamientos${pct?' · valores en %':''})</small>`:'';
+
+  if(FQ.mode==='per'){
+    // UNA sola gráfica: cada categoría lleva una barra por periodo (la primera lisa, las demás sombreadas)
+    const rows=[...new Set(S.flatMap(x=>x.data.order))].sort((a,b)=>S.reduce((t,x)=>t+val(x,b),0)-S.reduce((t,x)=>t+val(x,a),0)).slice(0,FQ.top);
+    const cmap=mkCmap(S,()=>rows);
+    const conv_=S.map(x=>convRows(x,rows));
+    body.innerHTML=bar+`<div class="ccard"><h2>${esc2(cfg.title)} · ${esc2(S.map(x=>x.label).join(' vs '))}<small style="font-family:'DM Sans',sans-serif;font-size:.7rem;color:#94a3b8;font-weight:500;"> (${S.map(x=>x.label+': '+x.sum).join(' · ')} aislamientos${pct?' · valores en %':''})</small></h2><div id="fcmp-0"></div></div>`+(approx?_fqApproxHint():'');
+    const el=document.getElementById('fcmp-0');
+    if(!el||!S.length){ if(el) el.innerHTML='<div class="empty">Sin datos</div>'; return; }
+    buildFreqChart(conv_[0],'fcmp-0',{cmap,minSlot:34,order:rows,extra:conv_.slice(1),labels:S.map(x=>x.label),availW:Math.max(300,(el.clientWidth||900)-6)});
+    attachOtrosTooltips(el);
+    return;
+  }
+
+  // Hospitales: (1) gráfica aparte con la SUMA de los hospitales (sin ambulatorios, que son NO IAAS)
+  // y (2) una gráfica por unidad, cada una ordenada de mayor a menor con sus propios valores.
+  const hospS=S.filter(x=>!HOSP_NO_IAAS.has(x.key));
+  let sumChart=null;
+  if(hospS.length>=2){
+    const m={order:[],stacks:{},totals:{}};
+    hospS.forEach(x=>x.data.order.forEach(r=>{
+      if(!m.stacks[r]){ m.stacks[r]={}; m.totals[r]=0; m.order.push(r); }
+      Object.entries(x.data.stacks[r]||{}).forEach(([c,n])=>{ m.stacks[r][c]=(m.stacks[r][c]||0)+n; });
+      m.totals[r]+=x.data.totals[r]||0;
+    }));
+    sumChart={label:'Suma de hospitales ('+hospS.map(x=>x.label).join(' + ')+')',data:m,sum:Object.values(m.totals).reduce((q,w)=>q+w,0)||1};
+  }
+  const ownRows=x=>[...x.data.order].sort((a,b)=>val(x,b)-val(x,a)).slice(0,FQ.top);
+  const allForCmap=sumChart?S.concat([sumChart]):S;
+  const cmapAll=mkCmap(allForCmap,x=>x===sumChart?sumChart.data.order:ownRows(x));
+  let h='';
+  if(sumChart) h+=`<div class="ccard"><h2>${esc2(cfg.title)} · ${esc2(sumChart.label)}${note(sumChart)}</h2><div id="fcmp-sum"></div></div>`;
+  h+=`<div class="fq-grid">`;
   series.forEach((x,i)=>{
-    h+=`<div class="ccard"><h2>${esc2(cfg.title)} · ${esc2(x.label)}${x.sum?` <small style="font-family:'DM Sans',sans-serif;font-size:.7rem;color:#94a3b8;font-weight:500;">(${x.sum} aislamientos${pct?' · valores en %':''})</small>`:''}</h2><div id="fcmp-${i}"></div></div>`;
+    h+=`<div class="ccard"><h2>${esc2(cfg.title)} · ${esc2(x.label)}${note(x)}</h2><div id="fcmp-${i}"></div></div>`;
   });
   h+='</div>';
   body.innerHTML=bar+h+(approx?_fqApproxHint():'');
+  if(sumChart){
+    const el=document.getElementById('fcmp-sum');
+    const rows=ownRows(sumChart);
+    buildFreqChart(convRows(sumChart,rows),'fcmp-sum',{cmap:cmapAll,minSlot:34,availW:Math.max(300,(el.clientWidth||900)-6)});
+    attachOtrosTooltips(el);
+  }
   series.forEach((x,i)=>{
     const el=document.getElementById('fcmp-'+i); if(!el) return;
-    const k=S.indexOf(x);
-    buildFreqChart(k>=0?conv_[k]:null,'fcmp-'+i,{cmap,minSlot:34,availW:Math.max(300,(el.clientWidth||520)-6)});
+    if(!S.includes(x)){ el.innerHTML='<div class="empty">Sin datos</div>'; return; }
+    buildFreqChart(convRows(x,ownRows(x)),'fcmp-'+i,{cmap:cmapAll,minSlot:34,availW:Math.max(300,(el.clientWidth||520)-6)});
     attachOtrosTooltips(el);
   });
 }
