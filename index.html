@@ -2183,7 +2183,8 @@ function buildFreqChart(data, cid, opts){
   // Orden: siempre de mayor a menor (por el total de todas las series juntas).
   const sumRow=r=>SER.reduce((t,d)=>t+((d&&d.totals&&d.totals[r])||0),0);
   const order=((opts&&opts.order)||[...new Set(SER.flatMap(d=>(d&&d.order)||[]))]).slice().sort((a,b)=>sumRow(b)-sumRow(a));
-  const SERSTYLE=['','background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.55) 0 3px,rgba(255,255,255,0) 3px 6px);filter:brightness(.82);','filter:brightness(.62);','background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.45) 0 3px,rgba(255,255,255,0) 3px 6px);filter:brightness(.55);'];
+  const SERDARK=[0,.35,.55,.7]; // la 2.ª, 3.ª… serie usa un tono más oscuro del mismo color (igual que la comparación S/R/I)
+  const serCol=(c,si)=>si?_darkenHex(c,SERDARK[Math.min(si,3)]):c;
 
   const stackCount={};
   SER.forEach(d=>{ if(!d) return; order.forEach(row=>Object.entries((d.stacks||{})[row]||{}).forEach(([col,n])=>{stackCount[col]=(stackCount[col]||0)+n;})); });
@@ -2238,13 +2239,13 @@ function buildFreqChart(data, cid, opts){
         const segH=(nn/niceMax)*CH;
         if(segH<=0) return;
         yB-=segH;
-        h+=`<div style="position:absolute;left:${x}px;top:${yB.toFixed(2)}px;width:${BW}px;height:${segH.toFixed(2)}px;background-color:${cmap[col]};${si?SERSTYLE[Math.min(si,3)]:''}"></div>`;
+        h+=`<div style="position:absolute;left:${x}px;top:${yB.toFixed(2)}px;width:${BW}px;height:${segH.toFixed(2)}px;background:${serCol(cmap[col],si)};"></div>`;
       });
-      const tipRows=sorted.map(([col,nn])=>
+      const tipRows=sorted.slice(0,14).map(([col,nn])=>
         `<div style="display:flex;justify-content:space-between;gap:8px;margin-top:2px;">
           <span style="color:${cmap[col]};font-weight:600;font-size:.67rem;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${col}</span>
           <span style="font-size:.67rem;flex-shrink:0;">${nn}</span>
-        </div>`).join('');
+        </div>`).join('')+(sorted.length>14?`<div style="margin-top:3px;font-size:.62rem;color:#94a3b8;">… y ${sorted.length-14} más</div>`:'');
       const tipData=JSON.stringify({name:row+(kSer>1&&SLBL[si]?' · '+SLBL[si]:''),total,tipRows}).replace(/'/g,'&apos;');
       h+=`<div class="vbh" data-tip='${tipData}' style="position:absolute;left:${x}px;top:${PADTOP}px;width:${BW}px;height:${CH}px;cursor:default;"></div>`;
     });
@@ -2259,7 +2260,7 @@ function buildFreqChart(data, cid, opts){
   // Legend below
   if(kSer>1){
     h+=`<div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:.72rem;color:#374151;font-weight:700;">`+
-      SER.map((d,si)=>`<div style="display:flex;align-items:center;gap:5px;"><span style="width:16px;height:12px;border-radius:2px;background-color:#64748b;${si?SERSTYLE[Math.min(si,3)]:''}"></span>${esc2(SLBL[si]||('Serie '+(si+1)))}${si===0?' (barra lisa)':' (barra sombreada)'}</div>`).join('')+`</div>`;
+      SER.map((d,si)=>`<div style="display:flex;align-items:center;gap:5px;"><span style="width:16px;height:12px;border-radius:2px;background:${serCol('#64748b',si)};"></span>${esc2(SLBL[si]||('Serie '+(si+1)))}${si===0?' (color claro)':' (tono oscuro)'}</div>`).join('')+`</div>`;
   }
   h+=`<div style="display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:${kSer>1?'8':'14'}px;padding-top:12px;border-top:1px solid #e2e8f0;">`;
   stackKeys.forEach(col=>{
@@ -2270,12 +2271,11 @@ function buildFreqChart(data, cid, opts){
   el.innerHTML=h;
   _insertarBotonDescarga(el,cid,'grafica_frecuencias_'+cid);
 
+  // Ventana flotante de la gráfica: no captura el mouse (para no tapar las barras vecinas), sigue al cursor,
+  // siempre muestra la barra sobre la que estás y se cierra al salir o al volver a dibujar la gráfica.
   const tip=getFixedTip('freq');
-  if(!tip.dataset.freqBound){
-    tip.dataset.freqBound='1';
-    tip.addEventListener('mouseenter',()=>{ tip.dataset.locked='1'; });
-    tip.addEventListener('mouseleave',()=>{ tip.dataset.locked='0'; hideTip(); });
-  }
+  tip.style.pointerEvents='none'; tip.style.maxWidth='300px';
+  tip.dataset.locked='0'; tip.style.display='none';
   el.querySelectorAll('.vbh[data-tip]').forEach(bar=>{
     bar.addEventListener('mouseenter',e=>{
       try{
@@ -2283,17 +2283,15 @@ function buildFreqChart(data, cid, opts){
         let inn=`<div style="font-weight:700;color:#0f172a;margin-bottom:4px;">${d.name}</div>`;
         inn+=`<div style="color:#475569;font-size:.66rem;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin-bottom:4px;">Total: ${d.total}</div>`;
         inn+=d.tipRows;
+        clearTimeout(_hideTipTimer);
         tip.innerHTML=inn;
         tip.dataset.locked='0';
         tip.style.display='block';
         placeTip(e);
       }catch(ex){}
     });
-    bar.addEventListener('mouseleave',e=>{
-      const to=e.relatedTarget;
-      if(to===tip || (to&&tip.contains(to))) return;
-      hideTip(120);
-    });
+    bar.addEventListener('mousemove',e=>{ if(tip.style.display==='block') placeTip(e); });
+    bar.addEventListener('mouseleave',()=>{ hideTip(40); });
   });
 }
 
