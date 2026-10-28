@@ -6079,7 +6079,8 @@ function renderAbasto(){
   const filas=D.claves.filter(f=>viaOk(f)&&awOk(f));
   const suma=(rows,meses)=>{let rec=0,rem=0;rows.forEach(f=>meses.forEach(m=>{rec+=f.altas[m]||0;rem+=f.remisionado[m]||0;}));return {rec,rem};};
   const tot=suma(filas,ms);
-  const filasRes=D.claves.filter(f=>f.aware==='Reserve'&&viaOk(f));
+  const resVisible=!_abastoAware||_abastoAware.has('Reserve');   // los filtros aplican a todo: sin Reserve marcado, no se muestra nada de reserva
+  const filasRes=resVisible?D.claves.filter(f=>f.aware==='Reserve'&&viaOk(f)):[];
   const totRes=suma(filasRes,ms);
   const pct=(a,b)=>b>0?Math.round(a/b*1000)/10:null;
 
@@ -6176,7 +6177,7 @@ function renderAbasto(){
 
   // ── detalle por antibiótico ──
   const dMap={};
-  filas.concat(filasRes.filter(f=>!filas.includes(f))).forEach(f=>{
+  filas.forEach(f=>{
     const k=f.nombre+'|'+f.via;
     if(!dMap[k]) dMap[k]={nombre:f.nombre,via:f.via,aware:f.aware,rec:0,rem:0,claves:[],fuente:f.aware_fuente};
     const r=suma([f],ms); dMap[k].rec+=r.rec; dMap[k].rem+=r.rem; dMap[k].claves.push(f.clave);
@@ -6211,7 +6212,7 @@ function renderAbasto(){
     kpi('📥 Recibido en almacén',fmt(tot.rec),'piezas (altas de almacén)'),
     kpi('📤 Remitido a unidades',fmt(tot.rem),'piezas (remisiones a las unidades)'),
     kpi('Diferencia',(tot.rec-tot.rem>0?'+':'')+fmt(tot.rec-tot.rem),'recibido − remitido'),
-    kpi('🔴 Reserve: recibido / remitido',`${fmt(totRes.rec)} / ${fmt(totRes.rem)}`,'piezas · antibióticos de reserva'),
+    ...(resVisible?[kpi('🔴 Reserve: recibido / remitido',`${fmt(totRes.rec)} / ${fmt(totRes.rem)}`,'piezas · antibióticos de reserva')]:[]),
   ].join('');
 
   const mesesParciales=ms.includes(mesActual);
@@ -6233,11 +6234,11 @@ function renderAbasto(){
     <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">🧪 Por grupo farmacológico</div>
     <div style="padding-top:14px;">${card('🧪 Recibido vs remitido por grupo farmacológico'+ctx+(filtroTxt?` <span style="font-size:.64rem;font-weight:600;color:#64748b;">· ${filtroTxt}</span>`:''),'Ordenado de mayor a menor movimiento. Piezas = unidades de cada presentación (clave); un grupo suma sus presentaciones.',leyenda('#2563eb')+`<div style="display:flex;flex-direction:column;gap:6px;">${gHtml}</div>`+gTabla)}</div>
 
-    <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">🔴 Antibióticos de reserva</div>
-    <div style="padding-top:14px;">${card('🔴 Reserve: ¿hay solvencia entre lo recibido y lo remitido?'+ctx,'Todos los antibióticos de reserva del archivo. Si no hubo movimiento se muestra explícitamente en cero (0 recibidos y 0 remitidos).',leyenda('#dc2626')+`<div style="display:flex;flex-direction:column;gap:8px;">${rHtml}</div><div style="font-size:.7rem;color:#7f1d1d;margin-top:10px;font-weight:700;">Total reserve: recibido ${fmt(totRes.rec)} · remitido ${fmt(totRes.rem)} · balance ${totRes.rec-totRes.rem>0?'+':''}${fmt(totRes.rec-totRes.rem)}${totRes.rem>0?` · cobertura ${Math.round(totRes.rec/totRes.rem*1000)/10}%`:' · cobertura N/A (sin surtido)'}</div>`,'background:#fef2f2;border-color:#fecaca;')}</div>
+    ${resVisible?`    <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">🔴 Antibióticos de reserva</div>
+    <div style="padding-top:14px;">${card('🔴 Reserve: ¿hay solvencia entre lo recibido y lo remitido?'+ctx,'Todos los antibióticos de reserva del archivo. Si no hubo movimiento se muestra explícitamente en cero (0 recibidos y 0 remitidos).',leyenda('#dc2626')+`<div style="display:flex;flex-direction:column;gap:8px;">${rHtml}</div><div style="font-size:.7rem;color:#7f1d1d;margin-top:10px;font-weight:700;">Total reserve: recibido ${fmt(totRes.rec)} · remitido ${fmt(totRes.rem)} · balance ${totRes.rec-totRes.rem>0?'+':''}${fmt(totRes.rec-totRes.rem)}${totRes.rem>0?` · cobertura ${Math.round(totRes.rec/totRes.rem*1000)/10}%`:' · cobertura N/A (sin surtido)'}</div>`,'background:#fef2f2;border-color:#fecaca;')}</div>`:''}
 
     <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">📈 Tendencias en el tiempo</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">${tendTodo}${tendRes}</div>
+    <div style="display:grid;grid-template-columns:${resVisible?'1fr 1fr':'1fr'};gap:16px;align-items:start;padding-top:14px;">${tendTodo}${resVisible?tendRes:''}</div>
 
     <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">🧾 Detalle</div>
     <div style="padding-top:14px;">${tablaHtml}</div>
