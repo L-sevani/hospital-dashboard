@@ -32130,6 +32130,3577 @@
           ]
         }
       }
+    },
+    "2026-10": {
+      "diagnostico_catalogo_antibioticos": {
+        "filas_totales_catalogo": 118,
+        "claves_unicas": 116,
+        "filas_duplicadas": 2,
+        "conflictos_clasificacion": []
+      },
+      "total_piezas_antibioticos": 14738.0,
+      "piezas_colectivas_excluidas": 17631.0,
+      "piezas_sin_medico_registrado": 0.0,
+      "piezas_medico_sin_catalogo": 1255.0,
+      "matriculas_prescriptoras_sin_catalogo": 39,
+      "por_unidad": {
+        "Farmacia HGZ 1": {
+          "hospital_id": "HGZ 1 TLAXCALA",
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA INTERNA",
+              "especialidad_normalizada": "MEDICINA INTERNA",
+              "piezas": 1073.0,
+              "num_medicos": 11,
+              "por_aware": {
+                "Watch": 726.0,
+                "Access": 300.0,
+                "Reserve": 47.0
+              },
+              "por_aware_pct": {
+                "Watch": 67.7,
+                "Access": 28.0,
+                "Reserve": 4.4
+              },
+              "por_antibiotico": {
+                "Ertapenem": 38.0,
+                "Azitromicina": 1.0,
+                "Amoxicilina": 9.0,
+                "Rifaximina": 13.0,
+                "Cefalexina": 7.0,
+                "Amoxicilina -Acido Clavulanico": 1.0,
+                "Meropenem": 79.0,
+                "Clindamicina": 18.0,
+                "Claritromicina": 10.0,
+                "Ciprofloxacino": 74.0,
+                "Vancomicina": 250.0,
+                "Amikacina": 111.0,
+                "Moxifloxacino": 3.0,
+                "Ceftazidima": 225.0,
+                "Levofloxacino": 16.0,
+                "Ceftriaxona": 17.0,
+                "Linezolid": 47.0,
+                "Dicloxacilina": 5.0,
+                "Trimetoprima -Sulfametoxazol": 12.0,
+                "Nitrofurantoina": 9.0,
+                "Benzatina Bencilpenicilina": 2.0,
+                "Tetraciclina": 24.0,
+                "Trimetoprima Y Sulfametoxazol": 1.0,
+                "Cefalotina": 90.0,
+                "Metronidazol": 11.0
+              }
+            },
+            {
+              "especialidad": "TRAUMATOLOGÍA Y ORTOPEDIA",
+              "especialidad_normalizada": "TRAUMATOLOGIA Y ORTOPEDIA",
+              "piezas": 364.0,
+              "num_medicos": 11,
+              "por_aware": {
+                "Access": 147.0,
+                "Watch": 217.0
+              },
+              "por_aware_pct": {
+                "Access": 40.4,
+                "Watch": 59.6
+              },
+              "por_antibiotico": {
+                "Cefalexina": 1.0,
+                "Amoxicilina -Acido Clavulanico": 2.0,
+                "Clindamicina": 117.0,
+                "Ciprofloxacino": 175.0,
+                "Levofloxacino": 40.0,
+                "Dicloxacilina": 22.0,
+                "Trimetoprima -Sulfametoxazol": 1.0,
+                "Piperacilina -Tazobactam": 2.0,
+                "Amoxicilina": 4.0
+              }
+            },
+            {
+              "especialidad": "GINECOLOGÍA Y OBSTETRICA",
+              "especialidad_normalizada": "GINECOLOGIA Y OBSTETRICA",
+              "piezas": 306.0,
+              "num_medicos": 19,
+              "por_aware": {
+                "Watch": 61.0,
+                "Access": 245.0
+              },
+              "por_aware_pct": {
+                "Watch": 19.9,
+                "Access": 80.1
+              },
+              "por_antibiotico": {
+                "Ertapenem": 3.0,
+                "Azitromicina": 2.0,
+                "Amoxicilina": 43.0,
+                "Cefalexina": 18.0,
+                "Clindamicina": 48.0,
+                "Claritromicina": 1.0,
+                "Doxiciclina": 6.0,
+                "Ciprofloxacino": 47.0,
+                "Levofloxacino": 8.0,
+                "Ampicilina": 90.0,
+                "Dicloxacilina": 4.0,
+                "Nitrofurantoina": 10.0,
+                "Metronidazol": 26.0
+              }
+            },
+            {
+              "especialidad": "CIRUGIA GENERAL",
+              "especialidad_normalizada": "CIRUGIA GENERAL",
+              "piezas": 165.0,
+              "num_medicos": 8,
+              "por_aware": {
+                "Access": 87.0,
+                "Watch": 76.0,
+                "Reserve": 2.0
+              },
+              "por_aware_pct": {
+                "Access": 52.7,
+                "Watch": 46.1,
+                "Reserve": 1.2
+              },
+              "por_antibiotico": {
+                "Amikacina": 4.0,
+                "Amoxicilina": 13.0,
+                "Cefalexina": 20.0,
+                "Clindamicina": 8.0,
+                "Claritromicina": 4.0,
+                "Ciprofloxacino": 20.0,
+                "Levofloxacino": 52.0,
+                "Linezolid": 2.0,
+                "Dicloxacilina": 17.0,
+                "Nitrofurantoina": 3.0,
+                "Ampicilina": 6.0,
+                "Metronidazol": 16.0
+              }
+            },
+            {
+              "especialidad": "DERMATOLOGÍA",
+              "especialidad_normalizada": "DERMATOLOGIA",
+              "piezas": 136.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 115.0,
+                "Watch": 21.0
+              },
+              "por_aware_pct": {
+                "Access": 84.6,
+                "Watch": 15.4
+              },
+              "por_antibiotico": {
+                "Clindamicina": 2.0,
+                "Doxiciclina": 97.0,
+                "Ciprofloxacino": 21.0,
+                "Dicloxacilina": 10.0,
+                "Benzatina Bencilpenicilina": 6.0
+              }
+            },
+            {
+              "especialidad": "UROLOGÍA",
+              "especialidad_normalizada": "UROLOGIA",
+              "piezas": 131.0,
+              "num_medicos": 4,
+              "por_aware": {
+                "Watch": 78.0,
+                "Access": 38.0,
+                "Reserve": 15.0
+              },
+              "por_aware_pct": {
+                "Watch": 59.5,
+                "Access": 29.0,
+                "Reserve": 11.5
+              },
+              "por_antibiotico": {
+                "Ertapenem": 12.0,
+                "Amikacina": 2.0,
+                "Amoxicilina": 4.0,
+                "Cefalexina": 3.0,
+                "Levofloxacino": 57.0,
+                "Ceftriaxona": 7.0,
+                "Linezolid": 15.0,
+                "Dicloxacilina": 3.0,
+                "Eritromicina": 2.0,
+                "Trimetoprima -Sulfametoxazol": 4.0,
+                "Nitrofurantoina": 18.0,
+                "Ampicilina": 2.0,
+                "Benzatina Bencilpenicilina": 2.0
+              }
+            },
+            {
+              "especialidad": "NEFROLOGÍA",
+              "especialidad_normalizada": "NEFROLOGIA",
+              "piezas": 113.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Watch": 102.0,
+                "Access": 9.0,
+                "Reserve": 2.0
+              },
+              "por_aware_pct": {
+                "Watch": 90.3,
+                "Access": 8.0,
+                "Reserve": 1.8
+              },
+              "por_antibiotico": {
+                "Ertapenem": 4.0,
+                "Rifaximina": 1.0,
+                "Meropenem": 16.0,
+                "Clindamicina": 2.0,
+                "Claritromicina": 2.0,
+                "Ciprofloxacino": 5.0,
+                "Vancomicina": 39.0,
+                "Ceftazidima": 20.0,
+                "Levofloxacino": 9.0,
+                "Ceftriaxona": 6.0,
+                "Linezolid": 2.0,
+                "Trimetoprima -Sulfametoxazol": 1.0,
+                "Nitrofurantoina": 2.0,
+                "Metronidazol": 4.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 108.0,
+              "num_medicos": 7,
+              "por_aware": {
+                "Access": 83.0,
+                "Watch": 25.0
+              },
+              "por_aware_pct": {
+                "Access": 76.9,
+                "Watch": 23.1
+              },
+              "por_antibiotico": {
+                "Amikacina": 2.0,
+                "Amoxicilina": 4.0,
+                "Cefalexina": 4.0,
+                "Clindamicina": 8.0,
+                "Doxiciclina": 6.0,
+                "Ciprofloxacino": 10.0,
+                "Gentamicina": 10.0,
+                "Levofloxacino": 10.0,
+                "Dicloxacilina": 2.0,
+                "Eritromicina": 2.0,
+                "Benzatina Bencilpenicilina": 28.0,
+                "Trimetoprima -Sulfametoxazol": 9.0,
+                "Nitrofurantoina": 1.0,
+                "Ampicilina": 9.0,
+                "Ceftriaxona": 3.0
+              }
+            },
+            {
+              "especialidad": "CIRUGÍA MAXILOFACIAL",
+              "especialidad_normalizada": "CIRUGIA MAXILOFACIAL",
+              "piezas": 84.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 84.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 61.0,
+                "Clindamicina": 23.0
+              }
+            },
+            {
+              "especialidad": "GERIATRÍA",
+              "especialidad_normalizada": "GERIATRIA",
+              "piezas": 49.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 27.0,
+                "Watch": 22.0
+              },
+              "por_aware_pct": {
+                "Access": 55.1,
+                "Watch": 44.9
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 2.0,
+                "Rifaximina": 1.0,
+                "Clindamicina": 2.0,
+                "Ciprofloxacino": 18.0,
+                "Levofloxacino": 3.0,
+                "Dicloxacilina": 3.0,
+                "Trimetoprima -Sulfametoxazol": 5.0,
+                "Nitrofurantoina": 14.0,
+                "Metronidazol": 1.0
+              }
+            },
+            {
+              "especialidad": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "especialidad_normalizada": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "piezas": 48.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 35.0,
+                "Watch": 13.0
+              },
+              "por_aware_pct": {
+                "Access": 72.9,
+                "Watch": 27.1
+              },
+              "por_antibiotico": {
+                "Amikacina": 2.0,
+                "Amoxicilina": 2.0,
+                "Cefalexina": 4.0,
+                "Clindamicina": 11.0,
+                "Doxiciclina": 2.0,
+                "Ciprofloxacino": 6.0,
+                "Levofloxacino": 7.0,
+                "Dicloxacilina": 8.0,
+                "Nitrofurantoina": 2.0,
+                "Ampicilina": 4.0
+              }
+            },
+            {
+              "especialidad": "GINECOLOGIA ONCOLÓGIA",
+              "especialidad_normalizada": "GINECOLOGIA ONCOLOGIA",
+              "piezas": 42.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 12.0,
+                "Watch": 30.0
+              },
+              "por_aware_pct": {
+                "Access": 28.6,
+                "Watch": 71.4
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 4.0,
+                "Clindamicina": 6.0,
+                "Ciprofloxacino": 6.0,
+                "Levofloxacino": 24.0,
+                "Nitrofurantoina": 1.0,
+                "Dicloxacilina": 1.0
+              }
+            },
+            {
+              "especialidad": "OTORRINOLARINGOLOGÍA",
+              "especialidad_normalizada": "OTORRINOLARINGOLOGIA",
+              "piezas": 40.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 7.0,
+                "Watch": 33.0
+              },
+              "por_aware_pct": {
+                "Access": 17.5,
+                "Watch": 82.5
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 4.0,
+                "Claritromicina": 7.0,
+                "Ciprofloxacino": 4.0,
+                "Levofloxacino": 22.0,
+                "Dicloxacilina": 3.0
+              }
+            },
+            {
+              "especialidad": "PEDIATRÍA MÉDICA",
+              "especialidad_normalizada": "PEDIATRIA MEDICA",
+              "piezas": 30.0,
+              "num_medicos": 5,
+              "por_aware": {
+                "Watch": 14.0,
+                "Access": 12.0,
+                "Reserve": 4.0
+              },
+              "por_aware_pct": {
+                "Watch": 46.7,
+                "Access": 40.0,
+                "Reserve": 13.3
+              },
+              "por_antibiotico": {
+                "Ertapenem": 3.0,
+                "Rifaximina": 1.0,
+                "Claritromicina": 8.0,
+                "Clindamicina": 1.0,
+                "Linezolid": 4.0,
+                "Eritromicina": 2.0,
+                "Benzatina Bencilpenicilina": 3.0,
+                "Nitrofurantoina": 2.0,
+                "Metronidazol": 1.0,
+                "Amoxicilina": 2.0,
+                "Amoxicilina -Acido Clavulanico": 3.0
+              }
+            },
+            {
+              "especialidad": "FOMENTO A LA SALUD",
+              "especialidad_normalizada": "FOMENTO A LA SALUD",
+              "piezas": 29.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 11.0,
+                "Watch": 18.0
+              },
+              "por_aware_pct": {
+                "Access": 37.9,
+                "Watch": 62.1
+              },
+              "por_antibiotico": {
+                "Clindamicina": 3.0,
+                "Ciprofloxacino": 15.0,
+                "Ceftriaxona": 3.0,
+                "Nitrofurantoina": 6.0,
+                "Metronidazol": 2.0
+              }
+            },
+            {
+              "especialidad": "CIRUGÍA PLÁSTICA Y RECONSTRUCTIVA",
+              "especialidad_normalizada": "CIRUGIA PLASTICA Y RECONSTRUCTIVA",
+              "piezas": 25.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 25.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Dicloxacilina": 25.0
+              }
+            },
+            {
+              "especialidad": "MEDICINA MATERNO FETAL",
+              "especialidad_normalizada": "MEDICINA MATERNO FETAL",
+              "piezas": 20.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 1.0,
+                "Access": 19.0
+              },
+              "por_aware_pct": {
+                "Watch": 5.0,
+                "Access": 95.0
+              },
+              "por_antibiotico": {
+                "Azitromicina": 1.0,
+                "Amoxicilina": 8.0,
+                "Cefalexina": 4.0,
+                "Benzatina Bencilpenicilina": 6.0,
+                "Metronidazol": 1.0
+              }
+            },
+            {
+              "especialidad": "CIRUGÍA PEDIÁTRICA",
+              "especialidad_normalizada": "CIRUGIA PEDIATRICA",
+              "piezas": 16.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Watch": 5.0,
+                "Access": 11.0
+              },
+              "por_aware_pct": {
+                "Watch": 31.2,
+                "Access": 68.8
+              },
+              "por_antibiotico": {
+                "Ciprofloxacino": 2.0,
+                "Ceftriaxona": 3.0,
+                "Ampicilina": 3.0,
+                "Metronidazol": 8.0
+              }
+            },
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 14.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Watch": 3.0,
+                "Access": 11.0
+              },
+              "por_aware_pct": {
+                "Watch": 21.4,
+                "Access": 78.6
+              },
+              "por_antibiotico": {
+                "Azitromicina": 2.0,
+                "Clindamicina": 4.0,
+                "Claritromicina": 1.0,
+                "Dicloxacilina": 2.0,
+                "Trimetoprima -Sulfametoxazol": 2.0,
+                "Metronidazol": 3.0
+              }
+            },
+            {
+              "especialidad": "ANESTESIOLOGÍA PEDIÁTRICA",
+              "especialidad_normalizada": "ANESTESIOLOGIA PEDIATRICA",
+              "piezas": 12.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 12.0
+              },
+              "por_aware_pct": {
+                "Watch": 100.0
+              },
+              "por_antibiotico": {
+                "Ceftriaxona": 12.0
+              }
+            },
+            {
+              "especialidad": "URGNECIAS",
+              "especialidad_normalizada": "URGNECIAS",
+              "piezas": 11.0,
+              "num_medicos": 3,
+              "por_aware": {
+                "Access": 5.0,
+                "Watch": 2.0,
+                "Reserve": 4.0
+              },
+              "por_aware_pct": {
+                "Access": 45.5,
+                "Watch": 18.2,
+                "Reserve": 36.4
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 2.0,
+                "Ciprofloxacino": 2.0,
+                "Linezolid": 4.0,
+                "Dicloxacilina": 2.0,
+                "Amoxicilina -Acido Clavulanico": 1.0
+              }
+            },
+            {
+              "especialidad": "REUMATOLOGÍA",
+              "especialidad_normalizada": "REUMATOLOGIA",
+              "piezas": 7.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 2.0,
+                "Watch": 5.0
+              },
+              "por_aware_pct": {
+                "Access": 28.6,
+                "Watch": 71.4
+              },
+              "por_antibiotico": {
+                "Amikacina": 2.0,
+                "Claritromicina": 1.0,
+                "Levofloxacino": 4.0
+              }
+            },
+            {
+              "especialidad": "OFTALMOLOGÍA",
+              "especialidad_normalizada": "OFTALMOLOGIA",
+              "piezas": 7.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Watch": 7.0
+              },
+              "por_aware_pct": {
+                "Watch": 100.0
+              },
+              "por_antibiotico": {
+                "Ciprofloxacino": 7.0
+              }
+            },
+            {
+              "especialidad": "TERAPIA INTENSIVA",
+              "especialidad_normalizada": "TERAPIA INTENSIVA",
+              "piezas": 6.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 5.0,
+                "Watch": 1.0
+              },
+              "por_aware_pct": {
+                "Access": 83.3,
+                "Watch": 16.7
+              },
+              "por_antibiotico": {
+                "Clindamicina": 4.0,
+                "Ciprofloxacino": 1.0,
+                "Nitrofurantoina": 1.0
+              }
+            },
+            {
+              "especialidad": "NEUMOLOGÍA",
+              "especialidad_normalizada": "NEUMOLOGIA",
+              "piezas": 5.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 3.0,
+                "Access": 2.0
+              },
+              "por_aware_pct": {
+                "Watch": 60.0,
+                "Access": 40.0
+              },
+              "por_antibiotico": {
+                "Claritromicina": 3.0,
+                "Nitrofurantoina": 1.0,
+                "Metronidazol": 1.0
+              }
+            },
+            {
+              "especialidad": "INFECTOLOGÍA",
+              "especialidad_normalizada": "INFECTOLOGIA",
+              "piezas": 4.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 4.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Trimetoprima -Sulfametoxazol": 4.0
+              }
+            },
+            {
+              "especialidad": "Sin especialidad médica (personal no médico)",
+              "especialidad_normalizada": "SIN ESPECIALIDAD MEDICA (PERSONAL NO MEDICO)",
+              "piezas": 2.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 2.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 2.0
+              }
+            },
+            {
+              "especialidad": "CARDIOLOGÍA",
+              "especialidad_normalizada": "CARDIOLOGIA",
+              "piezas": 2.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 2.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Ampicilina": 2.0
+              }
+            },
+            {
+              "especialidad": "NEUROCIRUGÍA",
+              "especialidad_normalizada": "NEUROCIRUGIA",
+              "piezas": 1.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 1.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Nitrofurantoina": 1.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 413.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Vancomicina",
+              "piezas": 289.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Clindamicina",
+              "piezas": 257.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Levofloxacino",
+              "piezas": 252.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Ceftazidima",
+              "piezas": 245.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 164.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amikacina",
+              "piezas": 123.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 116.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Doxiciclina",
+              "piezas": 111.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Dicloxacilina",
+              "piezas": 107.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Meropenem",
+              "piezas": 95.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Cefalotina",
+              "piezas": 90.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Linezolid",
+              "piezas": 74.0,
+              "aware": "Reserve"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 74.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 71.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Cefalexina",
+              "piezas": 61.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ertapenem",
+              "piezas": 60.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Ceftriaxona",
+              "piezas": 51.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 47.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 38.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Claritromicina",
+              "piezas": 37.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Tetraciclina",
+              "piezas": 24.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Rifaximina",
+              "piezas": 16.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Gentamicina",
+              "piezas": 10.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 7.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Azitromicina",
+              "piezas": 6.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 6.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Moxifloxacino",
+              "piezas": 3.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Piperacilina -Tazobactam",
+              "piezas": 2.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Trimetoprima Y Sulfametoxazol",
+              "piezas": 1.0,
+              "aware": "Access"
+            }
+          ]
+        },
+        "Farmacia UMF 19": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 1794.0,
+              "num_medicos": 31,
+              "por_aware": {
+                "Access": 1167.0,
+                "Watch": 627.0
+              },
+              "por_aware_pct": {
+                "Access": 65.1,
+                "Watch": 34.9
+              },
+              "por_antibiotico": {
+                "Amikacina": 34.0,
+                "Azitromicina": 13.0,
+                "Amoxicilina": 130.0,
+                "Cefalexina": 3.0,
+                "Amoxicilina -Acido Clavulanico": 41.0,
+                "Clindamicina": 90.0,
+                "Claritromicina": 34.0,
+                "Doxiciclina": 19.0,
+                "Ciprofloxacino": 547.0,
+                "Levofloxacino": 3.0,
+                "Trimetoprima -Sulfametoxazol": 215.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 221.0,
+                "Dicloxacilina": 79.0,
+                "Eritromicina": 30.0,
+                "Ampicilina": 57.0,
+                "Benzatina Bencilpenicilina": 12.0,
+                "Nitrofurantoina": 175.0,
+                "Metronidazol": 91.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 300.0,
+              "num_medicos": 4,
+              "por_aware": {
+                "Access": 207.0,
+                "Watch": 93.0
+              },
+              "por_aware_pct": {
+                "Access": 69.0,
+                "Watch": 31.0
+              },
+              "por_antibiotico": {
+                "Amikacina": 15.0,
+                "Azitromicina": 3.0,
+                "Amoxicilina": 34.0,
+                "Cefalexina": 1.0,
+                "Amoxicilina -Acido Clavulanico": 10.0,
+                "Clindamicina": 12.0,
+                "Doxiciclina": 8.0,
+                "Ciprofloxacino": 89.0,
+                "Trimetoprima -Sulfametoxazol": 25.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 11.0,
+                "Dicloxacilina": 8.0,
+                "Eritromicina": 1.0,
+                "Ampicilina": 53.0,
+                "Nitrofurantoina": 20.0,
+                "Metronidazol": 10.0
+              }
+            },
+            {
+              "especialidad": "ESTOMATOLOGÍA",
+              "especialidad_normalizada": "ESTOMATOLOGIA",
+              "piezas": 48.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 47.0,
+                "Watch": 1.0
+              },
+              "por_aware_pct": {
+                "Access": 97.9,
+                "Watch": 2.1
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 29.0,
+                "Amoxicilina -Acido Clavulanico": 7.0,
+                "Clindamicina": 1.0,
+                "Dicloxacilina": 1.0,
+                "Trimetoprima -Sulfametoxazol": 1.0,
+                "Eritromicina": 1.0,
+                "Ampicilina": 6.0,
+                "Metronidazol": 2.0
+              }
+            },
+            {
+              "especialidad": "URGNECIAS",
+              "especialidad_normalizada": "URGNECIAS",
+              "piezas": 18.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 9.0,
+                "Access": 9.0
+              },
+              "por_aware_pct": {
+                "Watch": 50.0,
+                "Access": 50.0
+              },
+              "por_antibiotico": {
+                "Rifaximina": 2.0,
+                "Clindamicina": 2.0,
+                "Ciprofloxacino": 7.0,
+                "Trimetoprima -Sulfametoxazol": 2.0,
+                "Nitrofurantoina": 2.0,
+                "Ampicilina": 1.0,
+                "Metronidazol": 2.0
+              }
+            },
+            {
+              "especialidad": "SECTOR ADMINISTRATIVO Y DE PERSONAL",
+              "especialidad_normalizada": "SECTOR ADMINISTRATIVO Y DE PERSONAL",
+              "piezas": 8.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 8.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 6.0,
+                "Clindamicina": 1.0,
+                "Ampicilina": 1.0
+              }
+            },
+            {
+              "especialidad": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "especialidad_normalizada": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "piezas": 2.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 2.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 2.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 643.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 243.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 232.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 201.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 197.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 118.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Clindamicina",
+              "piezas": 106.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 105.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Dicloxacilina",
+              "piezas": 88.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 58.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amikacina",
+              "piezas": 49.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Claritromicina",
+              "piezas": 34.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 32.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Doxiciclina",
+              "piezas": 27.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Azitromicina",
+              "piezas": 16.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 12.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Cefalexina",
+              "piezas": 4.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Levofloxacino",
+              "piezas": 3.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Rifaximina",
+              "piezas": 2.0,
+              "aware": "Watch"
+            }
+          ]
+        },
+        "Farmacia HGZ-MF 2": {
+          "hospital_id": "HGZMF 2 APIZACO",
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 991.0,
+              "num_medicos": 22,
+              "por_aware": {
+                "Access": 605.0,
+                "Watch": 386.0
+              },
+              "por_aware_pct": {
+                "Access": 61.0,
+                "Watch": 39.0
+              },
+              "por_antibiotico": {
+                "Amikacina": 5.0,
+                "Amoxicilina": 104.0,
+                "Clindamicina": 46.0,
+                "Claritromicina": 47.0,
+                "Doxiciclina": 13.0,
+                "Ciprofloxacino": 333.0,
+                "Ampicilina": 9.0,
+                "Nitrofurantoina": 143.0,
+                "Dicloxacilina": 68.0,
+                "Trimetoprima -Sulfametoxazol": 85.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 45.0,
+                "Eritromicina": 6.0,
+                "Benzatina Bencilpenicilina": 10.0,
+                "Tetraciclina": 2.0,
+                "Metronidazol": 51.0,
+                "Amoxicilina -Acido Clavulanico": 24.0
+              }
+            },
+            {
+              "especialidad": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "especialidad_normalizada": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "piezas": 388.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 287.0,
+                "Access": 101.0
+              },
+              "por_aware_pct": {
+                "Watch": 74.0,
+                "Access": 26.0
+              },
+              "por_antibiotico": {
+                "Azitromicina": 4.0,
+                "Imipenem Y Cilastatina": 3.0,
+                "Amoxicilina": 19.0,
+                "Cefalexina": 3.0,
+                "Clindamicina": 17.0,
+                "Meropenem": 151.0,
+                "Claritromicina": 1.0,
+                "Doxiciclina": 2.0,
+                "Eritromicina": 2.0,
+                "Ciprofloxacino": 21.0,
+                "Levofloxacino": 81.0,
+                "Vancomicina": 24.0,
+                "Benzatina Bencilpenicilina": 1.0,
+                "Trimetoprima -Sulfametoxazol": 2.0,
+                "Ampicilina": 32.0,
+                "Nitrofurantoina": 11.0,
+                "Dicloxacilina": 8.0,
+                "Metronidazol": 4.0,
+                "Amoxicilina -Acido Clavulanico": 2.0
+              }
+            },
+            {
+              "especialidad": "CIRUGIA GENERAL",
+              "especialidad_normalizada": "CIRUGIA GENERAL",
+              "piezas": 374.0,
+              "num_medicos": 6,
+              "por_aware": {
+                "Access": 85.0,
+                "Watch": 289.0
+              },
+              "por_aware_pct": {
+                "Access": 22.7,
+                "Watch": 77.3
+              },
+              "por_antibiotico": {
+                "Cefalexina": 5.0,
+                "Meropenem": 21.0,
+                "Clindamicina": 34.0,
+                "Doxiciclina": 2.0,
+                "Ciprofloxacino": 219.0,
+                "Vancomicina": 28.0,
+                "Levofloxacino": 21.0,
+                "Dicloxacilina": 25.0,
+                "Trimetoprima -Sulfametoxazol": 7.0,
+                "Nitrofurantoina": 1.0,
+                "Benzatina Bencilpenicilina": 1.0,
+                "Metronidazol": 10.0
+              }
+            },
+            {
+              "especialidad": "GINECOLOGÍA Y OBSTETRICA",
+              "especialidad_normalizada": "GINECOLOGIA Y OBSTETRICA",
+              "piezas": 187.0,
+              "num_medicos": 8,
+              "por_aware": {
+                "Access": 139.0,
+                "Watch": 48.0
+              },
+              "por_aware_pct": {
+                "Access": 74.3,
+                "Watch": 25.7
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 15.0,
+                "Cefalexina": 1.0,
+                "Amoxicilina -Acido Clavulanico": 2.0,
+                "Clindamicina": 19.0,
+                "Doxiciclina": 4.0,
+                "Ciprofloxacino": 32.0,
+                "Vancomicina": 14.0,
+                "Levofloxacino": 2.0,
+                "Ampicilina": 76.0,
+                "Dicloxacilina": 5.0,
+                "Nitrofurantoina": 7.0,
+                "Metronidazol": 10.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 175.0,
+              "num_medicos": 8,
+              "por_aware": {
+                "Access": 86.0,
+                "Watch": 89.0
+              },
+              "por_aware_pct": {
+                "Access": 49.1,
+                "Watch": 50.9
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 8.0,
+                "Cefalexina": 3.0,
+                "Meropenem": 49.0,
+                "Clindamicina": 14.0,
+                "Claritromicina": 1.0,
+                "Doxiciclina": 2.0,
+                "Vancomicina": 14.0,
+                "Ciprofloxacino": 25.0,
+                "Nitrofurantoina": 14.0,
+                "Dicloxacilina": 15.0,
+                "Trimetoprima -Sulfametoxazol": 10.0,
+                "Ampicilina": 6.0,
+                "Benzatina Bencilpenicilina": 2.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 2.0,
+                "Tetraciclina": 1.0,
+                "Metronidazol": 9.0
+              }
+            },
+            {
+              "especialidad": "TRAUMATOLOGÍA Y ORTOPEDIA",
+              "especialidad_normalizada": "TRAUMATOLOGIA Y ORTOPEDIA",
+              "piezas": 159.0,
+              "num_medicos": 6,
+              "por_aware": {
+                "Access": 106.0,
+                "Watch": 53.0
+              },
+              "por_aware_pct": {
+                "Access": 66.7,
+                "Watch": 33.3
+              },
+              "por_antibiotico": {
+                "Amikacina": 4.0,
+                "Amoxicilina": 5.0,
+                "Cefalexina": 43.0,
+                "Clindamicina": 29.0,
+                "Doxiciclina": 13.0,
+                "Ciprofloxacino": 25.0,
+                "Vancomicina": 28.0,
+                "Dicloxacilina": 8.0,
+                "Trimetoprima -Sulfametoxazol": 3.0,
+                "Nitrofurantoina": 1.0
+              }
+            },
+            {
+              "especialidad": "ESTOMATOLOGÍA",
+              "especialidad_normalizada": "ESTOMATOLOGIA",
+              "piezas": 102.0,
+              "num_medicos": 3,
+              "por_aware": {
+                "Watch": 6.0,
+                "Access": 96.0
+              },
+              "por_aware_pct": {
+                "Watch": 5.9,
+                "Access": 94.1
+              },
+              "por_antibiotico": {
+                "Azitromicina": 1.0,
+                "Amoxicilina": 73.0,
+                "Cefalexina": 2.0,
+                "Clindamicina": 1.0,
+                "Claritromicina": 2.0,
+                "Ampicilina": 4.0,
+                "Trimetoprima -Sulfametoxazol": 1.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 5.0,
+                "Eritromicina": 3.0,
+                "Benzatina Bencilpenicilina": 3.0,
+                "Metronidazol": 5.0,
+                "Amoxicilina -Acido Clavulanico": 2.0
+              }
+            },
+            {
+              "especialidad": "MEDICINA INTERNA",
+              "especialidad_normalizada": "MEDICINA INTERNA",
+              "piezas": 23.0,
+              "num_medicos": 4,
+              "por_aware": {
+                "Watch": 14.0,
+                "Access": 9.0
+              },
+              "por_aware_pct": {
+                "Watch": 60.9,
+                "Access": 39.1
+              },
+              "por_antibiotico": {
+                "Rifaximina": 7.0,
+                "Doxiciclina": 1.0,
+                "Ciprofloxacino": 6.0,
+                "Levofloxacino": 1.0,
+                "Nitrofurantoina": 1.0,
+                "Benzatina Bencilpenicilina": 1.0,
+                "Tetraciclina": 4.0,
+                "Metronidazol": 2.0
+              }
+            },
+            {
+              "especialidad": "OFTALMOLOGÍA",
+              "especialidad_normalizada": "OFTALMOLOGIA",
+              "piezas": 18.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 10.0,
+                "Watch": 8.0
+              },
+              "por_aware_pct": {
+                "Access": 55.6,
+                "Watch": 44.4
+              },
+              "por_antibiotico": {
+                "Doxiciclina": 6.0,
+                "Ciprofloxacino": 8.0,
+                "Dicloxacilina": 4.0
+              }
+            },
+            {
+              "especialidad": "PEDIATRÍA MÉDICA",
+              "especialidad_normalizada": "PEDIATRIA MEDICA",
+              "piezas": 12.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 10.0,
+                "Watch": 2.0
+              },
+              "por_aware_pct": {
+                "Access": 83.3,
+                "Watch": 16.7
+              },
+              "por_antibiotico": {
+                "Clindamicina": 2.0,
+                "Claritromicina": 2.0,
+                "Nitrofurantoina": 1.0,
+                "Benzatina Bencilpenicilina": 2.0,
+                "Amoxicilina": 3.0,
+                "Amoxicilina -Acido Clavulanico": 2.0
+              }
+            },
+            {
+              "especialidad": "FOMENTO A LA SALUD",
+              "especialidad_normalizada": "FOMENTO A LA SALUD",
+              "piezas": 5.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 5.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Dicloxacilina": 1.0,
+                "Nitrofurantoina": 1.0,
+                "Metronidazol": 3.0
+              }
+            },
+            {
+              "especialidad": "OTORRINOLARINGOLOGÍA",
+              "especialidad_normalizada": "OTORRINOLARINGOLOGIA",
+              "piezas": 2.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 2.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Clindamicina": 2.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 669.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 227.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Meropenem",
+              "piezas": 221.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 180.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Clindamicina",
+              "piezas": 164.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Dicloxacilina",
+              "piezas": 134.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 127.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Vancomicina",
+              "piezas": 108.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 108.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Levofloxacino",
+              "piezas": 105.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 94.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Cefalexina",
+              "piezas": 57.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Claritromicina",
+              "piezas": 53.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 52.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Doxiciclina",
+              "piezas": 43.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 32.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 20.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 11.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amikacina",
+              "piezas": 9.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Rifaximina",
+              "piezas": 7.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Tetraciclina",
+              "piezas": 7.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Azitromicina",
+              "piezas": 5.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Imipenem Y Cilastatina",
+              "piezas": 3.0,
+              "aware": "Watch"
+            }
+          ]
+        },
+        "Farmacia UMF 35": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 122.0,
+              "num_medicos": 3,
+              "por_aware": {
+                "Access": 84.0,
+                "Watch": 38.0
+              },
+              "por_aware_pct": {
+                "Access": 68.9,
+                "Watch": 31.1
+              },
+              "por_antibiotico": {
+                "Amikacina": 2.0,
+                "Azitromicina": 2.0,
+                "Amoxicilina": 35.0,
+                "Ciprofloxacino": 35.0,
+                "Ampicilina": 5.0,
+                "Trimetoprima -Sulfametoxazol": 11.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 16.0,
+                "Eritromicina": 1.0,
+                "Nitrofurantoina": 10.0,
+                "Metronidazol": 3.0,
+                "Amoxicilina -Acido Clavulanico": 2.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 35.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 35.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 16.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 11.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 10.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 5.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 3.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amikacina",
+              "piezas": 2.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Azitromicina",
+              "piezas": 2.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 2.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 1.0,
+              "aware": "Watch"
+            }
+          ]
+        },
+        "Farmacia HGSZ-MF 8": {
+          "hospital_id": "HGSMF 8 TLAXCALA",
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 1157.0,
+              "num_medicos": 34,
+              "por_aware": {
+                "Watch": 190.0,
+                "Access": 967.0
+              },
+              "por_aware_pct": {
+                "Watch": 16.4,
+                "Access": 83.6
+              },
+              "por_antibiotico": {
+                "Azitromicina": 7.0,
+                "Amikacina": 11.0,
+                "Amoxicilina": 135.0,
+                "Rifaximina": 23.0,
+                "Cefalexina": 8.0,
+                "Clindamicina": 50.0,
+                "Claritromicina": 15.0,
+                "Doxiciclina": 25.0,
+                "Eritromicina": 14.0,
+                "Ciprofloxacino": 113.0,
+                "Ceftriaxona": 10.0,
+                "Levofloxacino": 8.0,
+                "Benzatina Bencilpenicilina": 20.0,
+                "Nitrofurantoina": 155.0,
+                "Trimetoprima -Sulfametoxazol": 182.0,
+                "Ampicilina": 50.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 123.0,
+                "Dicloxacilina": 88.0,
+                "Tetraciclina": 4.0,
+                "Metronidazol": 86.0,
+                "Amoxicilina -Acido Clavulanico": 30.0
+              }
+            },
+            {
+              "especialidad": "CIRUGIA GENERAL",
+              "especialidad_normalizada": "CIRUGIA GENERAL",
+              "piezas": 179.0,
+              "num_medicos": 4,
+              "por_aware": {
+                "Access": 56.0,
+                "Watch": 123.0
+              },
+              "por_aware_pct": {
+                "Access": 31.3,
+                "Watch": 68.7
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 1.0,
+                "Cefalexina": 2.0,
+                "Clindamicina": 19.0,
+                "Doxiciclina": 1.0,
+                "Ciprofloxacino": 104.0,
+                "Levofloxacino": 19.0,
+                "Trimetoprima -Sulfametoxazol": 4.0,
+                "Dicloxacilina": 14.0,
+                "Metronidazol": 14.0,
+                "Amoxicilina -Acido Clavulanico": 1.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 120.0,
+              "num_medicos": 7,
+              "por_aware": {
+                "Watch": 30.0,
+                "Access": 90.0
+              },
+              "por_aware_pct": {
+                "Watch": 25.0,
+                "Access": 75.0
+              },
+              "por_antibiotico": {
+                "Azitromicina": 3.0,
+                "Amikacina": 10.0,
+                "Amoxicilina": 3.0,
+                "Cefalexina": 7.0,
+                "Clindamicina": 11.0,
+                "Doxiciclina": 4.0,
+                "Eritromicina": 2.0,
+                "Ciprofloxacino": 23.0,
+                "Vancomicina": 2.0,
+                "Benzatina Bencilpenicilina": 6.0,
+                "Ampicilina": 14.0,
+                "Nitrofurantoina": 21.0,
+                "Dicloxacilina": 4.0,
+                "Metronidazol": 3.0,
+                "Amoxicilina -Acido Clavulanico": 7.0
+              }
+            },
+            {
+              "especialidad": "GINECOLOGÍA Y OBSTETRICA",
+              "especialidad_normalizada": "GINECOLOGIA Y OBSTETRICA",
+              "piezas": 120.0,
+              "num_medicos": 7,
+              "por_aware": {
+                "Access": 113.0,
+                "Watch": 7.0
+              },
+              "por_aware_pct": {
+                "Access": 94.2,
+                "Watch": 5.8
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 13.0,
+                "Clindamicina": 22.0,
+                "Doxiciclina": 1.0,
+                "Eritromicina": 1.0,
+                "Levofloxacino": 6.0,
+                "Ampicilina": 62.0,
+                "Trimetoprima -Sulfametoxazol": 2.0,
+                "Nitrofurantoina": 8.0,
+                "Metronidazol": 5.0
+              }
+            },
+            {
+              "especialidad": "ESTOMATOLOGÍA",
+              "especialidad_normalizada": "ESTOMATOLOGIA",
+              "piezas": 93.0,
+              "num_medicos": 5,
+              "por_aware": {
+                "Access": 88.0,
+                "Watch": 5.0
+              },
+              "por_aware_pct": {
+                "Access": 94.6,
+                "Watch": 5.4
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 7.0,
+                "Amoxicilina -Acido Clavulanico": 4.0,
+                "Clindamicina": 20.0,
+                "Eritromicina": 2.0,
+                "Ceftriaxona": 3.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 14.0,
+                "Ampicilina": 42.0,
+                "Metronidazol": 1.0
+              }
+            },
+            {
+              "especialidad": "MEDICINA INTERNA",
+              "especialidad_normalizada": "MEDICINA INTERNA",
+              "piezas": 79.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 41.0,
+                "Watch": 38.0
+              },
+              "por_aware_pct": {
+                "Access": 51.9,
+                "Watch": 48.1
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 3.0,
+                "Rifaximina": 7.0,
+                "Cefalexina": 5.0,
+                "Clindamicina": 5.0,
+                "Claritromicina": 6.0,
+                "Doxiciclina": 5.0,
+                "Ciprofloxacino": 15.0,
+                "Levofloxacino": 10.0,
+                "Dicloxacilina": 2.0,
+                "Trimetoprima -Sulfametoxazol": 4.0,
+                "Ampicilina": 10.0,
+                "Nitrofurantoina": 1.0,
+                "Metronidazol": 6.0
+              }
+            },
+            {
+              "especialidad": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "especialidad_normalizada": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "piezas": 27.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 3.0,
+                "Watch": 24.0
+              },
+              "por_aware_pct": {
+                "Access": 11.1,
+                "Watch": 88.9
+              },
+              "por_antibiotico": {
+                "Clindamicina": 1.0,
+                "Ciprofloxacino": 23.0,
+                "Levofloxacino": 1.0,
+                "Metronidazol": 2.0
+              }
+            },
+            {
+              "especialidad": "PEDIATRÍA MÉDICA",
+              "especialidad_normalizada": "PEDIATRIA MEDICA",
+              "piezas": 11.0,
+              "num_medicos": 4,
+              "por_aware": {
+                "Watch": 1.0,
+                "Access": 10.0
+              },
+              "por_aware_pct": {
+                "Watch": 9.1,
+                "Access": 90.9
+              },
+              "por_antibiotico": {
+                "Claritromicina": 1.0,
+                "Ampicilina": 2.0,
+                "Trimetoprima -Sulfametoxazol": 1.0,
+                "Metronidazol": 1.0,
+                "Amoxicilina": 2.0,
+                "Amoxicilina -Acido Clavulanico": 4.0
+              }
+            },
+            {
+              "especialidad": "TRIAGE",
+              "especialidad_normalizada": "TRIAGE",
+              "piezas": 2.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 2.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Ampicilina": 1.0,
+                "Nitrofurantoina": 1.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 278.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 193.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 186.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 181.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 164.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 137.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Clindamicina",
+              "piezas": 128.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 118.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Dicloxacilina",
+              "piezas": 108.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 46.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Levofloxacino",
+              "piezas": 44.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Doxiciclina",
+              "piezas": 36.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Rifaximina",
+              "piezas": 30.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 26.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Cefalexina",
+              "piezas": 22.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Claritromicina",
+              "piezas": 22.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amikacina",
+              "piezas": 21.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 19.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Ceftriaxona",
+              "piezas": 13.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Azitromicina",
+              "piezas": 10.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Tetraciclina",
+              "piezas": 4.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Vancomicina",
+              "piezas": 2.0,
+              "aware": "Watch"
+            }
+          ]
+        },
+        "Farmacia UMF 9": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 1054.0,
+              "num_medicos": 17,
+              "por_aware": {
+                "Watch": 457.0,
+                "Access": 597.0
+              },
+              "por_aware_pct": {
+                "Watch": 43.4,
+                "Access": 56.6
+              },
+              "por_antibiotico": {
+                "Azitromicina": 2.0,
+                "Amoxicilina": 106.0,
+                "Clindamicina": 18.0,
+                "Claritromicina": 17.0,
+                "Doxiciclina": 22.0,
+                "Ciprofloxacino": 430.0,
+                "Nitrofurantoina": 56.0,
+                "Eritromicina": 8.0,
+                "Benzatina Bencilpenicilina": 25.0,
+                "Trimetoprima -Sulfametoxazol": 109.0,
+                "Ampicilina": 29.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 88.0,
+                "Tetraciclina": 7.0,
+                "Dicloxacilina": 22.0,
+                "Metronidazol": 85.0,
+                "Amoxicilina -Acido Clavulanico": 30.0
+              }
+            },
+            {
+              "especialidad": "ESTOMATOLOGÍA",
+              "especialidad_normalizada": "ESTOMATOLOGIA",
+              "piezas": 65.0,
+              "num_medicos": 3,
+              "por_aware": {
+                "Watch": 6.0,
+                "Access": 59.0
+              },
+              "por_aware_pct": {
+                "Watch": 9.2,
+                "Access": 90.8
+              },
+              "por_antibiotico": {
+                "Azitromicina": 2.0,
+                "Amoxicilina": 3.0,
+                "Amoxicilina -Acido Clavulanico": 4.0,
+                "Clindamicina": 2.0,
+                "Ampicilina": 47.0,
+                "Dicloxacilina": 1.0,
+                "Eritromicina": 4.0,
+                "Metronidazol": 2.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 62.0,
+              "num_medicos": 4,
+              "por_aware": {
+                "Access": 40.0,
+                "Watch": 22.0
+              },
+              "por_aware_pct": {
+                "Access": 64.5,
+                "Watch": 35.5
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 6.0,
+                "Amoxicilina -Acido Clavulanico": 6.0,
+                "Clindamicina": 3.0,
+                "Claritromicina": 1.0,
+                "Ciprofloxacino": 17.0,
+                "Benzatina Bencilpenicilina": 4.0,
+                "Trimetoprima -Sulfametoxazol": 3.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 3.0,
+                "Ampicilina": 1.0,
+                "Dicloxacilina": 3.0,
+                "Nitrofurantoina": 6.0,
+                "Eritromicina": 4.0,
+                "Metronidazol": 5.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 447.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 115.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 112.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 92.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 91.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 77.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 62.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 40.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 29.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Dicloxacilina",
+              "piezas": 26.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Clindamicina",
+              "piezas": 23.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Doxiciclina",
+              "piezas": 22.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Claritromicina",
+              "piezas": 18.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 16.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Tetraciclina",
+              "piezas": 7.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Azitromicina",
+              "piezas": 4.0,
+              "aware": "Watch"
+            }
+          ]
+        },
+        "Farmacia UMF 22": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 700.0,
+              "num_medicos": 7,
+              "por_aware": {
+                "Watch": 169.0,
+                "Access": 531.0
+              },
+              "por_aware_pct": {
+                "Watch": 24.1,
+                "Access": 75.9
+              },
+              "por_antibiotico": {
+                "Azitromicina": 1.0,
+                "Amoxicilina": 60.0,
+                "Rifaximina": 2.0,
+                "Amoxicilina -Acido Clavulanico": 42.0,
+                "Clindamicina": 2.0,
+                "Claritromicina": 8.0,
+                "Doxiciclina": 17.0,
+                "Ciprofloxacino": 122.0,
+                "Levofloxacino": 1.0,
+                "Nitrofurantoina": 27.0,
+                "Eritromicina": 35.0,
+                "Ampicilina": 26.0,
+                "Benzatina Bencilpenicilina": 26.0,
+                "Trimetoprima -Sulfametoxazol": 66.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 223.0,
+                "Tetraciclina": 2.0,
+                "Dicloxacilina": 6.0,
+                "Metronidazol": 34.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 279.0,
+              "num_medicos": 3,
+              "por_aware": {
+                "Access": 194.0,
+                "Watch": 85.0
+              },
+              "por_aware_pct": {
+                "Access": 69.5,
+                "Watch": 30.5
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 9.0,
+                "Clindamicina": 2.0,
+                "Claritromicina": 5.0,
+                "Ciprofloxacino": 71.0,
+                "Nitrofurantoina": 17.0,
+                "Eritromicina": 9.0,
+                "Ampicilina": 2.0,
+                "Benzatina Bencilpenicilina": 12.0,
+                "Trimetoprima -Sulfametoxazol": 13.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 82.0,
+                "Dicloxacilina": 7.0,
+                "Metronidazol": 12.0,
+                "Amoxicilina -Acido Clavulanico": 38.0
+              }
+            },
+            {
+              "especialidad": "ESTOMATOLOGÍA",
+              "especialidad_normalizada": "ESTOMATOLOGIA",
+              "piezas": 1.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 1.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Amoxicilina -Acido Clavulanico": 1.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 305.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 193.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 81.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 79.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 69.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 46.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 44.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 44.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 38.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 28.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Doxiciclina",
+              "piezas": 17.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Claritromicina",
+              "piezas": 13.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Dicloxacilina",
+              "piezas": 13.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Clindamicina",
+              "piezas": 4.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Rifaximina",
+              "piezas": 2.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Tetraciclina",
+              "piezas": 2.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Azitromicina",
+              "piezas": 1.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Levofloxacino",
+              "piezas": 1.0,
+              "aware": "Watch"
+            }
+          ]
+        },
+        "Farmacia UMF 7": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 1082.0,
+              "num_medicos": 16,
+              "por_aware": {
+                "Watch": 439.0,
+                "Access": 643.0
+              },
+              "por_aware_pct": {
+                "Watch": 40.6,
+                "Access": 59.4
+              },
+              "por_antibiotico": {
+                "Azitromicina": 7.0,
+                "Amikacina": 15.0,
+                "Amoxicilina": 192.0,
+                "Rifaximina": 1.0,
+                "Clindamicina": 25.0,
+                "Doxiciclina": 1.0,
+                "Ciprofloxacino": 407.0,
+                "Levofloxacino": 6.0,
+                "Eritromicina": 18.0,
+                "Nitrofurantoina": 97.0,
+                "Ampicilina": 22.0,
+                "Trimetoprima -Sulfametoxazol": 85.0,
+                "Benzatina Bencilpenicilina": 11.0,
+                "Tetraciclina": 4.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 85.0,
+                "Dicloxacilina": 9.0,
+                "Metronidazol": 54.0,
+                "Amoxicilina -Acido Clavulanico": 43.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 63.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 50.0,
+                "Watch": 13.0
+              },
+              "por_aware_pct": {
+                "Access": 79.4,
+                "Watch": 20.6
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 16.0,
+                "Doxiciclina": 4.0,
+                "Ciprofloxacino": 11.0,
+                "Eritromicina": 2.0,
+                "Nitrofurantoina": 11.0,
+                "Benzatina Bencilpenicilina": 1.0,
+                "Ampicilina": 1.0,
+                "Dicloxacilina": 2.0,
+                "Trimetoprima -Sulfametoxazol": 2.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 2.0,
+                "Metronidazol": 5.0,
+                "Amoxicilina -Acido Clavulanico": 6.0
+              }
+            },
+            {
+              "especialidad": "ESTOMATOLOGÍA",
+              "especialidad_normalizada": "ESTOMATOLOGIA",
+              "piezas": 39.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 39.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 25.0,
+                "Clindamicina": 1.0,
+                "Ampicilina": 1.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 3.0,
+                "Metronidazol": 2.0,
+                "Amoxicilina -Acido Clavulanico": 7.0
+              }
+            },
+            {
+              "especialidad": "URGNECIAS",
+              "especialidad_normalizada": "URGNECIAS",
+              "piezas": 2.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 1.0,
+                "Access": 1.0
+              },
+              "por_aware_pct": {
+                "Watch": 50.0,
+                "Access": 50.0
+              },
+              "por_antibiotico": {
+                "Ciprofloxacino": 1.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 1.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 419.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 233.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 108.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 91.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 87.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 61.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 56.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Clindamicina",
+              "piezas": 26.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 24.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 20.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amikacina",
+              "piezas": 15.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 12.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Dicloxacilina",
+              "piezas": 11.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Azitromicina",
+              "piezas": 7.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Levofloxacino",
+              "piezas": 6.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Doxiciclina",
+              "piezas": 5.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Tetraciclina",
+              "piezas": 4.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Rifaximina",
+              "piezas": 1.0,
+              "aware": "Watch"
+            }
+          ]
+        },
+        "Farmacia UMF 10": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 244.0,
+              "num_medicos": 8,
+              "por_aware": {
+                "Watch": 128.0,
+                "Access": 116.0
+              },
+              "por_aware_pct": {
+                "Watch": 52.5,
+                "Access": 47.5
+              },
+              "por_antibiotico": {
+                "Azitromicina": 1.0,
+                "Amikacina": 5.0,
+                "Amoxicilina": 15.0,
+                "Claritromicina": 3.0,
+                "Doxiciclina": 2.0,
+                "Eritromicina": 6.0,
+                "Ciprofloxacino": 118.0,
+                "Trimetoprima -Sulfametoxazol": 24.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 21.0,
+                "Ampicilina": 11.0,
+                "Nitrofurantoina": 15.0,
+                "Benzatina Bencilpenicilina": 1.0,
+                "Metronidazol": 16.0,
+                "Amoxicilina -Acido Clavulanico": 6.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 26.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 14.0,
+                "Watch": 12.0
+              },
+              "por_aware_pct": {
+                "Access": 53.8,
+                "Watch": 46.2
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 4.0,
+                "Ciprofloxacino": 12.0,
+                "Nitrofurantoina": 3.0,
+                "Ampicilina": 2.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 4.0,
+                "Metronidazol": 1.0
+              }
+            },
+            {
+              "especialidad": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "especialidad_normalizada": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "piezas": 2.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 2.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Ampicilina": 2.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 130.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 25.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 24.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 19.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 18.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 17.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 15.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 6.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 6.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amikacina",
+              "piezas": 5.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Claritromicina",
+              "piezas": 3.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Doxiciclina",
+              "piezas": 2.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Azitromicina",
+              "piezas": 1.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 1.0,
+              "aware": "Access"
+            }
+          ]
+        },
+        "Farmacia UMF 20": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 205.0,
+              "num_medicos": 10,
+              "por_aware": {
+                "Access": 117.0,
+                "Watch": 88.0
+              },
+              "por_aware_pct": {
+                "Access": 57.1,
+                "Watch": 42.9
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 23.0,
+                "Clindamicina": 16.0,
+                "Doxiciclina": 5.0,
+                "Ciprofloxacino": 86.0,
+                "Ampicilina": 2.0,
+                "Nitrofurantoina": 21.0,
+                "Eritromicina": 2.0,
+                "Trimetoprima -Sulfametoxazol": 13.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 16.0,
+                "Benzatina Bencilpenicilina": 2.0,
+                "Metronidazol": 13.0,
+                "Amoxicilina -Acido Clavulanico": 6.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 32.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 14.0,
+                "Access": 18.0
+              },
+              "por_aware_pct": {
+                "Watch": 43.8,
+                "Access": 56.2
+              },
+              "por_antibiotico": {
+                "Azitromicina": 1.0,
+                "Amoxicilina": 2.0,
+                "Clindamicina": 3.0,
+                "Ciprofloxacino": 12.0,
+                "Ampicilina": 2.0,
+                "Eritromicina": 1.0,
+                "Nitrofurantoina": 5.0,
+                "Metronidazol": 2.0,
+                "Amoxicilina -Acido Clavulanico": 4.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 98.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 26.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 25.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Clindamicina",
+              "piezas": 19.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 16.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 15.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 13.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 10.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Doxiciclina",
+              "piezas": 5.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 4.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 3.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 2.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Azitromicina",
+              "piezas": 1.0,
+              "aware": "Watch"
+            }
+          ]
+        },
+        "Farmacia UMF 48": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 50.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Watch": 22.0,
+                "Access": 28.0
+              },
+              "por_aware_pct": {
+                "Watch": 44.0,
+                "Access": 56.0
+              },
+              "por_antibiotico": {
+                "Azitromicina": 1.0,
+                "Amoxicilina": 11.0,
+                "Amoxicilina -Acido Clavulanico": 4.0,
+                "Ciprofloxacino": 21.0,
+                "Ampicilina": 4.0,
+                "Trimetoprima -Sulfametoxazol": 2.0,
+                "Nitrofurantoina": 5.0,
+                "Metronidazol": 2.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 34.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 10.0,
+                "Access": 24.0
+              },
+              "por_aware_pct": {
+                "Watch": 29.4,
+                "Access": 70.6
+              },
+              "por_antibiotico": {
+                "Ciprofloxacino": 8.0,
+                "Ampicilina": 5.0,
+                "Nitrofurantoina": 10.0,
+                "Eritromicina": 2.0,
+                "Benzatina Bencilpenicilina": 4.0,
+                "Metronidazol": 1.0,
+                "Amoxicilina": 2.0,
+                "Amoxicilina -Acido Clavulanico": 2.0
+              }
+            },
+            {
+              "especialidad": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "especialidad_normalizada": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "piezas": 2.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 2.0
+              },
+              "por_aware_pct": {
+                "Watch": 100.0
+              },
+              "por_antibiotico": {
+                "Ciprofloxacino": 2.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 31.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 15.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 13.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 9.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 6.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 4.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 3.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 2.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 2.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Azitromicina",
+              "piezas": 1.0,
+              "aware": "Watch"
+            }
+          ]
+        },
+        "Farmacia UMF 6": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 669.0,
+              "num_medicos": 10,
+              "por_aware": {
+                "Access": 397.0,
+                "Watch": 272.0
+              },
+              "por_aware_pct": {
+                "Access": 59.3,
+                "Watch": 40.7
+              },
+              "por_antibiotico": {
+                "Amikacina": 19.0,
+                "Amoxicilina": 104.0,
+                "Rifaximina": 3.0,
+                "Amoxicilina -Acido Clavulanico": 18.0,
+                "Claritromicina": 9.0,
+                "Doxiciclina": 2.0,
+                "Ciprofloxacino": 247.0,
+                "Levofloxacino": 7.0,
+                "Trimetoprima -Sulfametoxazol": 61.0,
+                "Eritromicina": 6.0,
+                "Nitrofurantoina": 38.0,
+                "Benzatina Bencilpenicilina": 6.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 96.0,
+                "Dicloxacilina": 20.0,
+                "Ampicilina": 12.0,
+                "Metronidazol": 21.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 18.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 8.0,
+                "Watch": 10.0
+              },
+              "por_aware_pct": {
+                "Access": 44.4,
+                "Watch": 55.6
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 2.0,
+                "Rifaximina": 4.0,
+                "Ciprofloxacino": 4.0,
+                "Eritromicina": 2.0,
+                "Nitrofurantoina": 2.0,
+                "Benzatina Bencilpenicilina": 2.0,
+                "Dicloxacilina": 2.0
+              }
+            },
+            {
+              "especialidad": "ESTOMATOLOGÍA",
+              "especialidad_normalizada": "ESTOMATOLOGIA",
+              "piezas": 13.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 4.0,
+                "Access": 9.0
+              },
+              "por_aware_pct": {
+                "Watch": 30.8,
+                "Access": 69.2
+              },
+              "por_antibiotico": {
+                "Ciprofloxacino": 2.0,
+                "Eritromicina": 2.0,
+                "Benzatina Bencilpenicilina": 1.0,
+                "Ampicilina": 2.0,
+                "Metronidazol": 4.0,
+                "Amoxicilina -Acido Clavulanico": 2.0
+              }
+            },
+            {
+              "especialidad": "URGNECIAS",
+              "especialidad_normalizada": "URGNECIAS",
+              "piezas": 8.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 8.0
+              },
+              "por_aware_pct": {
+                "Watch": 100.0
+              },
+              "por_antibiotico": {
+                "Ciprofloxacino": 8.0
+              }
+            },
+            {
+              "especialidad": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "especialidad_normalizada": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "piezas": 1.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Watch": 1.0
+              },
+              "por_aware_pct": {
+                "Watch": 100.0
+              },
+              "por_antibiotico": {
+                "Levofloxacino": 1.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 261.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 106.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 96.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 61.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 40.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 25.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Dicloxacilina",
+              "piezas": 22.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 20.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amikacina",
+              "piezas": 19.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 14.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 10.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Claritromicina",
+              "piezas": 9.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 9.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Levofloxacino",
+              "piezas": 8.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Rifaximina",
+              "piezas": 7.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Doxiciclina",
+              "piezas": 2.0,
+              "aware": "Access"
+            }
+          ]
+        },
+        "Farmacia UMF 37": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 269.0,
+              "num_medicos": 5,
+              "por_aware": {
+                "Access": 203.0,
+                "Watch": 66.0
+              },
+              "por_aware_pct": {
+                "Access": 75.5,
+                "Watch": 24.5
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 27.0,
+                "Rifaximina": 5.0,
+                "Amoxicilina -Acido Clavulanico": 3.0,
+                "Clindamicina": 12.0,
+                "Ciprofloxacino": 59.0,
+                "Ampicilina": 41.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 39.0,
+                "Dicloxacilina": 5.0,
+                "Eritromicina": 2.0,
+                "Trimetoprima -Sulfametoxazol": 34.0,
+                "Nitrofurantoina": 30.0,
+                "Benzatina Bencilpenicilina": 5.0,
+                "Metronidazol": 7.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 26.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 21.0,
+                "Watch": 5.0
+              },
+              "por_aware_pct": {
+                "Access": 80.8,
+                "Watch": 19.2
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 12.0,
+                "Clindamicina": 2.0,
+                "Ciprofloxacino": 5.0,
+                "Ampicilina": 2.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 3.0,
+                "Dicloxacilina": 1.0,
+                "Benzatina Bencilpenicilina": 1.0
+              }
+            },
+            {
+              "especialidad": "ESTOMATOLOGÍA",
+              "especialidad_normalizada": "ESTOMATOLOGIA",
+              "piezas": 26.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 26.0
+              },
+              "por_aware_pct": {
+                "Access": 100.0
+              },
+              "por_antibiotico": {
+                "Clindamicina": 14.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 8.0,
+                "Benzatina Bencilpenicilina": 3.0,
+                "Amoxicilina": 1.0
+              }
+            },
+            {
+              "especialidad": "URGNECIAS",
+              "especialidad_normalizada": "URGNECIAS",
+              "piezas": 7.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 5.0,
+                "Watch": 2.0
+              },
+              "por_aware_pct": {
+                "Access": 71.4,
+                "Watch": 28.6
+              },
+              "por_antibiotico": {
+                "Clindamicina": 2.0,
+                "Ciprofloxacino": 2.0,
+                "Ampicilina": 1.0,
+                "Dicloxacilina": 2.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 66.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 50.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 44.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 40.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 34.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Clindamicina",
+              "piezas": 30.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 30.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 9.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Dicloxacilina",
+              "piezas": 8.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 7.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Rifaximina",
+              "piezas": 5.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 3.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 2.0,
+              "aware": "Watch"
+            }
+          ]
+        },
+        "Farmacia UMF 17": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 101.0,
+              "num_medicos": 2,
+              "por_aware": {
+                "Access": 47.0,
+                "Watch": 54.0
+              },
+              "por_aware_pct": {
+                "Access": 46.5,
+                "Watch": 53.5
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 9.0,
+                "Rifaximina": 1.0,
+                "Ciprofloxacino": 47.0,
+                "Nitrofurantoina": 10.0,
+                "Benzatina Bencilpenicilina": 2.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 6.0,
+                "Trimetoprima -Sulfametoxazol": 9.0,
+                "Ampicilina": 2.0,
+                "Dicloxacilina": 2.0,
+                "Eritromicina": 6.0,
+                "Metronidazol": 7.0
+              }
+            },
+            {
+              "especialidad": "Médico no encontrado en catálogo de especialidades",
+              "especialidad_normalizada": "MEDICO NO ENCONTRADO EN CATALOGO DE ESPECIALIDADES",
+              "piezas": 12.0,
+              "num_medicos": 3,
+              "por_aware": {
+                "Access": 9.0,
+                "Watch": 3.0
+              },
+              "por_aware_pct": {
+                "Access": 75.0,
+                "Watch": 25.0
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 2.0,
+                "Ciprofloxacino": 3.0,
+                "Trimetoprima -Sulfametoxazol": 2.0,
+                "Dicloxacilina": 2.0,
+                "Metronidazol": 3.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 50.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 11.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 11.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 10.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 10.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 6.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 6.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Dicloxacilina",
+              "piezas": 4.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 2.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 2.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Rifaximina",
+              "piezas": 1.0,
+              "aware": "Watch"
+            }
+          ]
+        },
+        "Farmacia UMF 51": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 54.0,
+              "num_medicos": 4,
+              "por_aware": {
+                "Access": 42.0,
+                "Watch": 12.0
+              },
+              "por_aware_pct": {
+                "Access": 77.8,
+                "Watch": 22.2
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 11.0,
+                "Ciprofloxacino": 12.0,
+                "Ampicilina": 4.0,
+                "Trimetoprima -Sulfametoxazol": 14.0,
+                "Nitrofurantoina": 6.0,
+                "Metronidazol": 5.0,
+                "Amoxicilina -Acido Clavulanico": 2.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 14.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 12.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 11.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 6.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 5.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 4.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 2.0,
+              "aware": "Access"
+            }
+          ]
+        },
+        "Farmacia UMF 18": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 53.0,
+              "num_medicos": 4,
+              "por_aware": {
+                "Access": 30.0,
+                "Watch": 23.0
+              },
+              "por_aware_pct": {
+                "Access": 56.6,
+                "Watch": 43.4
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 12.0,
+                "Ciprofloxacino": 23.0,
+                "Nitrofurantoina": 3.0,
+                "Trimetoprima -Sulfametoxazol": 5.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 6.0,
+                "Metronidazol": 4.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 23.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 12.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 6.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 5.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 4.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 3.0,
+              "aware": "Access"
+            }
+          ]
+        },
+        "Farmacia UMF 5": {
+          "hospital_id": null,
+          "especialidades": [
+            {
+              "especialidad": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "especialidad_normalizada": "MEDICINA FAMILIAR (CONS.MEDICO)",
+              "piezas": 162.0,
+              "num_medicos": 6,
+              "por_aware": {
+                "Access": 108.0,
+                "Watch": 54.0
+              },
+              "por_aware_pct": {
+                "Access": 66.7,
+                "Watch": 33.3
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 4.0,
+                "Doxiciclina": 1.0,
+                "Ciprofloxacino": 53.0,
+                "Eritromicina": 1.0,
+                "Nitrofurantoina": 14.0,
+                "Trimetoprima -Sulfametoxazol": 25.0,
+                "Benzatina Bencilpenicilina": 3.0,
+                "Ampicilina": 8.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 36.0,
+                "Dicloxacilina": 6.0,
+                "Metronidazol": 9.0,
+                "Amoxicilina -Acido Clavulanico": 2.0
+              }
+            },
+            {
+              "especialidad": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "especialidad_normalizada": "N.CENT.REG.DELEG.SUBDELEG.DIR.ADMTV.U.OP.",
+              "piezas": 11.0,
+              "num_medicos": 1,
+              "por_aware": {
+                "Access": 7.0,
+                "Watch": 4.0
+              },
+              "por_aware_pct": {
+                "Access": 63.6,
+                "Watch": 36.4
+              },
+              "por_antibiotico": {
+                "Amoxicilina": 2.0,
+                "Ciprofloxacino": 4.0,
+                "Nitrofurantoina": 1.0,
+                "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina": 3.0,
+                "Dicloxacilina": 1.0
+              }
+            }
+          ],
+          "antibioticos": [
+            {
+              "antibiotico": "Ciprofloxacino",
+              "piezas": 57.0,
+              "aware": "Watch"
+            },
+            {
+              "antibiotico": "Bencilpenicilina Procainica Con Bencilpenicilina Cristalina",
+              "piezas": 39.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Trimetoprima -Sulfametoxazol",
+              "piezas": 25.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Nitrofurantoina",
+              "piezas": 15.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Metronidazol",
+              "piezas": 9.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Ampicilina",
+              "piezas": 8.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Dicloxacilina",
+              "piezas": 7.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina",
+              "piezas": 6.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Benzatina Bencilpenicilina",
+              "piezas": 3.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Amoxicilina -Acido Clavulanico",
+              "piezas": 2.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Doxiciclina",
+              "piezas": 1.0,
+              "aware": "Access"
+            },
+            {
+              "antibiotico": "Eritromicina",
+              "piezas": 1.0,
+              "aware": "Watch"
+            }
+          ]
+        }
+      }
     }
   }
 }
