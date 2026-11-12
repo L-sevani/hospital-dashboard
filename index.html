@@ -4888,9 +4888,9 @@ let CONSUMO_DATA_V2={}; // datos crudos por antibiótico, calculados directo de 
 let _consumoFiltroVia='endovenoso'; // 'endovenoso'|'oral'|'ambos'
 let _consumoFiltroTipo='ambas'; // 'individual'|'colectiva'|'ambas'
 let ESPECIALIDAD_DATA=null;
-let ABASTO_DATA=null, _abastoMeses=null, _abastoAware=null, _abastoVia='todas', _abastoGrupos=null;
+let ABASTO_DATA=null, _abastoMeses=null, _abastoAware=null, _abastoVia='todas', _abastoGrupos=null, _abastoAwareTabla=null;
 let _especialidadUnidad=null;
-let _especialidadPeriodo=null;
+let _especialidadPeriodo=null, _especialidadMeses=null;
 let _especialidadAwareFiltro=null; // null = todos; o un Set con las categorías activas (selección múltiple)
 let _indicadoresOrden={}; // {tablaId: null|'asc'|'desc'} -- cada tabla ordena de forma independiente
 let _indicadoresMesesSel=null; // null = todos los meses; o un Set con los meses seleccionados
@@ -4977,7 +4977,7 @@ function setOoadPieSel(sel){
   _ooadPieSel = (_ooadPieSel===sel) ? null : sel;
   renderConsumoDDD();
 }
-let _coberturaCultivo=null, _coberturaAbxSel=null, _coberturaSortCol=null, _coberturaDim='cultivos', _coberturaFiltroCB='todos', _coberturaEskape=false;
+let _coberturaCultivo=null, _coberturaAbxSel=null, _coberturaSortCol=null, _coberturaDim='cultivos', _coberturaFiltroCB='todos', _coberturaEskape=false, _cobAnios=[], _cobMeses=[];
 let _consumoAwareFilter=null; // Set de categorías activas, null = todas
 let _consumoTopMetrica='ddd'; // métrica de la gráfica 'Antimicrobianos con mayor consumo': 'ddd'|'costo'|'piezas'
 
@@ -5329,6 +5329,21 @@ function _awareFiltroTxt(){
 function toggleConsumoFiltroVia(v){ _consumoFiltroVia=v; renderConsumoDDD(); }
 function toggleConsumoFiltroTipo(v){ _consumoFiltroTipo=v; renderConsumoDDD(); }
 
+const _CONSUMO_INTROS={"ddd": ["📊 DDD / 100 camas", ["Aquí ves <b>cuánto antibiótico se consumió</b> en la unidad que elijas (o en todo el OOAD) y <b>qué tipo de antibióticos</b> fueron. Todo se calcula con las <b>recetas surtidas</b> del mes (Plantilla de Recetas), traducidas a <b>DDD</b>: la Dosis Diaria Definida de la OMS, una medida que permite comparar antibióticos distintos entre sí.", "<b>Resumen ejecutivo y tarjetas de arriba:</b> te cuentan en pocas líneas cómo va el mes. El indicador principal es <b>DDD por cada 100 camas censables</b>; las camas y los días paciente vienen de la <b>PARTE II</b> de cada hospital.", "<b>Consolidado OOAD y Clasificación AWaRe:</b> reparten el consumo en <b>Access</b> (primera línea, los que conviene usar más), <b>Watch</b> (vigilar) y <b>Reserve</b> (guardar para casos difíciles). La clasificación AWaRe es la de la OMS.", "<b>Antimicrobianos con mayor consumo y Consumo por grupo farmacológico:</b> muestran cuáles antibióticos y qué familias pesan más. Los grupos los armamos nosotros por nombre del medicamento (no es una clasificación ATC oficial). <b>Antibióticos de mayor riesgo</b> junta los que se usan mucho y a la vez funcionan poco según el antibiograma del hospital.", "<b>Comparativo entre hospitales y Composición AWaRe:</b> ponen a los hospitales lado a lado. <b>Tendencias:</b> cómo cambia el consumo mes con mes. <b>Consumo por servicio:</b> camas y días paciente por especialidad (PARTE II); la columna de DDD ahí es una <b>estimación</b> (piezas de recetas × factor DDD), no un dato oficial.", "Los filtros de <b>vía</b> (endovenoso, oral o ambos), <b>tipo de receta</b> (individual, colectiva o ambas) y <b>AWaRe</b> cambian todas las gráficas a la vez. Por defecto se muestra lo endovenoso con recetas individuales y colectivas."]], "cobertura": ["🎯 Cobertura Empírica", ["Esta pestaña responde una pregunta práctica: <b>si un paciente llega con una infección y todavía no tenemos su antibiograma, ¿qué antibiótico tiene más probabilidades de funcionar?</b> Se contesta con los <b>antibiogramas capturados en SYRA</b> de la unidad: cuántos de los gérmenes aislados resultaron <b>sensibles (S)</b> a cada antibiótico.", "<b>La tabla de microorganismos</b> muestra la sensibilidad germen por germen; <b>la cobertura ponderada</b> la resume en un solo número por antibiótico; <b>el mapa de calor</b> y <b>la cobertura por cultivo</b> la comparan entre muestras; <b>la tendencia</b> la sigue año con año. <b>La gráfica de burbujas</b> cruza esa sensibilidad con el consumo del mes (ΣDDD de las recetas) para detectar antibióticos muy usados que funcionan poco.", "Puedes elegir los <b>años de antibiograma</b> y los <b>meses de consumo</b>; si marcas varios, se suman. Los colores son verde (≥80% sensible), ámbar (60–79%) y rojo (&lt;60%)."]], "ranking": ["🏆 Ranking de Antibióticos", ["Es la lista de <b>qué antibióticos se entregaron más</b>, contados en <b>piezas</b> (cajas, frascos, ampolletas…), no en DDD. Sale de las <b>recetas surtidas</b> del mes (Plantilla de Recetas), en la definición oficial de endovenosos con recetas individuales y colectivas.", "<b>El ranking</b> ordena los antibióticos de mayor a menor número de piezas, con su clasificación AWaRe. <b>Comparativo entre hospitales</b> y <b>Delegación vs. hospitales</b> muestran cómo se reparte ese consumo entre unidades. Si marcas varios meses, las piezas se <b>suman</b>."]], "especialidad": ["🩺 Consumo por Especialidad", ["Aquí vemos <b>qué especialidades médicas recetan más antibióticos</b>. Se toma cada receta individual del mes (Plantilla de Recetas), se identifica al médico por su matrícula y se busca su especialidad en el <b>Catálogo de Especialidades</b>. No se guardan nombres ni matrículas en el dashboard. Las recetas colectivas se dejan fuera porque no tienen un médico único.", "<b>La tabla de especialidades</b> cuenta piezas, médicos y, cuando se puede cruzar con la <b>PARTE II</b>, días paciente. <b>Clasificación AWaRe</b>, <b>Top especialidades</b> y <b>Antibióticos más recetados</b> detallan qué y cuánto se receta. <b>Lectura por especialidad</b> resume lo más llamativo. <b>DDD estimado</b> es una aproximación (piezas × factor DDD) y no un dato oficial. Si marcas varios meses, todo se suma."]], "indicadores": ["📐 Indicadores PROA", ["Son los indicadores del <b>Programa de Optimización de Antimicrobianos (PROA)</b> que sí podemos calcular con la información disponible: <b>DDD por 100 camas</b>, <b>DDD por 100 días paciente</b> y el porcentaje de consumo <b>Access</b>, <b>Watch</b> y <b>Reserve</b>. El consumo sale de las <b>recetas</b> y las camas y días paciente de la <b>PARTE II</b>.", "Cada tabla muestra, por unidad y por mes, el <b>numerador</b>, el <b>denominador</b> y el resultado, con su fórmula y semáforo de referencia (Access esperado ≥70%, meta OMS; Watch ≤30% y Reserve ≤10%, metas de C.I.A.E.). Los indicadores que requieren revisar expedientes (como adecuación o desescalamiento) no aparecen porque hoy no hay datos para calcularlos."]], "abasto": ["📦 Abasto", ["Compara <b>cuántas piezas de antimicrobianos llegaron al almacén</b> (altas) contra <b>cuántas se enviaron a las unidades</b> (remitido), para ver si el abasto alcanza. La fuente es el Excel mensual <b>«Porcentaje de abasto antimicrobianos»</b> que se recibe de la jefatura; no sale de las recetas, así que sus cifras no se cruzan con las del resto de pestañas.", "<b>Las tarjetas de Access, Watch y Reserve</b> dicen si lo recibido cubre lo remitido (cobertura = recibido ÷ remitido). <b>Las tendencias</b> siguen el mes a mes y <b>el detalle por antibiótico</b> trae cada medicamento y su grupo. Los ceros son ceros reales: significan que ese mes no hubo movimiento registrado."]]};
+function _consumoIntroHtml(id){
+  const it=_CONSUMO_INTROS[id]; if(!it) return '';
+  return `<details open style="margin-top:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid #154f39;border-radius:12px;padding:10px 16px;">
+    <summary style="cursor:pointer;font-size:.8rem;font-weight:800;color:#154f39;">ℹ️ ¿Qué estoy viendo aquí? · ${it[0]}</summary>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;font-size:.76rem;color:#1e293b;line-height:1.55;">${it[1].map(t=>`<p style="margin:0;">${t}</p>`).join('')}</div>
+  </details>`;
+}
+function _consumoIntroPrepend(id){
+  const inner=document.getElementById('consumo-inner'); if(!inner) return;
+  inner.querySelectorAll(':scope > details[data-intro]').forEach(e=>e.remove());
+  const tmp=document.createElement('div'); tmp.innerHTML=_consumoIntroHtml(id);
+  const d=tmp.firstElementChild; if(!d) return; d.setAttribute('data-intro',id);
+  inner.insertBefore(d,inner.firstChild);
+}
 function renderConsumo(){
   const body=document.getElementById('consumo-body');
   if(!body) return;
@@ -5384,7 +5399,8 @@ function toggleAwareFilter(cat){
 }
 function setAwareChip(cat){ toggleAwareFilter(cat); }
 
-function renderConsumoDDD(){
+function renderConsumoDDD(){ const _r=renderConsumoDDDBase.apply(this,arguments); _consumoIntroPrepend('ddd'); return _r; }
+function renderConsumoDDDBase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
   _tipRegistry={};
@@ -6000,7 +6016,7 @@ function renderConsumoDDD(){
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">⚠️ Antibióticos de mayor riesgo${ctx(uniNom,'todo el período')}</div>
-        <div style="font-size:.66rem;color:#94a3b8;margin-bottom:10px;">Alto consumo + baja sensibilidad hospital-wide — candidatos a revisar en el COA</div>
+        <div style="font-size:.66rem;color:#94a3b8;margin-bottom:10px;">Alto consumo + baja sensibilidad hospital-wide — candidatos a revisión</div>
         <div style="display:flex;flex-direction:column;gap:6px;">${riesgoHtml}</div>
       </div>
     </div>
@@ -6049,6 +6065,12 @@ function setAbastoAware(k){
   renderAbasto();
 }
 function setAbastoVia(v){ _abastoVia=v; renderAbasto(); }
+function toggleAbastoAwareTabla(k){
+  const cur=_abastoAwareTabla?new Set(_abastoAwareTabla):new Set();
+  if(cur.has(k)) cur.delete(k); else cur.add(k);
+  _abastoAwareTabla=cur.size?cur:null;
+  renderAbasto();
+}
 function toggleAbastoGrupo(g){
   const cur=_abastoGrupos?new Set(_abastoGrupos):new Set();
   if(cur.has(g)) cur.delete(g); else cur.add(g);
@@ -6056,7 +6078,8 @@ function toggleAbastoGrupo(g){
   renderAbasto();
 }
 
-function renderAbasto(){
+function renderAbasto(){ const _r=renderAbastoBase.apply(this,arguments); _consumoIntroPrepend('abasto'); return _r; }
+function renderAbastoBase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
   _tipRegistry={};
@@ -6107,8 +6130,8 @@ function renderAbasto(){
     const max=Math.max(1,...items.map(i=>Math.max(i.rec,i.rem)));
     return items.map(it=>{
       const c=it.color||'#0ea5e9', cd=_darkenHex(c,.38);
-      const dif=it.rec-it.rem, p=pct(it.rem,it.rec);
-      const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${it.label}</div><div>📥 Recibido en almacén: <b>${fmt(it.rec)}</b> pzas</div><div>📤 Remitido a unidades: <b>${fmt(it.rem)}</b> pzas</div><div>Diferencia (recibido − remitido): <b>${dif>0?'+':''}${fmt(dif)}</b></div>${p!=null?`<div>Remitido / recibido: ${p}%</div>`:''}<div style="color:#94a3b8;font-size:.66rem;margin-top:3px;">${unidad} · ${etq}</div>${it.tipExtra||''}`);
+      const dif=it.rec-it.rem, p=pct(it.rec,it.rem);
+      const tid=registerTip(`<div style="font-weight:700;margin-bottom:4px;">${it.label}</div><div>📥 Recibido en almacén: <b>${fmt(it.rec)}</b> pzas</div><div>📤 Remitido a unidades: <b>${fmt(it.rem)}</b> pzas</div><div>Diferencia (recibido − remitido): <b>${dif>0?'+':''}${fmt(dif)}</b></div>${p!=null?`<div>Cobertura (recibido ÷ surtido): ${p}%</div>`:''}<div style="color:#94a3b8;font-size:.66rem;margin-top:3px;">${unidad} · ${etq}</div>${it.tipExtra||''}`);
       const cero=it.rec===0&&it.rem===0;
       return `<div data-tipid="${tid}" style="display:grid;grid-template-columns:${labelW}px 1fr 122px;align-items:center;gap:8px;cursor:pointer;padding:2px 0;">
         <span style="font-size:.74rem;color:#000;font-weight:600;line-height:1.25;">${it.badge||''}${it.label}${cero?' <span style="font-size:.64rem;color:#dc2626;font-weight:700;">· sin movimiento</span>':''}</span>
@@ -6154,6 +6177,28 @@ function renderAbasto(){
   }));
   const rHtml=rItems.length?pares(rItems,230):`<div style="color:#94a3b8;font-size:.78rem;">No hay antibióticos de reserva en el archivo.</div>`;
 
+  // ── tarjetas Access / Watch (misma comparación que Reserve; solo los que tuvieron movimiento) ──
+  const awareCard=(cat,icon,color,bg,bd)=>{
+    if(_abastoAware&&!_abastoAware.has(cat)) return '';
+    const rows=D.claves.filter(f=>f.aware===cat&&viaOk(f));
+    const map={};
+    rows.forEach(f=>{
+      const k=f.nombre+'|'+f.via;
+      if(!map[k]) map[k]={nombre:f.nombre,via:f.via,rec:0,rem:0,claves:[]};
+      const r=suma([f],ms); map[k].rec+=r.rec; map[k].rem+=r.rem; map[k].claves.push(f.clave);
+    });
+    const todosAb=Object.values(map);
+    const conMov=todosAb.filter(x=>x.rec>0||x.rem>0).sort((a,b)=>((b.rec+b.rem)-(a.rec+a.rem))||a.nombre.localeCompare(b.nombre));
+    const sinMov=todosAb.filter(x=>!(x.rec>0||x.rem>0)).map(x=>x.nombre+' ('+x.via+')').sort((a,b)=>a.localeCompare(b));
+    const tt=suma(rows,ms);
+    const items=conMov.map(x=>({label:`${x.nombre} · ${x.via}`,rec:x.rec,rem:x.rem,color:color,badge:awareBadge(cat),tipExtra:`<div style="color:#94a3b8;font-size:.66rem;">Claves: ${x.claves.join(', ')}</div>`}));
+    const cuerpo=items.length?pares(items,230):`<div style="color:#94a3b8;font-size:.78rem;">Sin movimiento en el período y filtros seleccionados.</div>`;
+    return `<div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">${icon} Antibióticos ${cat}</div>
+    <div style="padding-top:14px;">${card(`${icon} ${cat}: ¿hay solvencia entre lo recibido y lo remitido?`+ctx,`Antibióticos ${cat} con movimiento en el período, de mayor a menor. ${sinMov.length?`${sinMov.length} más del archivo no tuvieron movimiento (0 recibido y 0 remitido).`:''}`,leyenda(color)+`<div style="display:flex;flex-direction:column;gap:8px;">${cuerpo}</div><div style="font-size:.7rem;color:#1e293b;margin-top:10px;font-weight:700;">Total ${cat}: recibido ${fmt(tt.rec)} · remitido ${fmt(tt.rem)} · balance ${tt.rec-tt.rem>0?'+':''}${fmt(tt.rec-tt.rem)}${tt.rem>0?` · cobertura ${Math.round(tt.rec/tt.rem*1000)/10}%`:' · cobertura N/A (sin surtido)'}</div>${sinMov.length?`<div style="font-size:.64rem;color:#94a3b8;margin-top:6px;line-height:1.5;">Sin movimiento (0 / 0): ${sinMov.join(', ')}.</div>`:''}`,`background:${bg};border-color:${bd};`)}</div>`;
+  };
+  const accessHtml=awareCard('Access','🟢',AWARE_COLORS.Access,'#f0fdf4','#bbf7d0');
+  const watchHtml=awareCard('Watch','🟠',AWARE_COLORS.Watch,'#fffbeb','#fde68a');
+
   // ── tendencia mensual ──
   const tendencia=(rows,c,titulo,sub)=>{
     const pts=todos.map(m=>({m,...suma(rows,[m])}));
@@ -6184,9 +6229,9 @@ function renderAbasto(){
   });
   const gruposTabla=[...new Set(Object.values(dMap).filter(x=>x.rec>0||x.rem>0||x.aware==='Reserve').map(x=>grupoFarmacologico(x.nombre)))].sort((a,b)=>a.localeCompare(b));
   if(_abastoGrupos&&![..._abastoGrupos].some(g=>gruposTabla.includes(g))) _abastoGrupos=null;
-  const dRows=Object.values(dMap).filter(x=>(x.rec>0||x.rem>0||(x.aware==='Reserve'))&&(!_abastoGrupos||_abastoGrupos.has(grupoFarmacologico(x.nombre)))).sort((a,b)=>((b.rec+b.rem)-(a.rec+a.rem))||a.nombre.localeCompare(b.nombre));
+  const dRows=Object.values(dMap).filter(x=>(x.rec>0||x.rem>0||(x.aware==='Reserve'))&&(!_abastoGrupos||_abastoGrupos.has(grupoFarmacologico(x.nombre)))&&(!_abastoAwareTabla||_abastoAwareTabla.has(x.aware))).sort((a,b)=>((b.rec+b.rem)-(a.rec+a.rem))||a.nombre.localeCompare(b.nombre));
   const tabla=dRows.map(x=>{
-    const dif=x.rec-x.rem, p=pct(x.rem,x.rec);
+    const dif=x.rec-x.rem, p=pct(x.rec,x.rem);
     const tid=registerTip(`<div style="font-weight:700;">${x.nombre} · ${x.via}</div><div style="font-size:.66rem;color:#94a3b8;">Claves: ${x.claves.join(', ')}</div>${x.fuente==='orden_del_archivo'?'<div style="font-size:.66rem;color:#fbbf24;">AWaRe tomado del orden del archivo (sin consumo en Recetas)</div>':''}`);
     return `<tr data-tipid="${tid}" style="border-top:1px solid #f1f5f9;">
       <td style="text-align:left;padding:6px 10px;color:#000;font-weight:600;">${x.nombre}</td>
@@ -6201,9 +6246,10 @@ function renderAbasto(){
   }).join('');
   const totTabla=dRows.reduce((o,x)=>({rec:o.rec+x.rec,rem:o.rem+x.rem}),{rec:0,rem:0});
   const grupoChips=gruposTabla.map(g=>{const act=!!_abastoGrupos&&_abastoGrupos.has(g);const c=GRUPO_COLORS[g]||'#94a3b8';return `<button onclick="toggleAbastoGrupo(${JSON.stringify(g).replace(/"/g,'&quot;')})" style="padding:4px 10px;border-radius:14px;font-size:.68rem;font-weight:700;cursor:pointer;border:1.5px solid ${c};background:${act?c:'#fff'};color:${act?'#fff':c};">${g}</button>`;}).join('');
-  const filtroGrupos=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;"><span style="font-size:.68rem;color:#94a3b8;font-weight:700;">Grupo:</span>${grupoChips}<button onclick="_abastoGrupos=null;renderAbasto();" style="padding:4px 10px;border-radius:14px;font-size:.68rem;font-weight:700;cursor:pointer;border:1.5px solid #64748b;background:${_abastoGrupos?'#fff':'#64748b'};color:${_abastoGrupos?'#64748b':'#fff'};">Todos</button><span style="font-size:.64rem;color:#94a3b8;">Puedes marcar uno o varios.</span></div>`;
+  const awTabChip=k=>{const act=!!_abastoAwareTabla&&_abastoAwareTabla.has(k);return `<button onclick="toggleAbastoAwareTabla('${k}')" style="padding:4px 10px;border-radius:14px;font-size:.68rem;font-weight:700;cursor:pointer;border:1.5px solid ${AWARE_COLORS[k]};background:${act?AWARE_COLORS[k]:'#fff'};color:${act?'#fff':AWARE_COLORS[k]};">${k}</button>`;};
+  const filtroGrupos=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;"><span style="font-size:.68rem;color:#94a3b8;font-weight:700;">AWaRe:</span>${awTabChip('Access')}${awTabChip('Watch')}${awTabChip('Reserve')}<button onclick="_abastoAwareTabla=null;renderAbasto();" style="padding:4px 10px;border-radius:14px;font-size:.68rem;font-weight:700;cursor:pointer;border:1.5px solid #64748b;background:${_abastoAwareTabla?'#fff':'#64748b'};color:${_abastoAwareTabla?'#64748b':'#fff'};">Todos</button><span style="font-size:.64rem;color:#94a3b8;">Puedes marcar uno o varios.</span></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;"><span style="font-size:.68rem;color:#94a3b8;font-weight:700;">Grupo:</span>${grupoChips}<button onclick="_abastoGrupos=null;renderAbasto();" style="padding:4px 10px;border-radius:14px;font-size:.68rem;font-weight:700;cursor:pointer;border:1.5px solid #64748b;background:${_abastoGrupos?'#fff':'#64748b'};color:${_abastoGrupos?'#64748b':'#fff'};">Todos</button><span style="font-size:.64rem;color:#94a3b8;">Puedes marcar uno o varios.</span></div>`;
   const th=(t,al)=>`<th style="text-align:${al||'center'};padding:7px 10px;color:#fff;">${t}</th>`;
-  const tablaHtml=card('🧾 Detalle por antibiótico'+ctx,'Suma de todas las claves (presentaciones) de cada antibiótico y vía. Se listan los que tuvieron movimiento y todos los de reserva (aunque estén en cero).',filtroGrupos+`<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:.74rem;min-width:720px;"><thead><tr style="background:#154f39;">${th('Antibiótico','left')}${th('AWaRe')}${th('Grupo','left')}${th('Vía')}${th('Recibido en almacén','right')}${th('Remitido a unidades','right')}${th('Diferencia','right')}${th('Remitido / recibido','right')}</tr></thead><tbody>${tabla||'<tr><td colspan="8" style="padding:14px;color:#94a3b8;text-align:center;">Sin movimiento en el filtro seleccionado.</td></tr>'}</tbody><tfoot><tr style="border-top:2px solid #154f39;font-weight:800;"><td style="padding:7px 10px;color:#154f39;" colspan="4">Total del filtro${_abastoGrupos?' · '+[..._abastoGrupos].join(' + '):''}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${fmt(totTabla.rec)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${fmt(totTabla.rem)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${totTabla.rec-totTabla.rem>0?'+':''}${fmt(totTabla.rec-totTabla.rem)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${pct(totTabla.rem,totTabla.rec)!=null?pct(totTabla.rem,totTabla.rec)+'%':'—'}</td></tr></tfoot></table></div>`,'');
+  const tablaHtml=card('🧾 Detalle por antibiótico'+ctx,'Suma de todas las claves (presentaciones) de cada antibiótico y vía. Se listan los que tuvieron movimiento y todos los de reserva (aunque estén en cero).',filtroGrupos+`<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:.74rem;min-width:720px;"><thead><tr style="background:#154f39;">${th('Antibiótico','left')}${th('AWaRe')}${th('Grupo','left')}${th('Vía')}${th('Recibido en almacén','right')}${th('Remitido a unidades','right')}${th('Diferencia','right')}${th('Cobertura (recibido ÷ surtido)','right')}</tr></thead><tbody>${tabla||'<tr><td colspan="8" style="padding:14px;color:#94a3b8;text-align:center;">Sin movimiento en el filtro seleccionado.</td></tr>'}</tbody><tfoot><tr style="border-top:2px solid #154f39;font-weight:800;"><td style="padding:7px 10px;color:#154f39;" colspan="4">Total del filtro${_abastoAwareTabla?' · '+[..._abastoAwareTabla].join(' + '):''}${_abastoGrupos?' · '+[..._abastoGrupos].join(' + '):''}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${fmt(totTabla.rec)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${fmt(totTabla.rem)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${totTabla.rec-totTabla.rem>0?'+':''}${fmt(totTabla.rec-totTabla.rem)}</td><td style="text-align:right;padding:7px 10px;color:#154f39;">${pct(totTabla.rec,totTabla.rem)!=null?pct(totTabla.rec,totTabla.rem)+'%':'—'}</td></tr></tfoot></table></div>`,'');
 
   // ── KPIs ──
   const kpi=(l,v,sub)=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;flex:1;min-width:170px;"><div style="font-size:.68rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.03em;">${l}</div><div style="font-size:1.5rem;font-weight:800;color:#154f39;margin:2px 0;">${v}</div><div style="font-size:.68rem;color:#94a3b8;">${sub}</div></div>`;
@@ -6237,6 +6283,7 @@ function renderAbasto(){
     ${resVisible?`    <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">🔴 Antibióticos de reserva</div>
     <div style="padding-top:14px;">${card('🔴 Reserve: ¿hay solvencia entre lo recibido y lo remitido?'+ctx,'Todos los antibióticos de reserva del archivo. Si no hubo movimiento se muestra explícitamente en cero (0 recibidos y 0 remitidos).',leyenda('#dc2626')+`<div style="display:flex;flex-direction:column;gap:8px;">${rHtml}</div><div style="font-size:.7rem;color:#7f1d1d;margin-top:10px;font-weight:700;">Total reserve: recibido ${fmt(totRes.rec)} · remitido ${fmt(totRes.rem)} · balance ${totRes.rec-totRes.rem>0?'+':''}${fmt(totRes.rec-totRes.rem)}${totRes.rem>0?` · cobertura ${Math.round(totRes.rec/totRes.rem*1000)/10}%`:' · cobertura N/A (sin surtido)'}</div>`,'background:#fef2f2;border-color:#fecaca;')}</div>`:''}
 
+    ${watchHtml}${accessHtml}
     <div style="padding-top:22px;margin-bottom:2px;font-size:.72rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">📈 Tendencias en el tiempo</div>
     <div style="display:grid;grid-template-columns:${resVisible?'1fr 1fr':'1fr'};gap:16px;align-items:start;padding-top:14px;">${tendTodo}${resVisible?tendRes:''}</div>
 
@@ -6323,6 +6370,10 @@ function coberturaColor(pct){
   return {c:'#991b1b',bg:'#fee2e2'};
 }
 
+function setCobAnios(arr){ _cobAnios=(arr||[]).slice().sort(); _coberturaAbxSel=null; renderCobertura(); }
+function toggleCobAnio(y){ const c=_cobAnios.slice(); const i=c.indexOf(y); if(i>=0) c.splice(i,1); else c.push(y); setCobAnios(c); }
+function setCobMeses(arr){ _cobMeses=(arr||[]).slice().sort(); renderCobertura(); }
+function toggleCobMes(p){ setCobMeses(_toggleEn(_cobMeses,p)); }
 function toggleCoberturaEskape(){ _coberturaEskape=!_coberturaEskape; renderCobertura(); }
 function toggleCoberturaAbx(name){
   if(!_coberturaAbxSel) _coberturaAbxSel=[];
@@ -6349,11 +6400,16 @@ function setCoberturaFiltroCB(f){
   renderCobertura();
 }
 
-function renderCobertura(){
+function renderCobertura(){ const _r=renderCoberturaBase.apply(this,arguments); _consumoIntroPrepend('cobertura'); return _r; }
+function renderCoberturaBase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
   _tipRegistry={};
   const hd=getHospRawData(_consumoHospital);
+  const aniosDisp=((hd&&hd.años)||[]).slice().sort();
+  _cobAnios=_cobAnios.filter(y=>aniosDisp.includes(y));
+  const _cobSri=obj=>_cobAnios.length?(sriMergedRaw(obj,_cobAnios)||[]):(sriForPeriod(obj,'TODOS')||[]);
+  const etqAnios=_cobAnios.length?_cobAnios.join(' + '):'todos los años';
   const dimCfg = _coberturaDim==='servicios'
     ? {obj:(hd&&hd.servicios), chartKey:'chart1', label:'Servicio', icon:'🏢'}
     : _coberturaDim==='infecciones'
@@ -6374,7 +6430,7 @@ function renderCobertura(){
     _coberturaCultivo = cultivos.find(c=>/URO/i.test(c)) || cultivos[0];
   }
   const cultivoObj = dimCfg.obj.data[_coberturaCultivo];
-  const sriCultivo = (sriForPeriod(cultivoObj,'TODOS')||[]).filter(r=>r.t>=3);
+  const sriCultivo = (_cobSri(cultivoObj)||[]).filter(r=>r.t>=3);
 
   // Antibióticos elegibles (con n>=3 en este cultivo), filtrados por Cuadro Básico si aplica, mayor a menor
   const abxOptionsTodos = sriCultivo.slice().sort((a,b)=>b.t-a.t);
@@ -6397,14 +6453,14 @@ function renderCobertura(){
 
   // Cultivos/servicios ordenados por volumen de aislamientos (mayor a menor)
   const cultivosOrdenados = cultivos.slice().sort((a,b)=>{
-    const ta=(sriForPeriod(dimCfg.obj.data[a],'TODOS')||[]).reduce((s,r)=>s+r.t,0);
-    const tb=(sriForPeriod(dimCfg.obj.data[b],'TODOS')||[]).reduce((s,r)=>s+r.t,0);
+    const ta=(_cobSri(dimCfg.obj.data[a])||[]).reduce((s,r)=>s+r.t,0);
+    const tb=(_cobSri(dimCfg.obj.data[b])||[]).reduce((s,r)=>s+r.t,0);
     return tb-ta;
   });
   const cultivoTabs=cultivosOrdenados.map(c=>`<button onclick="_coberturaCultivo='${c.replace(/'/g,"\\'")}';_coberturaAbxSel=null;_coberturaSortCol=null;renderCobertura();" style="padding:6px 13px;border-radius:18px;font-size:.74rem;font-weight:700;cursor:pointer;border:1.5px solid ${c===_coberturaCultivo?'#154f39':'#e2e8f0'};background:${c===_coberturaCultivo?'#154f39':'#fff'};color:${c===_coberturaCultivo?'#fff':'#374151'};">${c}</button>`).join('');
 
   // Top microorganismos para este cultivo/servicio (via crosstab micro→dimensión), mayor a menor
-  const chart4 = (hd.freq && hd.freq[dimCfg.chartKey] && hd.freq[dimCfg.chartKey]['TODOS']) ? hd.freq[dimCfg.chartKey]['TODOS'] : null;
+  const chart4 = (hd.freq && hd.freq[dimCfg.chartKey]) ? (_cobAnios.length ? freqYearsMerge(hd.freq[dimCfg.chartKey], _cobAnios) : (hd.freq[dimCfg.chartKey]['TODOS']||null)) : null;
   let topMicros=[];
   if(chart4 && chart4.stacks){
     topMicros = Object.entries(chart4.stacks)
@@ -6439,7 +6495,7 @@ function renderCobertura(){
     // Calcular filas con el %S de cada antibiótico seleccionado por microorganismo
     microRowsData = topMicros.map(({micro,n})=>{
       const microObj=hd.micros && hd.micros.data ? hd.micros.data[micro] : null;
-      const sriMicro=microObj?(sriForPeriod(microObj,'TODOS')||[]):[];
+      const sriMicro=microObj?(_cobSri(microObj)||[]):[];
       const vals={};
       _coberturaAbxSel.forEach(abxName=>{
         const row=sriMicro.find(r=>r.a===abxName);
@@ -6501,7 +6557,7 @@ function renderCobertura(){
   let crossCultivoHtml='';
   if(abxSelSorted.length){
     const porCultivoPorAbx=cultivosOrdenados.map(c=>{
-      const rows=sriForPeriod(dimCfg.obj.data[c],'TODOS')||[];
+      const rows=_cobSri(dimCfg.obj.data[c])||[];
       const items=abxSelSorted.map((abx,ai)=>{
         const row=rows.find(r=>r.a===abx);
         return {abx,pct:row?Math.round(row.pS*100):null,n:row?row.t:0,color:PALETTE[ai%PALETTE.length]};
@@ -6545,7 +6601,7 @@ function renderCobertura(){
     }).join('');
     const heatRows=topMicros.map(({micro})=>{
       const microObj=hd.micros && hd.micros.data ? hd.micros.data[micro] : null;
-      const sriMicro=microObj?(sriForPeriod(microObj,'TODOS')||[]):[];
+      const sriMicro=microObj?(_cobSri(microObj)||[]):[];
       const cells=heatAbx.map(r=>{
         const row=sriMicro.find(x=>x.a===r.a);
         if(!row||row.t<1) return `<td style="text-align:center;background:#f8fafc;color:#cbd5e1;font-size:.62rem;">·</td>`;
@@ -6606,10 +6662,12 @@ function renderCobertura(){
   // Gráfica consumo vs sensibilidad (burbujas por cuadrante), con tooltip real
   const consumoHosp=CONSUMO_DATA[_consumoHospital];
   const periodosCons=consumoHosp?Object.keys(consumoHosp.periodos).filter(p=>consumoHosp.periodos[p].consumo_cargado).sort():[];
-  const ultimoPeriodo=periodosCons[periodosCons.length-1];
-  const consumoDatos=ultimoPeriodo?consumoHosp.periodos[ultimoPeriodo]:null;
+  _cobMeses=(_cobMeses||[]).filter(m=>periodosCons.includes(m));
+  if(!_cobMeses.length && periodosCons.length) _cobMeses=[periodosCons[periodosCons.length-1]];
+  const ultimoPeriodo=_cobMeses.length?_etiquetaMeses(_cobMeses):'';
+  const consumoDatos=_cobMeses.length?(_cobMeses.length>1?_consumoOficialMeses(_consumoHospital,_cobMeses):consumoHosp.periodos[_cobMeses[0]]):null;
   let bubbleHtml='';
-  if(consumoDatos){
+  if(consumoDatos && consumoDatos.top_antibioticos){
     const consumoNames=consumoDatos.top_antibioticos.map(a=>a.antibiotico);
     const puntos=sriCultivo.map(r=>{
       const matchName=matchConsumoName(r.a,consumoNames);
@@ -6630,7 +6688,7 @@ function renderCobertura(){
       const yAxisHtml=yTicks.map(t=>`<div style="position:absolute;left:-6px;bottom:${t.bottom}%;transform:translate(-100%,50%);font-size:.6rem;color:#94a3b8;white-space:nowrap;">${t.val.toLocaleString('es-MX',{maximumFractionDigits:0})}</div><div style="position:absolute;left:0;right:0;bottom:${t.bottom}%;border-top:1px dashed #f1f5f9;"></div>`).join('');
       bubbleHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px 8px;overflow-x:auto;">
         <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">🎯 Consumo vs. Sensibilidad · ${_coberturaCultivo}</div>
-        <div style="font-size:.7rem;color:#94a3b8;margin-bottom:4px;">Cada burbuja es un antibiótico. <b>Eje X</b> = % de sensibilidad en antibiograma (todos los períodos). <b>Eje Y y tamaño</b> = ΣDDD consumido en ${ultimoPeriodo} (mismo dato, dos veces, para que se note más el consumo alto). Pasa el cursor sobre una burbuja para ver el detalle.</div>
+        <div style="font-size:.7rem;color:#94a3b8;margin-bottom:4px;">Cada burbuja es un antibiótico. <b>Eje X</b> = % de sensibilidad en antibiograma (${etqAnios}). <b>Eje Y y tamaño</b> = ΣDDD consumido en ${ultimoPeriodo}${_cobMeses.length>1?' (suma de los meses elegidos)':''} (mismo dato, dos veces, para que se note más el consumo alto). Pasa el cursor sobre una burbuja para ver el detalle.</div>
         <div style="position:relative;height:280px;min-width:460px;margin-left:34px;background:linear-gradient(90deg,#fef2f2 0%,#fef2f2 60%,#fffbeb 60%,#fffbeb 80%,#f0fdf4 80%,#f0fdf4 100%);border-radius:10px;border:1px solid #e2e8f0;margin-bottom:6px;">
           ${yAxisHtml}
           <div style="position:absolute;top:6px;left:2%;font-size:.62rem;font-weight:700;color:#991b1b;">FUERA DEL ESQUEMA EMPÍRICO</div>
@@ -6647,7 +6705,7 @@ function renderCobertura(){
     bubbleHtml=`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;color:#94a3b8;font-size:.78rem;">🎯 No se pudo cruzar sensibilidad con consumo para este cultivo (nombres sin coincidencia o falta consumo cargado para esta unidad).</div>`;
   }
 
-  // Lectura automática para el COA, ordenada de mayor a menor cobertura
+  // Lectura automática, ordenada de mayor a menor cobertura
   const insights=[];
   abxSelSorted.forEach(abxName=>{
     const row=sriCultivo.find(r=>r.a===abxName);
@@ -6666,6 +6724,15 @@ function renderCobertura(){
       <div style="display:flex;gap:6px;flex-wrap:wrap;">${cultivoTabs}</div>
       ${dimToggle}
     </div>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:4px 14px 12px;margin-top:12px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:12px;">
+        <span style="font-size:.72rem;color:#94a3b8;font-weight:600;">📅 Años de antibiograma:</span>
+        <button onclick="setCobAnios([])" style="padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:${_cobAnios.length?600:700};cursor:pointer;border:1.5px solid ${_cobAnios.length?'#e2e8f0':'#154f39'};background:${_cobAnios.length?'#fff':'#154f39'};color:${_cobAnios.length?'#6b7280':'#fff'};">Todo el período</button>
+        ${aniosDisp.map(y=>{const on=_cobAnios.includes(y);return `<button onclick="toggleCobAnio('${y}')" style="padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:${on?700:600};cursor:pointer;border:1.5px solid ${on?'#154f39':'#e2e8f0'};background:${on?'#154f39':'#fff'};color:${on?'#fff':'#6b7280'};">${on?'✓ ':''}${y}</button>`;}).join('')}
+        <span style="font-size:.64rem;color:#94a3b8;">Puedes marcar varios años: los aislamientos se suman. Afecta tabla, ponderada, heatmap y burbujas (eje X).</span>
+      </div>
+      ${periodosCons.length?_chipsMesesHtml({periodos:periodosCons,sel:_cobMeses,esCargado:()=>true,onToggle:p=>`toggleCobMes('${p}')`,onSet:arr=>`setCobMeses(${JSON.stringify(arr).replace(/"/g,'&quot;')})`}).replace('>Mes:<','>💊 Meses de consumo (solo gráfica de burbujas):<'):'<div style="font-size:.68rem;color:#94a3b8;padding-top:10px;">Sin meses de consumo cargados para esta unidad.</div>'}
+    </div>
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-top:10px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Antibióticos a evaluar:</span>${abxChecks}
@@ -6678,6 +6745,9 @@ function renderCobertura(){
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
           <div style="font-size:.85rem;font-weight:800;color:#1e293b;">🦠 ¿Qué cubre cada opción empírica? · ${_coberturaCultivo}</div>
           <button onclick="toggleCoberturaEskape()" title="${ESKAPE_TXT}" style="padding:4px 12px;border-radius:14px;font-size:.7rem;font-weight:800;cursor:pointer;border:1.5px solid ${_coberturaEskape?'#b91c1c':'#e2e8f0'};background:${_coberturaEskape?'#fef2f2':'#fff'};color:${_coberturaEskape?'#b91c1c':'#475569'};">🛡️ ESKAPE${_coberturaEskape?' ✓':''}</button>
+        </div>
+        <div style="font-size:.72rem;color:#334155;background:#f1f5f9;border-radius:8px;padding:8px 12px;margin-bottom:10px;line-height:1.55;">
+          <b>¿De dónde sale esta información?</b> De los <b>antibiogramas de los cultivos</b> capturados en SYRA para esta unidad (${etqAnios}). Cada fila es un microorganismo aislado en <b>${_coberturaCultivo}</b> y cada columna un antibiótico probado. El número es el <b>% de aislamientos sensibles (S)</b> = aislamientos sensibles ÷ aislamientos probados con ese antibiótico; <b>n</b> es el número de aislamientos probados (se muestran solo con n≥3). Si marcas varios años se suman los aislamientos y se recalcula el %. Se listan los microorganismos más frecuentes en ${dimCfg.label.toLowerCase()} (o solo ESKAPE si activas el botón). No usa datos de consumo: el consumo solo aparece en la gráfica de burbujas.
         </div>
         <div style="font-size:.7rem;color:#94a3b8;margin-bottom:10px;">Sensibilidad por microorganismo (verde ≥80%, ámbar 60–79%, rojo &lt;60%). ${_coberturaEskape?'<b style="color:#b91c1c;">Solo grupo ESKAPE</b> ('+ESKAPE_TXT+').':'Microorganismos según frecuencia registrada en '+dimCfg.label.toLowerCase()+'.'}</div>
         ${tablaHtml}
@@ -6695,7 +6765,8 @@ function renderCobertura(){
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">🩺 Lectura para el COA</div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">🩺 Lectura automática</div>
+        <div style="font-size:.68rem;color:#64748b;margin-bottom:10px;line-height:1.5;">Resumen automático, antibiótico por antibiótico, de los que marcaste en «Antibióticos a evaluar». Se calcula con el % de sensibilidad global de ${_coberturaCultivo.toLowerCase()} (${etqAnios}): <b>≥80%</b> = buena opción empírica; <b>60–79%</b> = zona intermedia, valorar uso dirigido; <b>&lt;60%</b> = no recomendable como esquema empírico, reservar para uso dirigido por antibiograma. Es una guía de apoyo, no una indicación clínica.</div>
         <div style="display:flex;flex-direction:column;gap:8px;">${insightsHtml}</div>
       </div>
       ${bubbleHtml}
@@ -6705,7 +6776,77 @@ function renderCobertura(){
 }
 
 /* ─── RANKING DE ANTIBIÓTICOS (hoja "Análisis" de CONSABI, por piezas) ── */
-function renderRankingAntibioticos(){
+
+/* ─── Selector de meses MÚLTIPLE reutilizable (Ranking y Especialidad): los meses marcados se suman ─── */
+function _chipsMesesHtml(cfg){
+  const {periodos,sel,esCargado,onToggle,onSet}=cfg;
+  const chips=periodos.map(p=>{
+    const on=sel.includes(p), c=esCargado(p);
+    return `<button onclick="${c?onToggle(p):onSet([p])}" style="padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:${on?700:600};cursor:pointer;border:1.5px solid ${on?'#154f39':'#e2e8f0'};background:${on?'#154f39':'#fff'};color:${on?'#fff':(c?'#6b7280':'#cbd5e1')};">${on?'✓ ':''}${mesNombre(p)}${c?'':' ○'}</button>`;
+  }).join('');
+  const conDato=periodos.filter(esCargado);
+  const atajo=(label,arr,title)=>{
+    const act=arr.length>0&&arr.length===sel.length&&arr.every(x=>sel.includes(x));
+    return `<button ${arr.length?'':'disabled'} title="${title}" onclick="${onSet(arr)}" style="padding:4px 10px;border-radius:8px;font-size:.68rem;font-weight:700;cursor:${arr.length?'pointer':'default'};border:1.5px solid ${act?'#0369a1':'#bfdbfe'};background:${act?'#0369a1':'#eff6ff'};color:${act?'#fff':(arr.length?'#1e40af':'#cbd5e1')};">${label}</button>`;
+  };
+  const anios=[...new Set(conDato.map(p=>p.slice(0,4)))];
+  const atajos=[
+    ...anios.flatMap(y=>[1,2,3,4].map(q=>{const arr=conDato.filter(p=>p.slice(0,4)===y&&Math.ceil(parseInt(p.slice(5,7),10)/3)===q);return arr.length?atajo('T'+q+' '+y,arr,'Suma de '+arr.map(x=>mesNombre(x)).join(', ')):'';})),
+    ...anios.map(y=>atajo('Año '+y,conDato.filter(p=>p.slice(0,4)===y),'Todos los meses con datos de '+y)),
+    atajo('Solo el último',conDato.slice(-1),'Quedarse con el último mes con datos')
+  ].join('');
+  return `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:14px;"><span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Mes:</span>${chips}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:8px;"><span style="font-size:.68rem;color:#94a3b8;font-weight:700;">Sumar rápido:</span>${atajos}<span style="font-size:.64rem;color:#94a3b8;">Puedes marcar varios meses: los datos se suman (p. ej. un trimestre).</span></div>`;
+}
+function _toggleEn(base,p){ const cur=(base||[]).slice(); const i=cur.indexOf(p); if(i>=0){ if(cur.length>1) cur.splice(i,1); } else cur.push(p); return cur.sort(); }
+function setRankMeses(arr){ _consumoMeses=(arr||[]).slice().sort(); _consumoPeriodo=_consumoMeses[_consumoMeses.length-1]||_consumoPeriodo; renderRankingAntibioticos(); }
+function toggleRankMes(p){ setRankMeses(_toggleEn(_consumoMeses,p)); }
+function setEspMeses(arr){ _especialidadMeses=(arr||[]).slice().sort(); _especialidadPeriodo=_especialidadMeses[_especialidadMeses.length-1]||_especialidadPeriodo; renderConsumoEspecialidad(); }
+function toggleEspMes(p){ setEspMeses(_toggleEn(_especialidadMeses,p)); }
+// Consumo por hospital con la definición OFICIAL del Ranking (endovenoso, individual+colectiva), sumando los meses indicados
+function _consumoOficialMeses(h,meses){
+  if(!(typeof CONSUMO_DATA_V2!=='undefined' && CONSUMO_DATA_V2 && CONSUMO_DATA_V2[h])) return consumoParaHospital(h,meses[meses.length-1],'mensual');
+  const v=_consumoFiltroVia, t=_consumoFiltroTipo;
+  _consumoFiltroVia='endovenoso'; _consumoFiltroTipo='ambas';
+  try{ return consumoMesesV2(h,meses); } finally { _consumoFiltroVia=v; _consumoFiltroTipo=t; }
+}
+// Suma varios meses de consumo por especialidad (misma forma que un solo mes)
+function _espMergeMeses(meses){
+  const per=ESPECIALIDAD_DATA.periodos;
+  const ms=meses.filter(m=>per[m]);
+  if(ms.length===1) return per[ms[0]];
+  const out={total_piezas_antibioticos:0,piezas_colectivas_excluidas:0,piezas_medico_sin_catalogo:0,matriculas_prescriptoras_sin_catalogo:null,por_unidad:{}};
+  const U={};
+  ms.forEach(m=>{
+    const d=per[m];
+    out.total_piezas_antibioticos+=d.total_piezas_antibioticos||0;
+    out.piezas_colectivas_excluidas+=d.piezas_colectivas_excluidas||0;
+    out.piezas_medico_sin_catalogo+=d.piezas_medico_sin_catalogo||0;
+    Object.entries(d.por_unidad||{}).forEach(([u,info])=>{
+      const o=U[u]||(U[u]={hospital_id:info.hospital_id,esp:{},ab:{}});
+      (info.especialidades||[]).forEach(e=>{
+        const x=o.esp[e.especialidad]||(o.esp[e.especialidad]={especialidad:e.especialidad,especialidad_normalizada:e.especialidad_normalizada,piezas:0,num_medicos:0,por_aware:{},por_antibiotico:{}});
+        x.piezas+=e.piezas||0;
+        x.num_medicos=Math.max(x.num_medicos,e.num_medicos||0);   // no se suman médicos: pueden repetirse entre meses
+        Object.entries(e.por_aware||{}).forEach(([k,v])=>{x.por_aware[k]=(x.por_aware[k]||0)+v;});
+        Object.entries(e.por_antibiotico||{}).forEach(([k,v])=>{x.por_antibiotico[k]=(x.por_antibiotico[k]||0)+v;});
+      });
+      (info.antibioticos||[]).forEach(a=>{
+        const x=o.ab[a.antibiotico]||(o.ab[a.antibiotico]={antibiotico:a.antibiotico,piezas:0,aware:a.aware});
+        x.piezas+=a.piezas||0;
+      });
+    });
+  });
+  Object.entries(U).forEach(([u,o])=>{
+    out.por_unidad[u]={hospital_id:o.hospital_id,
+      especialidades:Object.values(o.esp).map(x=>{ const tot=Object.values(x.por_aware).reduce((a,b)=>a+b,0); x.por_aware_pct={}; Object.entries(x.por_aware).forEach(([k,v])=>{x.por_aware_pct[k]=tot?Math.round(v/tot*1000)/10:0;}); return x; }),
+      antibioticos:Object.values(o.ab)};
+  });
+  return out;
+}
+
+function renderRankingAntibioticos(){ const _r=renderRankingAntibioticosBase.apply(this,arguments); _consumoIntroPrepend('ranking'); return _r; }
+function renderRankingAntibioticosBase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
   _tipRegistry={};
@@ -6713,25 +6854,26 @@ function renderRankingAntibioticos(){
   const periodosMap=CONSUMO_DATA[_consumoHospital].periodos;
   const periodos=Object.keys(periodosMap).sort();
   const periodosConConsumo=periodos.filter(p=>periodosMap[p].consumo_cargado);
-  if(!_consumoPeriodo || !periodosMap[_consumoPeriodo]) _consumoPeriodo=periodosConConsumo[periodosConConsumo.length-1]||periodos[periodos.length-1];
+  // Meses seleccionados (se SUMAN). _consumoPeriodo = último elegido (compatible con las otras pestañas)
+  let ms=(_consumoMeses||[]).filter(p=>periodosMap[p]);
+  if(ms.length && _consumoPeriodo && periodosMap[_consumoPeriodo] && ms[ms.length-1]!==_consumoPeriodo) ms=[_consumoPeriodo];
+  if(!ms.length) ms=[periodosMap[_consumoPeriodo]?_consumoPeriodo:(periodosConConsumo[periodosConConsumo.length-1]||periodos[periodos.length-1])];
+  ms.sort(); _consumoMeses=ms; _consumoPeriodo=ms[ms.length-1];
+  const msC=ms.filter(p=>periodosMap[p].consumo_cargado);
+  const multi=msC.length>1;
+  const etq=_etiquetaMeses(ms);
+  const ctxR=`<span style="font-size:.64rem;font-weight:600;color:#64748b;"> · OOAD Tlaxcala · ${etq}</span>`;
 
-  const selectorMesHtml=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:14px;">
-    <span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Mes:</span>
-    ${periodos.map(p=>{
-      const cargado=periodosMap[p].consumo_cargado;
-      return `<button onclick="_consumoPeriodo='${p}';renderRankingAntibioticos();" style="padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid ${p===_consumoPeriodo?'#154f39':'#e2e8f0'};background:${p===_consumoPeriodo?'#ecfdf5':'#fff'};color:${p===_consumoPeriodo?'#154f39':cargado?'#6b7280':'#cbd5e1'};">${p}${cargado?'':' ○'}</button>`;
-    }).join('')}
-  </div>`;
+  const selectorMesHtml=_chipsMesesHtml({periodos,sel:ms,esCargado:p=>!!periodosMap[p].consumo_cargado,onToggle:p=>`toggleRankMes('${p}')`,onSet:arr=>`setRankMeses(${JSON.stringify(arr).replace(/"/g,'&quot;')})`});
 
-  const perActual=periodosMap[_consumoPeriodo]&&periodosMap[_consumoPeriodo].consumo_cargado?_consumoPeriodo:null;
-  if(!perActual){
-    inner.innerHTML=`${selectorMesHtml}<div style="padding:40px;text-align:center;color:#94a3b8;">El mes ${mesNombre(_consumoPeriodo)} todavía no tiene consumo de Recetas cargado (solo PARTE II) — elige otro mes arriba.</div>`;
+  if(!msC.length){
+    inner.innerHTML=`${selectorMesHtml}<div style="padding:40px;text-align:center;color:#94a3b8;">${etq} todavía no tiene consumo de Recetas cargado (solo PARTE II) — elige otro mes arriba.</div>`;
     return;
   }
 
   const datosPorHosp={};
   ids.forEach(h=>{
-    const dd=consumoParaHospital(h,perActual,_consumoModo);
+    const dd=_consumoOficialMeses(h,msC);
     datosPorHosp[h]=(dd&&dd.top_antibioticos)?dd.top_antibioticos:[];
   });
 
@@ -6827,24 +6969,24 @@ function renderRankingAntibioticos(){
 
   inner.innerHTML=`
     <div>
-      <h3 style="font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 4px;">🏆 Ranking de Antibióticos por Piezas Consumidas · ${perActual}${_consumoModo==='acumulado'?' (acumulado)':''}</h3>
+      <h3 style="font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 4px;">🏆 Ranking de Antibióticos por Piezas Consumidas · ${etq}${multi?` (suma de ${msC.length} meses)`:''}</h3>
       <p style="font-size:.72rem;color:#64748b;margin:0;">Calculado desde la Plantilla de Recetas (vía endovenosa, receta individual + colectiva) de los 3 hospitales; equivale a la tabla "Etiquetas de fila" de la hoja "Análisis" de CONSABI. A diferencia del resto del dashboard, esta vista usa <b>piezas consumidas</b> (unidades físicas dispensadas, columna "Consumo real de piezas"), no DDD — es la métrica que usa esa hoja específica del Excel.</p>
     </div>
     ${selectorMesHtml}
     <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;margin-top:14px;">
-      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">📋 Comparativo Delegación vs. Hospitales</div>
+      <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">📋 Comparativo Delegación vs. Hospitales${ctxR}</div>
       ${tablaHtml}
     </div>
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-          <div style="font-size:.85rem;font-weight:800;color:#1e293b;">💊 Antibióticos con mayor consumo — ${tituloVista} (piezas), mayor a menor</div>
+          <div style="font-size:.85rem;font-weight:800;color:#1e293b;">💊 Antibióticos con mayor consumo — ${tituloVista} (piezas), mayor a menor${ctxR}</div>
           ${vistaToggle}
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;">${barsTop15}</div>
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">⚖️ Comparativo entre hospitales</div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">⚖️ Comparativo entre hospitales${ctxR}</div>
         <div style="display:flex;gap:8px;justify-content:space-around;flex-wrap:wrap;">${compGrupoHtml}</div>
         <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">${legendHospComp}</div>
       </div>
@@ -6958,7 +7100,8 @@ function toggleEspecialidadAwareFiltro(cat){
   renderConsumoEspecialidad();
 }
 
-function renderConsumoEspecialidad(){
+function renderConsumoEspecialidad(){ const _r=renderConsumoEspecialidadBase.apply(this,arguments); _consumoIntroPrepend('especialidad'); return _r; }
+function renderConsumoEspecialidadBase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
   _tipRegistry={};
@@ -6967,15 +7110,19 @@ function renderConsumoEspecialidad(){
     return;
   }
   const periodosEsp=Object.keys(ESPECIALIDAD_DATA.periodos).sort();
-  if(!_especialidadPeriodo || !ESPECIALIDAD_DATA.periodos[_especialidadPeriodo]) _especialidadPeriodo=periodosEsp[periodosEsp.length-1];
-  const datosDelPeriodo=ESPECIALIDAD_DATA.periodos[_especialidadPeriodo];
+  let msE=(_especialidadMeses||[]).filter(p=>ESPECIALIDAD_DATA.periodos[p]);
+  if(!msE.length) msE=[(_especialidadPeriodo&&ESPECIALIDAD_DATA.periodos[_especialidadPeriodo])?_especialidadPeriodo:periodosEsp[periodosEsp.length-1]];
+  msE.sort(); _especialidadMeses=msE; _especialidadPeriodo=msE[msE.length-1];
+  const multiE=msE.length>1;
+  const etqE=_etiquetaMeses(msE);
+  const datosDelPeriodo=_espMergeMeses(msE);
 
-  const periodoTabs=periodosEsp.map(p=>`<button onclick="_especialidadPeriodo='${p}';_especialidadUnidad=null;renderConsumoEspecialidad();" style="padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid ${p===_especialidadPeriodo?'#154f39':'#e2e8f0'};background:${p===_especialidadPeriodo?'#ecfdf5':'#fff'};color:${p===_especialidadPeriodo?'#154f39':'#6b7280'};">${mesNombre(p)}</button>`).join('');
+  const periodoTabs=_chipsMesesHtml({periodos:periodosEsp,sel:msE,esCargado:p=>true,onToggle:p=>`toggleEspMes('${p}')`,onSet:arr=>`setEspMeses(${JSON.stringify(arr).replace(/"/g,'&quot;')})`});
 
   const porUnidad=datosDelPeriodo.por_unidad||{};
   const unidades=Object.keys(porUnidad);
   if(!unidades.length){
-    inner.innerHTML=`<div style="padding-top:14px;">${periodoTabs}</div><div style="padding:40px;text-align:center;color:#94a3b8;">Sin datos para ${_especialidadPeriodo}.</div>`;
+    inner.innerHTML=`${periodoTabs}<div style="padding:40px;text-align:center;color:#94a3b8;">Sin datos para ${etqE}.</div>`;
     return;
   }
   const unidadesOrdenadas=unidades
@@ -7010,19 +7157,28 @@ function renderConsumoEspecialidad(){
   const totalUnidad=filas.reduce((s,f)=>s+f.piezas,0);
 
   const hospitalId=infoUnidad.hospital_id;
+  // PARTE II de los meses elegidos: días paciente se SUMAN; camas = promedio de los meses
   let serviciosNormalizados={};
-  if(hospitalId && _consumoPeriodo){
-    // PARTE II por mes: primero consumo_data_v2.json (trae todos los meses), si no el CONSABI viejo.
-    const perV2=CONSUMO_DATA_V2[hospitalId] && CONSUMO_DATA_V2[hospitalId].periodos[_consumoPeriodo];
-    const perOld=CONSUMO_DATA[hospitalId] && CONSUMO_DATA[hospitalId].periodos[_consumoPeriodo];
-    const per=(perV2 && perV2.servicios && Object.keys(perV2.servicios).length)?perV2:perOld;
-    if(per && per.servicios) serviciosNormalizados=_serviciosPorClave(per.servicios);
+  if(hospitalId){
+    const acum={};
+    msE.forEach(mes=>{
+      const perV2=CONSUMO_DATA_V2[hospitalId] && CONSUMO_DATA_V2[hospitalId].periodos[mes];
+      const perOld=CONSUMO_DATA[hospitalId] && CONSUMO_DATA[hospitalId].periodos[mes];
+      const per=(perV2 && perV2.servicios && Object.keys(perV2.servicios).length)?perV2:perOld;
+      if(!(per && per.servicios)) return;
+      Object.entries(_serviciosPorClave(per.servicios)).forEach(([k,v])=>{
+        const a=acum[k]||(acum[k]={camas:0,nc:0,dias:0,nd:0});
+        if(v.camas!=null){a.camas+=v.camas;a.nc++;}
+        if(v.dias_paciente!=null){a.dias+=v.dias_paciente;a.nd++;}
+      });
+    });
+    Object.entries(acum).forEach(([k,a])=>{ serviciosNormalizados[k]={camas:a.nc?a.camas/a.nc:null,dias_paciente:a.nd?a.dias:null,ocupacion:null}; });
   }
 
   const kpis=[
     {label:'Total piezas (solo receta individual)',val:datosDelPeriodo.total_piezas_antibioticos.toLocaleString('es-MX',{maximumFractionDigits:0})},
     {label:'Piezas de receta colectiva (excluidas)',val:(datosDelPeriodo.piezas_colectivas_excluidas||0).toLocaleString('es-MX',{maximumFractionDigits:0})},
-    {label:'Médico sin catálogo',val:`${datosDelPeriodo.piezas_medico_sin_catalogo.toLocaleString('es-MX',{maximumFractionDigits:0})} (${datosDelPeriodo.matriculas_prescriptoras_sin_catalogo} matrículas)`},
+    {label:'Médico sin catálogo',val:`${datosDelPeriodo.piezas_medico_sin_catalogo.toLocaleString('es-MX',{maximumFractionDigits:0})}${multiE?'':` (${datosDelPeriodo.matriculas_prescriptoras_sin_catalogo} matrículas)`}`},
     {label:`Piezas en ${_especialidadUnidad}`,val:totalUnidad.toLocaleString('es-MX',{maximumFractionDigits:0})},
   ];
   const kpiHtml=kpis.map(k=>`<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;flex:1;min-width:170px;"><div style="font-size:.64rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.03em;">${k.label}</div><div style="font-size:1.1rem;font-weight:800;color:#154f39;margin-top:2px;">${k.val}</div></div>`).join('');
@@ -7045,7 +7201,7 @@ function renderConsumoEspecialidad(){
     return `<tr data-tipid="${tid}" style="cursor:pointer;">
       <td style="padding:5px 10px;font-weight:700;color:#000;">${f.especialidad}</td>
       <td style="text-align:center;padding:5px 6px;font-weight:800;color:#000;">${f.piezas.toLocaleString('es-MX',{maximumFractionDigits:0})}</td>
-      <td style="text-align:center;padding:5px 6px;color:#000;">${f.num_medicos||'—'}</td>
+      <td style="text-align:center;padding:5px 6px;color:#000;">${f.num_medicos?f.num_medicos+(multiE?'*':''):'—'}</td>
       <td style="text-align:center;padding:5px 6px;">${dominante?`${awareBadge(dominante[0])}<span style="color:#000;">${Math.round(f.por_aware_pct[dominante[0]]||0)}%</span>`:'—'}</td>
       <td style="text-align:center;padding:5px 6px;color:#000;">${diasPaciente!=null?diasPaciente.toLocaleString('es-MX',{maximumFractionDigits:0}):'<span style="color:#cbd5e1;">N/D</span>'}</td>
       <td style="text-align:center;padding:5px 6px;color:#000;">${piezasPorCama!=null?piezasPorCama:'<span style="color:#cbd5e1;">N/D</span>'}</td>
@@ -7182,24 +7338,26 @@ function renderConsumoEspecialidad(){
   // (las UMF no tienen CONSABI, por eso no aparece esta sección para ellas).
   let dddEstimadoHtml='';
   if(hospitalId && CONSUMO_DATA[hospitalId]){
-    const perCons=CONSUMO_DATA[hospitalId].periodos[_especialidadPeriodo];
-    if(perCons && perCons.consumo_cargado && perCons.top_antibioticos && perCons.top_antibioticos.length){
+    const acumEst={}; const mesesUsadosEst=[];
+    msE.forEach(mes=>{
+      const perCons=CONSUMO_DATA[hospitalId].periodos[mes];
+      const uniMes=((ESPECIALIDAD_DATA.periodos[mes]||{}).por_unidad||{})[_especialidadUnidad];
+      if(!(perCons && perCons.consumo_cargado && perCons.top_antibioticos && perCons.top_antibioticos.length && uniMes)) return;
+      mesesUsadosEst.push(mes);
       const nombresConsabi=perCons.top_antibioticos.map(a=>a.antibiotico);
       const factorPorNombreConsabi={};
-      perCons.top_antibioticos.forEach(a=>{
-        if(a.piezas && a.piezas>0) factorPorNombreConsabi[a.antibiotico]=a.ddd/a.piezas;
-      });
-      const filasEstimado=filas.map(f=>{
+      perCons.top_antibioticos.forEach(a=>{ if(a.piezas && a.piezas>0) factorPorNombreConsabi[a.antibiotico]=a.ddd/a.piezas; });
+      (uniMes.especialidades||[]).forEach(f=>{
         let dddEst=0, huboMatch=false;
         Object.entries(f.por_antibiotico||{}).forEach(([nombreAb,piezasAb])=>{
           const match=matchConsumoName(nombreAb,nombresConsabi);
-          if(match && factorPorNombreConsabi[match]!=null){
-            dddEst+=piezasAb*factorPorNombreConsabi[match];
-            huboMatch=true;
-          }
+          if(match && factorPorNombreConsabi[match]!=null){ dddEst+=piezasAb*factorPorNombreConsabi[match]; huboMatch=true; }
         });
-        return {especialidad:f.especialidad,piezas:f.piezas,dddEst,huboMatch};
-      }).filter(x=>x.huboMatch).sort((a,b)=>b.dddEst-a.dddEst);
+        if(huboMatch){ const a=acumEst[f.especialidad]||(acumEst[f.especialidad]={especialidad:f.especialidad,piezas:0,dddEst:0}); a.piezas+=f.piezas; a.dddEst+=dddEst; }
+      });
+    });
+    {
+      const filasEstimado=Object.values(acumEst).sort((a,b)=>b.dddEst-a.dddEst);
       const totalDddEst=filasEstimado.reduce((s,x)=>s+x.dddEst,0);
       if(filasEstimado.length){
         const filasHtml=filasEstimado.slice(0,12).map(x=>{
@@ -7216,7 +7374,7 @@ function renderConsumoEspecialidad(){
           <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:6px;">🧮 DDD estimado por especialidad <span style="font-size:.68rem;font-weight:700;color:#92400e;background:#fef3c7;padding:2px 8px;border-radius:10px;">ESTIMACIÓN DERIVADA — NO ES DATO OFICIAL DE CONSABI</span></div>
         <div style="font-size:.66rem;color:#64748b;margin-bottom:6px;"><b>DDD</b> = Dosis Diaria Definida: dosis media diaria de mantenimiento de un antibiótico en adultos, según la OMS.</div>
           <p style="font-size:.72rem;color:#374151;line-height:1.6;margin:0 0 12px;">
-            CONSABI reporta, por cada antibiótico, tanto el <b>DDD</b> como las <b>piezas</b> consumidas — pero a nivel de todo el hospital, sin desglose por especialidad. Aquí se calcula el factor implícito <b>DDD ÷ pieza</b> de cada antibiótico usando esos dos números oficiales de CONSABI (${_especialidadPeriodo}), y ese mismo factor se aplica a las piezas que la Plantilla de Recetas sí tiene desglosadas por especialidad. Así se estima cuántos DDD le corresponderían a cada especialidad, asumiendo que la presentación/dosis del medicamento es la misma sin importar quién lo recete. <b>Es una aproximación razonable, no una cifra que CONSABI calcule ni certifique.</b> Solo se muestran especialidades donde al menos un antibiótico coincidió por nombre entre ambas fuentes.
+            CONSABI reporta, por cada antibiótico, tanto el <b>DDD</b> como las <b>piezas</b> consumidas — pero a nivel de todo el hospital, sin desglose por especialidad. Aquí se calcula el factor implícito <b>DDD ÷ pieza</b> de cada antibiótico usando esos dos números oficiales de CONSABI (${_etiquetaMeses(mesesUsadosEst)}; cada mes con su propio factor, y luego se suman), y ese mismo factor se aplica a las piezas que la Plantilla de Recetas sí tiene desglosadas por especialidad. Así se estima cuántos DDD le corresponderían a cada especialidad, asumiendo que la presentación/dosis del medicamento es la misma sin importar quién lo recete. <b>Es una aproximación razonable, no una cifra que CONSABI calcule ni certifique.</b> Solo se muestran especialidades donde al menos un antibiótico coincidió por nombre entre ambas fuentes.
           </p>
           <table style="width:100%;border-collapse:collapse;font-size:.74rem;">
             <thead><tr style="background:linear-gradient(135deg,#92400e,#b45309);">
@@ -7234,21 +7392,21 @@ function renderConsumoEspecialidad(){
 
   inner.innerHTML=`
     <div style="padding-top:14px;">
-      <h3 style="font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 4px;">🩺 Consumo de Antibióticos por Especialidad Médica</h3>
+      <h3 style="font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 4px;">🩺 Consumo de Antibióticos por Especialidad Médica · ${etqE}${multiE?` (suma de ${msE.length} meses)`:''}</h3>
       <p style="font-size:.72rem;color:#64748b;margin:0;">Cruce Plantilla de Recetas (matrícula del médico prescriptor) × Catálogo de Especialidades/Personal. Solo <b>Receta Individual</b> (las colectivas no tienen un médico específico detrás, se excluyen). Piezas dispensadas (no DDD). La clasificación AWaRe viene directo de la propia Plantilla de Recetas, sin usar CONSABI.</p>
     </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:10px;"><span style="font-size:.72rem;color:#94a3b8;font-weight:600;">Mes:</span>${periodoTabs}</div>
+    ${periodoTabs}
     <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:14px;">${kpiHtml}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:14px;">${unidadTabs}</div>
     <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;overflow:auto;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">📋 Especialidades — ${_especialidadUnidad} <span style="font-size:.62rem;color:#94a3b8;font-weight:600;">· ordenado por % AWaRe dominante</span></div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:4px;">📋 Especialidades — ${_especialidadUnidad} · ${etqE} <span style="font-size:.62rem;color:#94a3b8;font-weight:600;">· ordenado por % AWaRe dominante</span></div>
         ${_especialidadAwareFiltro?`<div style="font-size:.68rem;color:#154f39;font-weight:700;margin-bottom:4px;">Filtrado a especialidades con AWaRe dominante ${[..._especialidadAwareFiltro].join(' o ')} (${filasFiltradas.length} de ${filas.length})</div>`:''}
-        <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${hospitalId?`Días Paciente, piezas/cama y piezas/100 días paciente cruzados con PARTE II donde el nombre de especialidad coincide exacto (período ${_consumoPeriodo||'—'}). Sin match = N/D, no se fuerza el emparejamiento.`:'Esta unidad no tiene equivalente en PARTE II (solo cubre los 3 hospitales, no UMF), por eso no hay días paciente ni piezas/cama aquí.'}</div>
+        <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${hospitalId?`Días Paciente, piezas/cama y piezas/100 días paciente cruzados con PARTE II donde el nombre de especialidad coincide exacto (${etqE}${multiE?': días paciente sumados, camas = promedio de los meses, piezas/cama del período completo':''}). Sin match = N/D, no se fuerza el emparejamiento.${multiE?' *Médicos: el máximo de un mes (no se suman, porque un mismo médico puede repetirse entre meses).':''}`:'Esta unidad no tiene equivalente en PARTE II (solo cubre los 3 hospitales, no UMF), por eso no hay días paciente ni piezas/cama aquí.'}</div>
         ${tablaHtml}
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">🌐 Clasificación AWaRe — ${_especialidadUnidad}</div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:10px;">🌐 Clasificación AWaRe — ${_especialidadUnidad} · ${etqE}</div>
         <div style="display:flex;align-items:center;gap:18px;">
           <div style="width:110px;height:110px;border-radius:50%;background:conic-gradient(${donutCss});flex-shrink:0;position:relative;">
             <div style="position:absolute;inset:15px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;color:#154f39;text-align:center;">${totalUnidad.toLocaleString('es-MX',{maximumFractionDigits:0})}<br><span style="font-size:.53rem;font-weight:600;color:#94a3b8;">PIEZAS</span></div>
@@ -7263,13 +7421,13 @@ function renderConsumoEspecialidad(){
     </div>
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start;padding-top:14px;">
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">💊 Antibióticos más recetados — ${_especialidadUnidad}</div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;">💊 Antibióticos más recetados — ${_especialidadUnidad} · ${etqE}</div>
         <div style="font-size:.68rem;color:#94a3b8;margin-bottom:10px;">${_especialidadAwareFiltro?`Filtrado a categoría(s) ${[..._especialidadAwareFiltro].join(', ')} (${totalFiltrado.toLocaleString('es-MX',{maximumFractionDigits:0})} piezas) · `:''}Clic en la leyenda AWaRe de la izquierda para filtrar (puedes seleccionar varias)</div>
         ${alertaHtml}
         <div style="display:flex;flex-direction:column;gap:8px;">${filasAbHtml}</div>
       </div>
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;">
-        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Top especialidades por piezas — ${_especialidadUnidad}</div>
+        <div style="font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:12px;">💊 Top especialidades por piezas — ${_especialidadUnidad} · ${etqE}</div>
         <div style="display:flex;flex-direction:column;gap:8px;">${barsHtml}</div>
       </div>
     </div>
@@ -7303,7 +7461,8 @@ function toggleIndicadoresCol(c){
   renderIndicadoresPROA();
 }
 
-function renderIndicadoresPROA(){
+function renderIndicadoresPROA(){ const _r=renderIndicadoresPROABase.apply(this,arguments); _consumoIntroPrepend('indicadores'); return _r; }
+function renderIndicadoresPROABase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
   _tipRegistry={};
