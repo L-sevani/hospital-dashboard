@@ -5329,13 +5329,105 @@ function _awareFiltroTxt(){
 function toggleConsumoFiltroVia(v){ _consumoFiltroVia=v; renderConsumoDDD(); }
 function toggleConsumoFiltroTipo(v){ _consumoFiltroTipo=v; renderConsumoDDD(); }
 
-const _CONSUMO_INTROS={"ddd": ["📊 DDD / 100 camas", ["Aquí ves <b>cuánto antibiótico se consumió</b> en la unidad que elijas (o en todo el OOAD) y <b>qué tipo de antibióticos</b> fueron. Todo se calcula con las <b>recetas surtidas</b> del mes (Plantilla de Recetas), traducidas a <b>DDD</b>: la Dosis Diaria Definida de la OMS, una medida que permite comparar antibióticos distintos entre sí.", "<b>Resumen ejecutivo y tarjetas de arriba:</b> te cuentan en pocas líneas cómo va el mes. El indicador principal es <b>DDD por cada 100 camas censables</b>; las camas y los días paciente vienen de la <b>PARTE II</b> de cada hospital.", "<b>Consolidado OOAD y Clasificación AWaRe:</b> reparten el consumo en <b>Access</b> (primera línea, los que conviene usar más), <b>Watch</b> (vigilar) y <b>Reserve</b> (guardar para casos difíciles). La clasificación AWaRe es la de la OMS.", "<b>Antimicrobianos con mayor consumo y Consumo por grupo farmacológico:</b> muestran cuáles antibióticos y qué familias pesan más. Los grupos los armamos nosotros por nombre del medicamento (no es una clasificación ATC oficial). <b>Antibióticos de mayor riesgo</b> junta los que se usan mucho y a la vez funcionan poco según el antibiograma del hospital.", "<b>Comparativo entre hospitales y Composición AWaRe:</b> ponen a los hospitales lado a lado. <b>Tendencias:</b> cómo cambia el consumo mes con mes. <b>Consumo por servicio:</b> camas y días paciente por especialidad (PARTE II); la columna de DDD ahí es una <b>estimación</b> (piezas de recetas × factor DDD), no un dato oficial.", "Los filtros de <b>vía</b> (endovenoso, oral o ambos), <b>tipo de receta</b> (individual, colectiva o ambas) y <b>AWaRe</b> cambian todas las gráficas a la vez. Por defecto se muestra lo endovenoso con recetas individuales y colectivas."]], "cobertura": ["🎯 Cobertura Empírica", ["Esta pestaña responde una pregunta práctica: <b>si un paciente llega con una infección y todavía no tenemos su antibiograma, ¿qué antibiótico tiene más probabilidades de funcionar?</b> Se contesta con los <b>antibiogramas capturados en SYRA</b> de la unidad: cuántos de los gérmenes aislados resultaron <b>sensibles (S)</b> a cada antibiótico.", "<b>La tabla de microorganismos</b> muestra la sensibilidad germen por germen; <b>la cobertura ponderada</b> la resume en un solo número por antibiótico; <b>el mapa de calor</b> y <b>la cobertura por cultivo</b> la comparan entre muestras; <b>la tendencia</b> la sigue año con año. <b>La gráfica de burbujas</b> cruza esa sensibilidad con el consumo del mes (ΣDDD de las recetas) para detectar antibióticos muy usados que funcionan poco.", "Puedes elegir los <b>años de antibiograma</b> y los <b>meses de consumo</b>; si marcas varios, se suman. Los colores son verde (≥80% sensible), ámbar (60–79%) y rojo (&lt;60%)."]], "ranking": ["🏆 Ranking de Antibióticos", ["Es la lista de <b>qué antibióticos se entregaron más</b>, contados en <b>piezas</b> (cajas, frascos, ampolletas…), no en DDD. Sale de las <b>recetas surtidas</b> del mes (Plantilla de Recetas), en la definición oficial de endovenosos con recetas individuales y colectivas.", "<b>El ranking</b> ordena los antibióticos de mayor a menor número de piezas, con su clasificación AWaRe. <b>Comparativo entre hospitales</b> y <b>Delegación vs. hospitales</b> muestran cómo se reparte ese consumo entre unidades. Si marcas varios meses, las piezas se <b>suman</b>."]], "especialidad": ["🩺 Consumo por Especialidad", ["Aquí vemos <b>qué especialidades médicas recetan más antibióticos</b>. Se toma cada receta individual del mes (Plantilla de Recetas), se identifica al médico por su matrícula y se busca su especialidad en el <b>Catálogo de Especialidades</b>. No se guardan nombres ni matrículas en el dashboard. Las recetas colectivas se dejan fuera porque no tienen un médico único.", "<b>La tabla de especialidades</b> cuenta piezas, médicos y, cuando se puede cruzar con la <b>PARTE II</b>, días paciente. <b>Clasificación AWaRe</b>, <b>Top especialidades</b> y <b>Antibióticos más recetados</b> detallan qué y cuánto se receta. <b>Lectura por especialidad</b> resume lo más llamativo. <b>DDD estimado</b> es una aproximación (piezas × factor DDD) y no un dato oficial. Si marcas varios meses, todo se suma."]], "indicadores": ["📐 Indicadores PROA", ["Son los indicadores del <b>Programa de Optimización de Antimicrobianos (PROA)</b> que sí podemos calcular con la información disponible: <b>DDD por 100 camas</b>, <b>DDD por 100 días paciente</b> y el porcentaje de consumo <b>Access</b>, <b>Watch</b> y <b>Reserve</b>. El consumo sale de las <b>recetas</b> y las camas y días paciente de la <b>PARTE II</b>.", "Cada tabla muestra, por unidad y por mes, el <b>numerador</b>, el <b>denominador</b> y el resultado, con su fórmula y semáforo de referencia (Access esperado ≥70%, meta OMS; Watch ≤30% y Reserve ≤10%, metas de C.I.A.E.). Los indicadores que requieren revisar expedientes (como adecuación o desescalamiento) no aparecen porque hoy no hay datos para calcularlos."]], "abasto": ["📦 Abasto", ["Compara <b>cuántas piezas de antimicrobianos llegaron al almacén</b> (altas) contra <b>cuántas se enviaron a las unidades</b> (remitido), para ver si el abasto alcanza. La fuente es el Excel mensual <b>«Porcentaje de abasto antimicrobianos»</b> que se recibe de la jefatura; no sale de las recetas, así que sus cifras no se cruzan con las del resto de pestañas.", "<b>Las tarjetas de Access, Watch y Reserve</b> dicen si lo recibido cubre lo remitido (cobertura = recibido ÷ remitido). <b>Las tendencias</b> siguen el mes a mes y <b>el detalle por antibiótico</b> trae cada medicamento y su grupo. Los ceros son ceros reales: significan que ese mes no hubo movimiento registrado."]]};
+const _CONSUMO_INTROS={"ddd": ["📊 DDD / 100 camas", ["Aquí ves <b>cuánto antibiótico se consumió</b> en la unidad que elijas (o en todo el OOAD) y <b>qué tipo de antibióticos</b> fueron. Todo se calcula con las <b>recetas surtidas</b> del mes (Plantilla de Recetas), traducidas a <b>DDD</b>: la Dosis Diaria Definida de la OMS, una medida que permite comparar antibióticos distintos entre sí.", "<b>Resumen ejecutivo y tarjetas de arriba:</b> te cuentan en pocas líneas cómo va el mes. El indicador principal es <b>DDD por cada 100 camas censables</b>; las camas y los días paciente vienen de la <b>PARTE II</b> de cada hospital.", "<b>Consolidado OOAD y Clasificación AWaRe:</b> reparten el consumo en <b>Access</b> (primera línea, los que conviene usar más), <b>Watch</b> (vigilar) y <b>Reserve</b> (guardar para casos difíciles). La clasificación AWaRe es la de la OMS.", "<b>Antimicrobianos con mayor consumo y Consumo por grupo farmacológico:</b> muestran cuáles antibióticos y qué familias pesan más. Los grupos los armamos nosotros por nombre del medicamento (no es una clasificación ATC oficial). <b>Antibióticos de mayor riesgo</b> junta los que se usan mucho y a la vez funcionan poco según el antibiograma del hospital.", "<b>Comparativo entre hospitales y Composición AWaRe:</b> ponen a los hospitales lado a lado. <b>Tendencias:</b> cómo cambia el consumo mes con mes. <b>Consumo por servicio:</b> camas y días paciente por especialidad (PARTE II); la columna de DDD ahí es una <b>estimación</b> (piezas de recetas × factor DDD), no un dato oficial.", "Los filtros de <b>vía</b> (endovenoso, oral o ambos), <b>tipo de receta</b> (individual, colectiva o ambas) y <b>AWaRe</b> cambian todas las gráficas a la vez. Por defecto se muestra lo endovenoso con recetas individuales y colectivas."]], "cobertura": ["🎯 Cobertura Empírica", ["Esta pestaña responde una pregunta práctica: <b>si un paciente llega con una infección y todavía no tenemos su antibiograma, ¿qué antibiótico tiene más probabilidades de funcionar?</b> Se contesta con los <b>antibiogramas capturados en SYRA</b> de la unidad: cuántos de los gérmenes aislados resultaron <b>sensibles (S)</b> a cada antibiótico.", "<b>La tabla de microorganismos</b> muestra la sensibilidad germen por germen; <b>la cobertura ponderada</b> la resume en un solo número por antibiótico; <b>el mapa de calor</b> y <b>la cobertura por cultivo</b> la comparan entre muestras; <b>la tendencia</b> la sigue año con año. <b>La gráfica de burbujas</b> cruza esa sensibilidad con el consumo del mes (ΣDDD de las recetas) para detectar antibióticos muy usados que funcionan poco.", "Puedes elegir uno o varios <b>años de antibiograma</b>; si marcas varios, se suman. (Los antibiogramas se registran por año, no por mes.) La gráfica de burbujas usa el consumo del último mes con datos. Los colores son verde (≥80% sensible), ámbar (60–79%) y rojo (&lt;60%)."]], "ranking": ["🏆 Ranking de Antibióticos", ["Es la lista de <b>qué antibióticos se entregaron más</b>, contados en <b>piezas</b> (cajas, frascos, ampolletas…), no en DDD. Sale de las <b>recetas surtidas</b> del mes (Plantilla de Recetas), en la definición oficial de endovenosos con recetas individuales y colectivas.", "<b>El ranking</b> ordena los antibióticos de mayor a menor número de piezas, con su clasificación AWaRe. <b>Comparativo entre hospitales</b> y <b>Delegación vs. hospitales</b> muestran cómo se reparte ese consumo entre unidades. Si marcas varios meses, las piezas se <b>suman</b>."]], "especialidad": ["🩺 Consumo por Especialidad", ["Aquí vemos <b>qué especialidades médicas recetan más antibióticos</b>. Se toma cada receta individual del mes (Plantilla de Recetas), se identifica al médico por su matrícula y se busca su especialidad en el <b>Catálogo de Especialidades</b>. No se guardan nombres ni matrículas en el dashboard. Las recetas colectivas se dejan fuera porque no tienen un médico único.", "<b>La tabla de especialidades</b> cuenta piezas, médicos y, cuando se puede cruzar con la <b>PARTE II</b>, días paciente. <b>Clasificación AWaRe</b>, <b>Top especialidades</b> y <b>Antibióticos más recetados</b> detallan qué y cuánto se receta. <b>Lectura por especialidad</b> resume lo más llamativo. <b>DDD estimado</b> es una aproximación (piezas × factor DDD) y no un dato oficial. Si marcas varios meses, todo se suma."]], "indicadores": ["📐 Indicadores PROA", ["Son los indicadores del <b>Programa de Optimización de Antimicrobianos (PROA)</b> que sí podemos calcular con la información disponible: <b>DDD por 100 camas</b>, <b>DDD por 100 días paciente</b> y el porcentaje de consumo <b>Access</b>, <b>Watch</b> y <b>Reserve</b>. El consumo sale de las <b>recetas</b> y las camas y días paciente de la <b>PARTE II</b>.", "Cada tabla muestra, por unidad y por mes, el <b>numerador</b>, el <b>denominador</b> y el resultado, con su fórmula y semáforo de referencia (Access esperado ≥70%, meta OMS; Watch ≤30% y Reserve ≤10%, metas de C.I.A.E.). Los indicadores que requieren revisar expedientes (como adecuación o desescalamiento) no aparecen porque hoy no hay datos para calcularlos."]], "abasto": ["📦 Abasto", ["Compara <b>cuántas piezas de antimicrobianos llegaron al almacén</b> (altas) contra <b>cuántas se enviaron a las unidades</b> (remitido), para ver si el abasto alcanza. La fuente es el Excel mensual <b>«Porcentaje de abasto antimicrobianos»</b> que se recibe de la jefatura; no sale de las recetas, así que sus cifras no se cruzan con las del resto de pestañas.", "<b>Las tarjetas de Access, Watch y Reserve</b> dicen si lo recibido cubre lo remitido (cobertura = recibido ÷ remitido). <b>Las tendencias</b> siguen el mes a mes y <b>el detalle por antibiótico</b> trae cada medicamento y su grupo. Los ceros son ceros reales: significan que ese mes no hubo movimiento registrado."]]};
 function _consumoIntroHtml(id){
   const it=_CONSUMO_INTROS[id]; if(!it) return '';
-  return `<details open style="margin-top:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid #154f39;border-radius:12px;padding:10px 16px;">
+  return `<details open style="margin-top:14px;margin-bottom:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid #154f39;border-radius:12px;padding:10px 16px;">
     <summary style="cursor:pointer;font-size:.8rem;font-weight:800;color:#154f39;">ℹ️ ¿Qué estoy viendo aquí? · ${it[0]}</summary>
     <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;font-size:.76rem;color:#1e293b;line-height:1.55;">${it[1].map(t=>`<p style="margin:0;">${t}</p>`).join('')}</div>
   </details>`;
+}
+
+/* ─── ORDEN DE TABLAS (Consumo): barra «Ordenar» sobre cada tabla, de mayor a menor, de menor a mayor u orden original ─── */
+let _ordEstado={};   // clave de tabla → {col,dir}
+function _ordCeldaNum(txt){
+  const t=String(txt||'').replace(/ /g,' ').trim();
+  if(!t||/^(n\/d|n\/a|—|-|–|s\/d)$/i.test(t)) return null;
+  if(/[A-Za-zÁÉÍÓÚáéíóúÑñ]/.test(t.split(/\d/)[0])) return null;   // si hay letras antes del primer número es texto (p. ej. «HGZ No. 1»)
+  const m=t.replace(/,/g,'').match(/-?\d+(?:\.\d+)?/);
+  return m?parseFloat(m[0]):null;
+}
+function _ordEtiquetasCols(tb){
+  const rows=[...(tb.tHead?tb.tHead.rows:[])];
+  if(!rows.length){ const r0=tb.rows[0]; if(r0&&r0.querySelector('th')) rows.push(r0); }
+  if(!rows.length) return null;
+  const grid=[]; 
+  rows.forEach((tr,ri)=>{ let ci=0; [...tr.cells].forEach(c=>{
+    while(grid[ri]&&grid[ri][ci]!==undefined) ci++;
+    const rs=c.rowSpan||1, cs=c.colSpan||1, txt=c.innerText.replace(/\s+/g,' ').trim();
+    for(let r=0;r<rs;r++) for(let k=0;k<cs;k++){ (grid[ri+r]=grid[ri+r]||[])[ci+k]=txt; }
+    ci+=cs; }); });
+  const n=Math.max(...grid.map(g=>g?g.length:0));
+  const labels=[];
+  for(let c=0;c<n;c++){ const parts=[]; grid.forEach(g=>{ const v=g&&g[c]; if(v&&!parts.includes(v)) parts.push(v); }); labels.push(parts.join(' · ')||('Columna '+(c+1))); }
+  return {labels,nHead:rows.length};
+}
+function _ordFijaFila(tr,nCols){
+  if([...tr.cells].some(c=>c.colSpan>1)) return true;
+  const t=(tr.cells[0]?tr.cells[0].innerText:'').trim();
+  return /^(total|suma|consolidado|ooad|oo\.ad|delegaci)/i.test(t);
+}
+function _ordAplicar(id){
+  const tb=document.querySelector('table[data-ordid="'+id+'"]'); if(!tb) return;
+  const st=_ordEstado[id]; const body=tb.tBodies[0]; if(!body) return;
+  const rows=[...body.rows];
+  rows.forEach((r,i)=>{ if(r.dataset.ordi===undefined) r.dataset.ordi=i; });
+  const fijas=rows.filter(r=>r.dataset.ordfija==='1'), libres=rows.filter(r=>r.dataset.ordfija!=='1');
+  if(!st||st.col==null||!st.dir){ libres.sort((a,b)=>a.dataset.ordi-b.dataset.ordi); }
+  else{
+    const vals=libres.map(r=>{ const c=r.cells[st.col]; return c?c.innerText:''; });
+    const nums=vals.map(_ordCeldaNum);
+    const numerica=nums.filter(x=>x!==null).length>=Math.max(1,vals.filter(v=>v.trim()).length/2);
+    const idx=libres.map((r,i)=>i);
+    idx.sort((a,b)=>{
+      let A,B;
+      if(numerica){ A=nums[a]; B=nums[b]; if(A===null&&B===null) return 0; if(A===null) return 1; if(B===null) return -1; return st.dir==='desc'?B-A:A-B; }
+      A=vals[a].trim().toLowerCase(); B=vals[b].trim().toLowerCase();
+      if(!A&&!B) return 0; if(!A) return 1; if(!B) return -1;
+      return st.dir==='desc'?B.localeCompare(A,'es'):A.localeCompare(B,'es');
+    });
+    const orden=idx.map(i=>libres[i]); libres.length=0; orden.forEach(r=>libres.push(r));
+  }
+  libres.concat(fijas.sort((a,b)=>a.dataset.ordi-b.dataset.ordi)).forEach(r=>body.appendChild(r));
+  const bar=document.querySelector('[data-ordbar="'+id+'"]');
+  if(bar){
+    bar.querySelectorAll('button[data-d]').forEach(b=>{ const on=st&&st.dir===b.dataset.d; b.style.background=on?'#154f39':'#fff'; b.style.color=on?'#fff':'#154f39'; });
+    const sel=bar.querySelector('select'); if(sel&&st&&st.col!=null) sel.value=String(st.col);
+  }
+}
+function _ordSet(id,col,dir){
+  const cur=_ordEstado[id]||{col:null,dir:null};
+  if(col!==null&&col!==undefined) cur.col=parseInt(col,10);
+  if(dir!==undefined) cur.dir=dir;
+  if(cur.dir&&cur.col==null) cur.col=0;
+  if(!cur.dir) cur.col=cur.col;
+  _ordEstado[id]=cur; _ordAplicar(id);
+}
+function _ordClick(id,dir){ const cur=_ordEstado[id]||{}; _ordSet(id,cur.col==null?null:cur.col,(cur.dir===dir)?null:dir); }
+function _consumoOrdenInit(tab){
+  const root=document.getElementById('consumo-inner'); if(!root) return;
+  [...root.querySelectorAll('table')].forEach((tb,ti)=>{
+    if(tb.closest('details[data-intro]')) return;
+    if(tb.parentElement.closest('table')) return;
+    const body=tb.tBodies[0]; if(!body||body.rows.length<2) return;
+    const et=_ordEtiquetasCols(tb); if(!et) return;
+    const id=tab+'#'+ti; tb.setAttribute('data-ordid',id);
+    const nCols=et.labels.length;
+    [...body.rows].forEach(r=>{ r.dataset.ordfija=_ordFijaFila(r,nCols)?'1':'0'; });
+    if(tb.previousElementSibling&&tb.previousElementSibling.hasAttribute('data-ordbar')) tb.previousElementSibling.remove();
+    const opts=et.labels.map((l,i)=>`<option value="${i}">${l.replace(/</g,'&lt;')}</option>`).join('');
+    const bar=document.createElement('div'); bar.setAttribute('data-ordbar',id);
+    bar.style.cssText='display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0 8px;font-size:.7rem;';
+    const bs='padding:4px 10px;border-radius:8px;font-size:.68rem;font-weight:700;cursor:pointer;border:1.5px solid #154f39;background:#fff;color:#154f39;';
+    bar.innerHTML=`<span style="color:#94a3b8;font-weight:700;">↕️ Ordenar por:</span>
+      <select onchange="_ordSet('${id}',this.value)" style="padding:4px 8px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:.7rem;color:#000;max-width:260px;">${opts}</select>
+      <button data-d="desc" onclick="_ordClick('${id}','desc')" style="${bs}">↓ Mayor a menor</button>
+      <button data-d="asc" onclick="_ordClick('${id}','asc')" style="${bs}">↑ Menor a mayor</button>
+      <button onclick="_ordSet('${id}',null,null)" title="Volver al orden original" style="${bs}border-color:#cbd5e1;color:#64748b;">Orden original</button>`;
+    tb.parentNode.insertBefore(bar,tb);
+    const st=_ordEstado[id];
+    if(st&&st.col!=null&&st.col<nCols) _ordAplicar(id); else { delete _ordEstado[id]; _ordAplicar(id); }
+  });
 }
 function _consumoIntroPrepend(id){
   const inner=document.getElementById('consumo-inner'); if(!inner) return;
@@ -5344,6 +5436,7 @@ function _consumoIntroPrepend(id){
   const d=tmp.firstElementChild; if(!d) return; d.setAttribute('data-intro',id);
   inner.insertBefore(d,inner.firstChild);
 }
+
 function renderConsumo(){
   const body=document.getElementById('consumo-body');
   if(!body) return;
@@ -5399,7 +5492,7 @@ function toggleAwareFilter(cat){
 }
 function setAwareChip(cat){ toggleAwareFilter(cat); }
 
-function renderConsumoDDD(){ const _r=renderConsumoDDDBase.apply(this,arguments); _consumoIntroPrepend('ddd'); return _r; }
+function renderConsumoDDD(){ const _r=renderConsumoDDDBase.apply(this,arguments); _consumoIntroPrepend('ddd'); _consumoOrdenInit('ddd'); return _r; }
 function renderConsumoDDDBase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
@@ -6078,7 +6171,7 @@ function toggleAbastoGrupo(g){
   renderAbasto();
 }
 
-function renderAbasto(){ const _r=renderAbastoBase.apply(this,arguments); _consumoIntroPrepend('abasto'); return _r; }
+function renderAbasto(){ const _r=renderAbastoBase.apply(this,arguments); _consumoIntroPrepend('abasto'); _consumoOrdenInit('abasto'); return _r; }
 function renderAbastoBase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
@@ -6400,15 +6493,28 @@ function setCoberturaFiltroCB(f){
   renderCobertura();
 }
 
-function renderCobertura(){ const _r=renderCoberturaBase.apply(this,arguments); _consumoIntroPrepend('cobertura'); return _r; }
+function renderCobertura(){ const _r=renderCoberturaBase.apply(this,arguments); _consumoIntroPrepend('cobertura'); _consumoOrdenInit('cobertura'); return _r; }
 function renderCoberturaBase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
   _tipRegistry={};
   const hd=getHospRawData(_consumoHospital);
-  const aniosDisp=((hd&&hd.años)||[]).slice().sort();
+  // Años disponibles: los que declara la unidad o, si faltan, los que aparecen en las llaves de sus datos (año 'YYYY' o mes 'YYYY-MM')
+  const _aniosDeLlaves=()=>{ const set=new Set(); const o=dimCfg.obj&&dimCfg.obj.data; if(o) Object.values(o).forEach(v=>Object.keys(v||{}).forEach(k=>{ const m=/^(\d{4})(-\d{2})?$/.exec(k); if(m) set.add(m[1]); })); return [...set]; };
+  const aniosDisp=((hd&&hd.años&&hd.años.length)?hd.años.map(String):_aniosDeLlaves()).slice().sort();
   _cobAnios=_cobAnios.filter(y=>aniosDisp.includes(y));
-  const _cobSri=obj=>_cobAnios.length?(sriMergedRaw(obj,_cobAnios)||[]):(sriForPeriod(obj,'TODOS')||[]);
+  // Suma las filas de los años elegidos leyendo SOLO los datos de esta unidad (llave de año, o sus meses si no hay llave de año)
+  const _sriAnios=(obj,years)=>{
+    if(!obj) return [];
+    const mg={};
+    years.forEach(y=>{
+      let rows=obj[y];
+      if(!rows||!rows.length){ rows=[]; Object.keys(obj).filter(k=>k.startsWith(y+'-')).forEach(k=>rows=rows.concat(obj[k]||[])); }
+      rows.forEach(r=>{ const x=mg[r.a]||(mg[r.a]={a:r.a,c:r.c,t:0,S:0,R:0,I:0}); x.t+=r.t; x.S+=r.S; x.R+=r.R; x.I+=r.I; });
+    });
+    return calcPct(Object.values(mg)).sort((a,b)=>b.pS-a.pS || a.pR-b.pR || a.pI-b.pI);
+  };
+  const _cobSri=obj=>_cobAnios.length?_sriAnios(obj,_cobAnios):(sriForPeriod(obj,'TODOS')||[]);
   const etqAnios=_cobAnios.length?_cobAnios.join(' + '):'todos los años';
   const dimCfg = _coberturaDim==='servicios'
     ? {obj:(hd&&hd.servicios), chartKey:'chart1', label:'Servicio', icon:'🏢'}
@@ -6662,10 +6768,10 @@ function renderCoberturaBase(){
   // Gráfica consumo vs sensibilidad (burbujas por cuadrante), con tooltip real
   const consumoHosp=CONSUMO_DATA[_consumoHospital];
   const periodosCons=consumoHosp?Object.keys(consumoHosp.periodos).filter(p=>consumoHosp.periodos[p].consumo_cargado).sort():[];
-  _cobMeses=(_cobMeses||[]).filter(m=>periodosCons.includes(m));
-  if(!_cobMeses.length && periodosCons.length) _cobMeses=[periodosCons[periodosCons.length-1]];
+  _cobMeses=periodosCons.length?[periodosCons[periodosCons.length-1]]:[];
   const ultimoPeriodo=_cobMeses.length?_etiquetaMeses(_cobMeses):'';
   const consumoDatos=_cobMeses.length?(_cobMeses.length>1?_consumoOficialMeses(_consumoHospital,_cobMeses):consumoHosp.periodos[_cobMeses[0]]):null;
+  const mesesSelHtml='';
   let bubbleHtml='';
   if(consumoDatos && consumoDatos.top_antibioticos){
     const consumoNames=consumoDatos.top_antibioticos.map(a=>a.antibiotico);
@@ -6726,12 +6832,13 @@ function renderCoberturaBase(){
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:4px 14px 12px;margin-top:12px;">
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding-top:12px;">
-        <span style="font-size:.72rem;color:#94a3b8;font-weight:600;">📅 Años de antibiograma:</span>
+        <span style="font-size:.72rem;color:#94a3b8;font-weight:600;">📅 Período (años de antibiograma):</span>
         <button onclick="setCobAnios([])" style="padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:${_cobAnios.length?600:700};cursor:pointer;border:1.5px solid ${_cobAnios.length?'#e2e8f0':'#154f39'};background:${_cobAnios.length?'#fff':'#154f39'};color:${_cobAnios.length?'#6b7280':'#fff'};">Todo el período</button>
         ${aniosDisp.map(y=>{const on=_cobAnios.includes(y);return `<button onclick="toggleCobAnio('${y}')" style="padding:5px 12px;border-radius:16px;font-size:.72rem;font-weight:${on?700:600};cursor:pointer;border:1.5px solid ${on?'#154f39':'#e2e8f0'};background:${on?'#154f39':'#fff'};color:${on?'#fff':'#6b7280'};">${on?'✓ ':''}${y}</button>`;}).join('')}
         <span style="font-size:.64rem;color:#94a3b8;">Puedes marcar varios años: los aislamientos se suman. Afecta tabla, ponderada, heatmap y burbujas (eje X).</span>
       </div>
-      ${periodosCons.length?_chipsMesesHtml({periodos:periodosCons,sel:_cobMeses,esCargado:()=>true,onToggle:p=>`toggleCobMes('${p}')`,onSet:arr=>`setCobMeses(${JSON.stringify(arr).replace(/"/g,'&quot;')})`}).replace('>Mes:<','>💊 Meses de consumo (solo gráfica de burbujas):<'):'<div style="font-size:.68rem;color:#94a3b8;padding-top:10px;">Sin meses de consumo cargados para esta unidad.</div>'}
+      <div style="font-size:.7rem;color:#154f39;font-weight:700;padding-top:8px;">Mostrando: ${_cobAnios.length?_cobAnios.join(' + '):'todos los años'} · ${_coberturaCultivo} · ${sriCultivo.reduce((a,r)=>a+r.t,0).toLocaleString('es-MX')} pruebas de antibiótico en ${abxOptionsTodos.length} antibióticos con n≥3${(_cobAnios.length&&!abxOptionsTodos.length)?' — <span style="color:#b91c1c;">sin datos suficientes en ese año para este '+dimCfg.label.toLowerCase()+'; prueba con otro año o con otro '+dimCfg.label.toLowerCase()+'</span>':''}</div>
+      <div style="font-size:.66rem;color:#64748b;padding-top:6px;">ℹ️ Los antibiogramas están registrados por <b>año</b>, por eso el filtro es por año. La gráfica «Consumo vs. Sensibilidad» usa el consumo del último mes con datos.</div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-top:10px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -6845,7 +6952,7 @@ function _espMergeMeses(meses){
   return out;
 }
 
-function renderRankingAntibioticos(){ const _r=renderRankingAntibioticosBase.apply(this,arguments); _consumoIntroPrepend('ranking'); return _r; }
+function renderRankingAntibioticos(){ const _r=renderRankingAntibioticosBase.apply(this,arguments); _consumoIntroPrepend('ranking'); _consumoOrdenInit('ranking'); return _r; }
 function renderRankingAntibioticosBase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
@@ -7100,7 +7207,7 @@ function toggleEspecialidadAwareFiltro(cat){
   renderConsumoEspecialidad();
 }
 
-function renderConsumoEspecialidad(){ const _r=renderConsumoEspecialidadBase.apply(this,arguments); _consumoIntroPrepend('especialidad'); return _r; }
+function renderConsumoEspecialidad(){ const _r=renderConsumoEspecialidadBase.apply(this,arguments); _consumoIntroPrepend('especialidad'); _consumoOrdenInit('especialidad'); return _r; }
 function renderConsumoEspecialidadBase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
@@ -7461,7 +7568,7 @@ function toggleIndicadoresCol(c){
   renderIndicadoresPROA();
 }
 
-function renderIndicadoresPROA(){ const _r=renderIndicadoresPROABase.apply(this,arguments); _consumoIntroPrepend('indicadores'); return _r; }
+function renderIndicadoresPROA(){ const _r=renderIndicadoresPROABase.apply(this,arguments); _consumoIntroPrepend('indicadores'); _consumoOrdenInit('indicadores'); return _r; }
 function renderIndicadoresPROABase(){
   const inner=document.getElementById('consumo-inner');
   if(!inner) return;
