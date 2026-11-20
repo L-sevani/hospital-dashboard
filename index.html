@@ -2616,7 +2616,7 @@ function attachOtrosTooltips(container){
 }
 
 /* ── Frecuencias: comparar por periodos / por hospitales y ambulatorios ── */
-const FQ={mode:'none',yrs:null,hs:null,metric:'n',top:15};
+const FQ={mode:'none',yrs:null,hs:null,svc:null,metric:'n',top:15};
 const FQ_COLORS=['#006657','#2563eb','#d97706','#7c3aed','#dc2626','#0891b2','#be185d','#65a30d'];
 function fqMode(m){
   FQ.mode=m;
@@ -2630,6 +2630,43 @@ function fqToggle(kind,v,on){
 }
 function fqMetric(m){ FQ.metric=m; renderFreq(); }
 function fqTop(v){ FQ.top=+v||15; renderFreq(); }
+
+/* ── Frecuencias · filtro por SERVICIO (modo hospitales y ambulatorios) ── */
+function _fqServiciosDisp(){
+  const set=new Set();
+  (FQ.hs||[]).forEach(k=>{ const hd=(RAW._derivedByHospital||{})[k]; const f=hd&&hd.freq&&hd.freq.chart2&&hd.freq.chart2['TODOS']; if(f&&f.order) f.order.forEach(x=>set.add(x)); });
+  return [...set].sort((a,b)=>a.localeCompare(b,'es'));
+}
+function fqSvcToggle(v,on){
+  const all=_fqServiciosDisp(); const cur=new Set(FQ.svc||all);
+  on?cur.add(v):cur.delete(v);
+  FQ.svc=(cur.size===all.length)?null:[...cur]; renderFreq();
+}
+function fqSvcAll(){ FQ.svc=null; renderFreq(); }
+function fqSvcNone(){ FQ.svc=[]; renderFreq(); }
+// Devuelve los datos de la gráfica `key` del hospital `hd` solo con los servicios elegidos.
+// chart1 (microorg × servicio) y chart2 (servicio × cultivo) salen de freq_per; chart3 y chart4 no traen
+// el servicio, por eso se leen de freq_svc (lo genera procesar_excel_v2.py).
+function _fqDataServicios(hd,key,spec,sel){
+  if(!sel) return freqSpec((hd.freq||{})[key],spec);
+  const selSet=new Set(sel);
+  const out={order:[],stacks:{},totals:{}};
+  const add=(row,col,n)=>{ if(!n) return; (out.stacks[row]||(out.stacks[row]={}))[col]=(out.stacks[row][col]||0)+n; out.totals[row]=(out.totals[row]||0)+n; };
+  if(key==='chart1'||key==='chart2'){
+    const base=freqSpec((hd.freq||{})[key],spec); if(!base) return null;
+    Object.keys(base.stacks||{}).forEach(row=>Object.entries(base.stacks[row]).forEach(([col,n])=>{
+      const sv=key==='chart1'?col:row; if(selSet.has(sv)) add(row,col,n);
+    }));
+  }else{
+    const fs=hd.freq_svc; if(!fs) return null;
+    const yrs=spec==='TODOS'?Object.keys(fs):(Array.isArray(spec)?spec:[spec]).map(y=>String(y).slice(0,4));
+    yrs.forEach(y=>Object.entries(fs[y]||{}).forEach(([sv,micros])=>{ if(!selSet.has(sv)) return;
+      Object.entries(micros).forEach(([m,culs])=>Object.entries(culs).forEach(([c,n])=>{ if(key==='chart3') add(c,m,n); else add(m,c,n); }));
+    }));
+  }
+  out.order=Object.keys(out.totals).sort((a,b)=>out.totals[b]-out.totals[a]);
+  return out.order.length?out:null;
+}
 function _fqPeriodSpec(){ return p1==='TODOS'?'TODOS':p1==='__main_multi__'?(mainPeriodSet||[]):p1; }
 function _fqHospKeys(){
   const ks=Object.keys(RAW._derivedByHospital||{});
@@ -2655,6 +2692,11 @@ function freqCmpBarHTML(){
     h+=`<div class="al-row"><span class="al-lbl">Unidades</span><div class="al-checks">`+
       ks.map(k=>`<label class="sgtab${FQ.hs.includes(k)?' active':''}"><input type="checkbox"${FQ.hs.includes(k)?' checked':''} onchange="fqToggle('h','${k}',this.checked)"><span>${esc2(getHospitalDisplayName(k))}</span></label>`).join('')+
       `</div><span class="al-hint">Periodo: ${esc2(fmtP(p1))} (el de la barra superior)</span></div>`;
+    const sv=_fqServiciosDisp(), sel=new Set(FQ.svc||sv);
+    h+=`<div class="al-row"><span class="al-lbl">Servicios</span><div class="al-checks">`+
+      `<span class="sgtab${FQ.svc===null?' active':''}" onclick="fqSvcAll()">Todos</span><span class="sgtab" onclick="fqSvcNone()">Ninguno</span>`+
+      sv.map(x=>`<label class="sgtab${sel.has(x)?' active':''}"><input type="checkbox"${sel.has(x)?' checked':''} onchange="fqSvcToggle(this.dataset.v,this.checked)" data-v="${esc2(x)}"><span>${esc2(x)}</span></label>`).join('')+
+      `</div><span class="al-hint">Marca uno o varios servicios (p. ej. Cunero Patológico). Cada unidad muestra solo los que tenga.</span></div>`;
   }
   if(FQ.mode!=='none'){
     h+=`<div class="al-row"><span class="al-lbl">Valores</span><div class="al-checks">`+
@@ -2682,7 +2724,7 @@ function renderFreq(){
     if(p1!=='TODOS'&&RAW._freqApprox) body.insertAdjacentHTML('beforeend',_fqApproxHint());
     return;
   }
-  let series=[],approx=false;
+  let series=[],approx=false,svcFaltante=false;
   if(FQ.mode==='per'){
     series=(FQ.yrs||[]).slice().sort().map((y,i)=>({label:y,color:FQ_COLORS[i%FQ_COLORS.length],data:freqYearsMerge(RAW.freq[cfg.key],[y])}));
     approx=!!RAW._freqApprox;
@@ -2691,7 +2733,8 @@ function renderFreq(){
     series=(FQ.hs||[]).map((k,i)=>{
       const hd=RAW._derivedByHospital[k]||{};
       if(spec!=='TODOS'&&hd._freqApprox) approx=true;
-      return {key:k,label:getHospitalDisplayName(k).replace(/^[^A-Za-zÁÉÍÓÚ]+/,''),color:FQ_COLORS[i%FQ_COLORS.length],data:freqSpec((hd.freq||{})[cfg.key],spec)};
+      if(FQ.svc&&(cfg.key==='chart3'||cfg.key==='chart4')&&!hd.freq_svc) svcFaltante=true;
+      return {key:k,label:getHospitalDisplayName(k).replace(/^[^A-Za-zÁÉÍÓÚ]+/,''),color:FQ_COLORS[i%FQ_COLORS.length],data:_fqDataServicios(hd,cfg.key,spec,FQ.svc)};
     });
   }
   const S=series.filter(x=>x.data&&x.data.order&&x.data.order.length);
@@ -2751,7 +2794,10 @@ function renderFreq(){
     h+=`<div class="ccard"><h2>${esc2(cfg.title)} · ${esc2(x.label)}${note(x)}</h2><div id="fcmp-${i}"></div></div>`;
   });
   h+='</div>';
-  body.innerHTML=bar+h+(approx?_fqApproxHint():'');
+  const svcHint=(FQ.svc&&FQ.svc.length===0)?'<div class="nodata-box">⚠️ Selecciona al menos un servicio.</div>':'';
+  const svcFalt=svcFaltante?'<div class="al-hint" style="padding:0 6px;">⚠ Esta gráfica no se puede filtrar por servicio con tu <code>dashboard_data.json</code> actual: vuelve a correr <code>procesar_excel_v2.py</code> (versión nueva) y sube el JSON.</div>':'';
+  const svcTxt=FQ.svc?`<div class="al-hint" style="padding:6px 6px 10px;">Filtrado por servicio: <b>${esc2(FQ.svc.join(', ')||'ninguno')}</b></div>`:'';
+  body.innerHTML=bar+svcTxt+svcHint+svcFalt+h+(approx?_fqApproxHint():'');
   if(sumChart){
     const el=document.getElementById('fcmp-sum');
     const rows=ownRows(sumChart);
