@@ -1853,15 +1853,7 @@ function _czBind(el,cid){
     const nsc=el.querySelector('.cz-scroll');
     if(nsc&&nsc.firstElementChild) nsc.scrollLeft=ratio*nsc.firstElementChild.offsetWidth-keepX;
   };
-  sc.addEventListener('wheel',e=>{
-    if(e.ctrlKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)) return;     // gesto horizontal: desplazamiento normal
-    const zin=e.deltaY<0;
-    if(!zin && s.z<=1) return;                                       // nada que alejar: deja correr la página
-    e.preventDefault();
-    const rect=sc.getBoundingClientRect(), mx=e.clientX-rect.left;
-    s.pz=Math.min(10,Math.max(1,(s.pz||s.z)*Math.exp(-e.deltaY*0.0015))); s.pmx=mx;
-    if(!s.raf) s.raf=requestAnimationFrame(()=>{ s.raf=0; const z=s.pz; s.pz=0; apply(z,s.pmx); });
-  },{passive:false});
+  /* zoom con la rueda del mouse desactivado: solo con los botones − / + de cada gráfica */
   if(btn) btn.addEventListener('click',()=>{ s.z=1; _czRerender(cid); });
   /* celular: botones − / + y pellizco con dos dedos */
   const tools=el.querySelector('.cz-tools');
